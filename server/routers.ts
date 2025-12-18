@@ -1,10 +1,33 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { z } from "zod";
+import {
+  createStudySession,
+  getStudySessionsByUser,
+  getTotalStudyHours,
+  createSamplePaper,
+  getSamplePapersByUser,
+  createSubject,
+  getSubjectsByUser,
+  createTopic,
+  getTopicsBySubject,
+  updateTopicCompletion,
+  initializeMathStudyPlan,
+  getMathStudyPlanByUser,
+  updateMathChapterCompletion,
+  createDailyTask,
+  getDailyTasksByUserAndDate,
+  updateDailyTaskCompletion,
+  createOrUpdateUserPreferences,
+  getUserPreferences,
+  createAIChatEntry,
+  getAIChatHistoryByUser,
+} from "./db";
+import { invokeLLM } from "./_core/llm";
 
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -17,12 +40,262 @@ export const appRouter = router({
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  // Study Sessions
+  studySessions: router({
+    create: protectedProcedure
+      .input(
+        z.object({
+          date: z.date(),
+          hoursStudied: z.number().min(0).max(24),
+          subject: z.string().optional(),
+          notes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        return createStudySession(ctx.user.id, { ...input, hoursStudied: input.hoursStudied as any });
+      }),
+
+    getByUser: protectedProcedure
+      .input(z.object({ daysBack: z.number().default(30) }))
+      .query(async ({ ctx, input }) => {
+        return getStudySessionsByUser(ctx.user.id, input.daysBack);
+      }),
+
+    getTotalHours: protectedProcedure
+      .input(z.object({ daysBack: z.number().default(30) }))
+      .query(async ({ ctx, input }) => {
+        return getTotalStudyHours(ctx.user.id, input.daysBack);
+      }),
+  }),
+
+  // Sample Papers
+  samplePapers: router({
+    create: protectedProcedure
+      .input(
+        z.object({
+          title: z.string(),
+          subject: z.string(),
+          completedDate: z.date(),
+          score: z.number().optional(),
+          totalScore: z.number().optional(),
+          notes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        return createSamplePaper(ctx.user.id, input);
+      }),
+
+    getByUser: protectedProcedure.query(async ({ ctx }) => {
+      return getSamplePapersByUser(ctx.user.id);
+    }),
+  }),
+
+  // Subjects
+  subjects: router({
+    create: protectedProcedure
+      .input(
+        z.object({
+          name: z.string(),
+          color: z.string().default("#3b82f6"),
+          isCustom: z.boolean().default(false),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        return createSubject(ctx.user.id, input);
+      }),
+
+    getByUser: protectedProcedure.query(async ({ ctx }) => {
+      return getSubjectsByUser(ctx.user.id);
+    }),
+  }),
+
+  // Topics
+  topics: router({
+    create: protectedProcedure
+      .input(
+        z.object({
+          subjectId: z.number(),
+          title: z.string(),
+          description: z.string().optional(),
+          scheduledDate: z.date().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        return createTopic(ctx.user.id, input);
+      }),
+
+    getBySubject: protectedProcedure
+      .input(z.object({ subjectId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return getTopicsBySubject(input.subjectId, ctx.user.id);
+      }),
+
+    toggleCompletion: protectedProcedure
+      .input(z.object({ topicId: z.number(), isCompleted: z.boolean() }))
+      .mutation(async ({ input }) => {
+        return updateTopicCompletion(input.topicId, input.isCompleted);
+      }),
+  }),
+
+  // Math Study Plan
+  mathStudyPlan: router({
+    initialize: protectedProcedure.mutation(async ({ ctx }) => {
+      return initializeMathStudyPlan(ctx.user.id);
+    }),
+
+    getByUser: protectedProcedure.query(async ({ ctx }) => {
+      return getMathStudyPlanByUser(ctx.user.id);
+    }),
+
+    toggleChapterCompletion: protectedProcedure
+      .input(z.object({ chapterId: z.number(), isCompleted: z.boolean() }))
+      .mutation(async ({ input }) => {
+        return updateMathChapterCompletion(input.chapterId, input.isCompleted);
+      }),
+  }),
+
+  // Daily Tasks
+  dailyTasks: router({
+    create: protectedProcedure
+      .input(
+        z.object({
+          date: z.date(),
+          subject: z.string(),
+          taskDescription: z.string(),
+          notes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        return createDailyTask(ctx.user.id, input);
+      }),
+
+    getByDate: protectedProcedure
+      .input(z.object({ date: z.date() }))
+      .query(async ({ ctx, input }) => {
+        return getDailyTasksByUserAndDate(ctx.user.id, input.date);
+      }),
+
+    toggleCompletion: protectedProcedure
+      .input(z.object({ taskId: z.number(), isCompleted: z.boolean() }))
+      .mutation(async ({ input }) => {
+        return updateDailyTaskCompletion(input.taskId, input.isCompleted);
+      }),
+  }),
+
+  // User Preferences
+  preferences: router({
+    get: protectedProcedure.query(async ({ ctx }) => {
+      return getUserPreferences(ctx.user.id);
+    }),
+
+    update: protectedProcedure
+      .input(
+        z.object({
+          notificationsEnabled: z.boolean().optional(),
+          dailyReminderTime: z.string().optional(),
+          dashboardLayout: z.string().optional(),
+          customSubjects: z.any().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        return createOrUpdateUserPreferences(ctx.user.id, input);
+      }),
+  }),
+
+  // AI Features
+  ai: router({
+    generateTips: protectedProcedure
+      .input(z.object({ subject: z.string() }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert HSLC exam preparation tutor. Provide personalized study tips based on the subject.",
+            },
+            {
+              role: "user",
+              content: `Provide 3 personalized study tips for ${input.subject} to help a Class 10 student prepare for board exams. Keep each tip concise and actionable.`,
+            },
+          ],
+        });
+        const content = response.choices[0]?.message.content;
+        return typeof content === 'string' ? content : "";
+      }),
+
+    generateQuestions: protectedProcedure
+      .input(z.object({ subject: z.string(), topic: z.string(), count: z.number().default(3) }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert HSLC exam preparation tutor. Generate practice questions for exam preparation.",
+            },
+            {
+              role: "user",
+              content: `Generate ${input.count} practice questions for ${input.subject} - ${input.topic} at HSLC board exam level. Format as numbered list.`,
+            },
+          ],
+        });
+        const content = response.choices[0]?.message.content;
+        return typeof content === 'string' ? content : "";
+      }),
+
+    askQuestion: protectedProcedure
+      .input(z.object({ subject: z.string(), question: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert HSLC exam preparation tutor. Answer student questions clearly and concisely.",
+            },
+            {
+              role: "user",
+              content: `${input.subject}: ${input.question}`,
+            },
+          ],
+        });
+        const content = response.choices[0]?.message.content;
+        const answer = typeof content === 'string' ? content : "";
+        
+        // Store in chat history
+        await createAIChatEntry(ctx.user.id, {
+          subject: input.subject,
+          question: input.question,
+          answer,
+        });
+        
+        return answer;
+      }),
+
+    getChatHistory: protectedProcedure
+      .input(z.object({ subject: z.string().optional() }))
+      .query(async ({ ctx, input }) => {
+        return getAIChatHistoryByUser(ctx.user.id, input.subject);
+      }),
+
+    getRecommendations: protectedProcedure.query(async ({ ctx }) => {
+      const sessions = await getStudySessionsByUser(ctx.user.id, 7);
+      const totalHours = await getTotalStudyHours(ctx.user.id, 7);
+      
+      const response = await invokeLLM({
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert HSLC exam preparation coach. Provide personalized recommendations.",
+          },
+          {
+            role: "user",
+            content: `A Class 10 student has studied ${totalHours} hours in the last 7 days. They have ${sessions.length} study sessions recorded. Provide 3 personalized recommendations to improve their exam preparation. Keep it motivational and actionable.`,
+          },
+        ],
+      });
+      const content = response.choices[0]?.message.content;
+      return typeof content === 'string' ? content : "";
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

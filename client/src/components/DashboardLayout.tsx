@@ -27,9 +27,16 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
+import { BookOpen, Calendar, Calculator, Sparkles, Info, Settings as SettingsIcon } from "lucide-react";
+
 const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: BookOpen, label: "Subjects", path: "/subjects" },
+  { icon: Calculator, label: "Math Plan", path: "/math-plan" },
+  { icon: Calendar, label: "Daily Tasks", path: "/daily-tasks" },
+  { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },
+  { icon: Info, label: "About", path: "/about" },
+  { icon: SettingsIcon, label: "Settings", path: "/settings" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
