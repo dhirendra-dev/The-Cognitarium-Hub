@@ -58,3 +58,15 @@
 ## Phase 9: Delivery
 - [x] Provide final website URL to user
 - [x] Create feature summary document
+
+## Phase 10: Leaderboard & Syllabus Updates
+- [x] Add leaderboard database schema and API endpoints
+- [x] Create Leaderboard UI page with top performers ranking
+- [x] Update Advanced Mathematics syllabus with 9 chapters
+- [x] Update Science syllabus with 16 chapters
+- [x] Update English syllabus with prose and poetry sections
+- [x] Update Hindi syllabus with poetry and prose sections
+- [x] Integrate HSLC Board Prep logo throughout the application
+- [x] Update pre-board exam date to December 30, 2025
+- [x] Personalize About section with Dhirendra Kumar's introduction
+- [x] Test all new features and create checkpoint

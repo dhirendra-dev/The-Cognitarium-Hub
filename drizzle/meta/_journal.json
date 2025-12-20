@@ -15,6 +15,13 @@
       "when": 1765828973278,
       "tag": "0001_flawless_nomad",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1766172155765,
+      "tag": "0002_flashy_the_initiative",
+      "breakpoints": true
     }
   ]
 }

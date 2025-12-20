@@ -153,3 +153,22 @@ export const aiChatHistory = mysqlTable("aiChatHistory", {
 
 export type AIChatHistory = typeof aiChatHistory.$inferSelect;
 export type InsertAIChatHistory = typeof aiChatHistory.$inferInsert;
+
+// Leaderboard - Track user rankings based on study metrics
+export const leaderboard = mysqlTable("leaderboard", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  totalHoursStudied: decimal("totalHoursStudied", { precision: 8, scale: 2 }).default("0"),
+  topicsCompleted: int("topicsCompleted").default(0),
+  chaptersCompleted: int("chaptersCompleted").default(0),
+  samplePapersCompleted: int("samplePapersCompleted").default(0),
+  averageScore: decimal("averageScore", { precision: 5, scale: 2 }).default("0"),
+  streakDays: int("streakDays").default(0),
+  rank: int("rank"),
+  points: int("points").default(0),
+  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Leaderboard = typeof leaderboard.$inferSelect;
+export type InsertLeaderboard = typeof leaderboard.$inferInsert;

@@ -12,6 +12,8 @@ import DailyTasks from "./pages/DailyTasks";
 import AIAssistant from "./pages/AIAssistant";
 import About from "./pages/About";
 import Settings from "./pages/Settings";
+import Leaderboard from "./pages/Leaderboard";
+import SyllabusTracker from "./pages/SyllabusTracker";
 
 function Router() {
   return (
@@ -22,6 +24,8 @@ function Router() {
       <Route path={"/math-plan"} component={MathStudyPlan} />
       <Route path={"/daily-tasks"} component={DailyTasks} />
       <Route path={"/ai-assistant"} component={AIAssistant} />
+      <Route path={"/leaderboard"} component={Leaderboard} />
+      <Route path={"/syllabus"} component={SyllabusTracker} />
       <Route path={"/about"} component={About} />
       <Route path={"/settings"} component={Settings} />
       <Route path={"/404"} component={NotFound} />

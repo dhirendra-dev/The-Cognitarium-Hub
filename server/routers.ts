@@ -24,6 +24,9 @@ import {
   getUserPreferences,
   createAIChatEntry,
   getAIChatHistoryByUser,
+  getLeaderboardTop,
+  getUserRank,
+  updateLeaderboardRanks,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 
@@ -294,6 +297,23 @@ export const appRouter = router({
       });
       const content = response.choices[0]?.message.content;
       return typeof content === 'string' ? content : "";
+    }),
+  }),
+
+  leaderboard: router({
+    getTop: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(100).default(10) }))
+      .query(async ({ input }) => {
+        return await getLeaderboardTop(input.limit);
+      }),
+
+    getUserRank: protectedProcedure.query(async ({ ctx }) => {
+      return await getUserRank(ctx.user.id);
+    }),
+
+    updateRanks: protectedProcedure.mutation(async () => {
+      await updateLeaderboardRanks();
+      return { success: true };
     }),
   }),
 });

@@ -11,6 +11,7 @@ import {
   InsertDailyTask,
   InsertUserPreference,
   InsertAIChatHistory,
+  InsertLeaderboard,
   studySessions,
   samplePapers,
   subjects,
@@ -19,6 +20,7 @@ import {
   dailyTasks,
   userPreferences,
   aiChatHistory,
+  leaderboard,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -302,4 +304,39 @@ export async function getAIChatHistoryByUser(userId: number, subject?: string) {
   }
   
   return db.select().from(aiChatHistory).where(eq(aiChatHistory.userId, userId)).orderBy(desc(aiChatHistory.createdAt));
+}
+
+// Leaderboard
+export async function createOrUpdateLeaderboard(userId: number, data: Partial<InsertLeaderboard>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(leaderboard).values({ userId, ...data } as any).onDuplicateKeyUpdate({
+    set: data as any
+  });
+}
+
+export async function getLeaderboardTop(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(leaderboard).orderBy(desc(leaderboard.points)).limit(limit);
+}
+
+export async function getUserRank(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(leaderboard).where(eq(leaderboard.userId, userId));
+  return result[0] || null;
+}
+
+export async function updateLeaderboardRanks() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Get all leaderboard entries sorted by points
+  const entries = await db.select().from(leaderboard).orderBy(desc(leaderboard.points));
+  
+  // Update ranks
+  for (let i = 0; i < entries.length; i++) {
+    await db.update(leaderboard).set({ rank: i + 1 }).where(eq(leaderboard.id, entries[i].id));
+  }
 }
