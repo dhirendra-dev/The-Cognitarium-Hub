@@ -27,8 +27,24 @@ import {
   getLeaderboardTop,
   getUserRank,
   updateLeaderboardRanks,
+  getAllUsers,
+  getAllStudySessions,
+  getAllSamplePapers,
+  getAdminDashboardStats,
+  getUserDetailedStats,
+  updateUserRole,
+  deleteUser,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
+import { TRPCError } from "@trpc/server";
+
+// Admin procedure - only allows admin users
+const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== "admin") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+  }
+  return next({ ctx });
+});
 
 export const appRouter = router({
   system: systemRouter,
@@ -315,6 +331,44 @@ export const appRouter = router({
       await updateLeaderboardRanks();
       return { success: true };
     }),
+  }),
+
+  admin: router({
+    getDashboardStats: adminProcedure.query(async () => {
+      return await getAdminDashboardStats();
+    }),
+
+    getAllUsers: adminProcedure.query(async () => {
+      return await getAllUsers();
+    }),
+
+    getAllStudySessions: adminProcedure.query(async () => {
+      return await getAllStudySessions();
+    }),
+
+    getAllSamplePapers: adminProcedure.query(async () => {
+      return await getAllSamplePapers();
+    }),
+
+    getUserStats: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ input }) => {
+        return await getUserDetailedStats(input.userId);
+      }),
+
+    updateUserRole: adminProcedure
+      .input(z.object({ userId: z.number(), role: z.enum(["admin", "user"]) }))
+      .mutation(async ({ input }) => {
+        await updateUserRole(input.userId, input.role);
+        return { success: true };
+      }),
+
+    deleteUser: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        await deleteUser(input.userId);
+        return { success: true };
+      }),
   }),
 });
 

@@ -10,9 +10,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Clock, BookOpen, Target, TrendingUp, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-const PREBOARD_EXAM_DATE = new Date("2025-12-30");
-const BOARD_EXAM_DATE = new Date("2026-02-10");
-const EXAM_DATE = PREBOARD_EXAM_DATE; // Use pre-board date for countdown
+const EXAM_DATE = new Date("2026-02-10");
 
 interface CountdownState {
   days: number;
@@ -118,7 +116,7 @@ export default function Dashboard() {
               <Clock className="w-8 h-8 text-indigo-600" />
               <h2 className="text-2xl font-bold text-gray-800">Board Exam Countdown</h2>
             </div>
-            <p className="text-gray-600 mb-6">Pre-Board: December 30, 2025 | Board Exam: February 10, 2026</p>
+            <p className="text-gray-600 mb-6">February 10, 2026</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Days", value: countdown.days },

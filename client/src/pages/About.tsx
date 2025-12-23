@@ -7,31 +7,11 @@ export default function About() {
       <div className="max-w-4xl mx-auto">
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <img src="/logo.png" alt="HSLC Board Prep" className="w-32 h-32 mx-auto mb-6 rounded-lg" />
           <h1 className="text-5xl font-bold text-gray-800 mb-4">HSLC Preparation Hub</h1>
           <p className="text-xl text-gray-600">
             Your companion for a successful Class 10 board exam journey
           </p>
-          <p className="text-lg text-indigo-600 font-semibold mt-4">
-            Board Exam: February 10, 2026 | Pre-Board: December 30, 2025
-          </p>
         </div>
-
-        {/* Creator Section */}
-        <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 shadow-lg p-8 mb-8 border-2 border-indigo-200">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">About the Creator</h2>
-          <div className="space-y-4 text-gray-700 leading-relaxed">
-            <p className="text-lg font-semibold text-indigo-600">
-              Hi! I'm Dhirendra Kumar, a Class 10 student.
-            </p>
-            <p>
-              I created this platform especially for all my fellow Class 9 and 10 students out there, particularly those of you studying under the SEBA board! My goal is to offer that extra bit of support we sometimes need beyond school or coaching. Here, you'll find a comprehensive study tracker, detailed solutions, and discussions on important questions and answers that could really help you ace your exams.
-            </p>
-            <p>
-              I understand the pressure of board exams and the need for organized, effective preparation. This platform brings together all the tools you need to track your progress, stay motivated, and succeed in your board exams. Whether you're preparing for your pre-board exams on December 30, 2025, or the main board exam on February 10, 2026, this hub is designed to support your journey.
-            </p>
-          </div>
-        </Card>
 
         {/* About Section */}
         <Card className="bg-white shadow-lg p-8 mb-8">

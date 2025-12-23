@@ -340,3 +340,88 @@ export async function updateLeaderboardRanks() {
     await db.update(leaderboard).set({ rank: i + 1 }).where(eq(leaderboard.id, entries[i].id));
   }
 }
+
+
+// Admin functions
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(users).orderBy(desc(users.createdAt));
+}
+
+export async function getAllStudySessions() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(studySessions).orderBy(desc(studySessions.createdAt));
+}
+
+export async function getAllSamplePapers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(samplePapers).orderBy(desc(samplePapers.createdAt));
+}
+
+export async function getAdminDashboardStats() {
+  const db = await getDb();
+  if (!db) return null;
+
+  const totalUsers = await db.select().from(users);
+  const totalSessions = await db.select().from(studySessions);
+  const totalTopics = await db.select().from(topics);
+  const totalLeaderboard = await db.select().from(leaderboard);
+
+  return {
+    totalUsers: totalUsers.length,
+    totalStudySessions: totalSessions.length,
+    totalTopicsCompleted: totalTopics.filter((t) => t.isCompleted).length,
+    totalTopics: totalTopics.length,
+    topLeaderboardUsers: totalLeaderboard.slice(0, 10),
+  };
+}
+
+export async function getUserDetailedStats(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const user = await db.select().from(users).where(eq(users.id, userId));
+  const sessions = await db.select().from(studySessions).where(eq(studySessions.userId, userId));
+  const userTopics = await db.select().from(topics).where(eq(topics.userId, userId));
+  const papers = await db.select().from(samplePapers).where(eq(samplePapers.userId, userId));
+  const rank = await db.select().from(leaderboard).where(eq(leaderboard.userId, userId));
+
+  return {
+    user: user[0],
+    totalSessions: sessions.length,
+    totalHours: sessions.reduce((sum, s) => sum + parseFloat(s.hoursStudied as any), 0),
+    topicsCompleted: userTopics.filter((t) => t.isCompleted).length,
+    totalTopics: userTopics.length,
+    papersCompleted: papers.length,
+    averageScore: papers.length > 0 ? papers.reduce((sum, p) => sum + (p.score || 0), 0) / papers.length : 0,
+    leaderboardRank: rank[0],
+  };
+}
+
+export async function updateUserRole(userId: number, role: "admin" | "user") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+export async function deleteUser(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Delete all related data
+  await db.delete(studySessions).where(eq(studySessions.userId, userId));
+  await db.delete(samplePapers).where(eq(samplePapers.userId, userId));
+  await db.delete(subjects).where(eq(subjects.userId, userId));
+  await db.delete(topics).where(eq(topics.userId, userId));
+  await db.delete(mathStudyPlan).where(eq(mathStudyPlan.userId, userId));
+  await db.delete(dailyTasks).where(eq(dailyTasks.userId, userId));
+  await db.delete(userPreferences).where(eq(userPreferences.userId, userId));
+  await db.delete(aiChatHistory).where(eq(aiChatHistory.userId, userId));
+  await db.delete(leaderboard).where(eq(leaderboard.userId, userId));
+  
+  // Finally delete the user
+  return db.delete(users).where(eq(users.id, userId));
+}

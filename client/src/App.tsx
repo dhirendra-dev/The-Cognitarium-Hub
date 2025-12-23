@@ -14,6 +14,7 @@ import About from "./pages/About";
 import Settings from "./pages/Settings";
 import Leaderboard from "./pages/Leaderboard";
 import SyllabusTracker from "./pages/SyllabusTracker";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
       <Route path={"/ai-assistant"} component={AIAssistant} />
       <Route path={"/leaderboard"} component={Leaderboard} />
       <Route path={"/syllabus"} component={SyllabusTracker} />
+      <Route path={"/admin"} component={AdminDashboard} />
       <Route path={"/about"} component={About} />
       <Route path={"/settings"} component={Settings} />
       <Route path={"/404"} component={NotFound} />
