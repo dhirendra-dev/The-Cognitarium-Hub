@@ -320,7 +320,21 @@ export async function createOrUpdateLeaderboard(userId: number, data: Partial<In
 export async function getLeaderboardTop(limit: number = 10) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(leaderboard).orderBy(desc(leaderboard.points)).limit(limit);
+  const results = await db.select().from(leaderboard).orderBy(desc(leaderboard.points)).limit(limit);
+  
+  // Join with user data to get names
+  const leaderboardWithUsers = await Promise.all(
+    results.map(async (entry) => {
+      const user = await db.select().from(users).where(eq(users.id, entry.userId)).limit(1);
+      return {
+        ...entry,
+        userName: user[0]?.name || `User ${entry.userId}`,
+        userEmail: user[0]?.email || "",
+      };
+    })
+  );
+  
+  return leaderboardWithUsers;
 }
 
 export async function getUserRank(userId: number) {

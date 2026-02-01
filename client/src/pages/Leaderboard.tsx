@@ -72,7 +72,7 @@ export default function Leaderboard() {
                       )}
                     </div>
                     <div>
-                      <p className="font-bold text-gray-800">User {performer.userId}</p>
+                      <p className="font-bold text-gray-800">{(performer as any).userName || `User ${performer.userId}`}</p>
                       <p className="text-sm text-gray-600 mt-1">
                         {performer.topicsCompleted} topics • {parseFloat(performer.totalHoursStudied as any).toFixed(1)} hrs
                       </p>
