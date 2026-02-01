@@ -34,6 +34,13 @@ import {
   getUserDetailedStats,
   updateUserRole,
   deleteUser,
+  createPost,
+  getAllPosts,
+  getPostsByUser,
+  deletePost,
+  updatePostLikes,
+  initializeLeaderboardEntry,
+  updateLeaderboardEntry,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { TRPCError } from "@trpc/server";
@@ -363,13 +370,51 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    deleteUser: adminProcedure
+     deleteUser: adminProcedure
       .input(z.object({ userId: z.number() }))
       .mutation(async ({ input }) => {
         await deleteUser(input.userId);
         return { success: true };
       }),
+    deletePost: adminProcedure
+      .input(z.object({ postId: z.number() }))
+      .mutation(async ({ input }) => {
+        await deletePost(input.postId);
+        return { success: true };
+      }),
+  }),
+  posts: router({
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string(),
+        description: z.string().optional(),
+        photoUrl: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await createPost(ctx.user.id, input);
+      }),
+    getAll: publicProcedure
+      .input(z.object({ limit: z.number().default(50) }))
+      .query(async ({ input }) => {
+        return await getAllPosts(input.limit);
+      }),
+    getByUser: protectedProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ input }) => {
+        return await getPostsByUser(input.userId);
+      }),
+    delete: adminProcedure
+      .input(z.object({ postId: z.number() }))
+      .mutation(async ({ input }) => {
+        await deletePost(input.postId);
+        return { success: true };
+      }),
+    like: protectedProcedure
+      .input(z.object({ postId: z.number(), likes: z.number() }))
+      .mutation(async ({ input }) => {
+        await updatePostLikes(input.postId, input.likes);
+        return { success: true };
+      }),
   }),
 });
-
 export type AppRouter = typeof appRouter;

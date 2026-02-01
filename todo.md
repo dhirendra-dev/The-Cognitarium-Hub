@@ -90,3 +90,13 @@
 - [ ] Add board selection option in settings
 - [x] Test countdown timers accuracy
 - [ ] Create final checkpoint
+
+
+## Phase 13: Leaderboard Fix & Posts Feature
+- [x] Fix leaderboard data population and display
+- [x] Create posts/updates database schema with photo support
+- [x] Implement API endpoints for creating, reading, and deleting posts
+- [x] Build Posts/Updates UI page with photo upload
+- [x] Implement admin delete post functionality
+- [x] Test leaderboard and posts features
+- [ ] Create final checkpoint

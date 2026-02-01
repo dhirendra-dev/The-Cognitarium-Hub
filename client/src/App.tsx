@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import Leaderboard from "./pages/Leaderboard";
 import SyllabusTracker from "./pages/SyllabusTracker";
 import AdminDashboard from "./pages/AdminDashboard";
+import Posts from "./pages/Posts";
 
 function Router() {
   return (
@@ -30,6 +31,7 @@ function Router() {
       <Route path={"/admin"} component={AdminDashboard} />
       <Route path={"/about"} component={About} />
       <Route path={"/settings"} component={Settings} />
+      <Route path={"/posts"} component={Posts} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

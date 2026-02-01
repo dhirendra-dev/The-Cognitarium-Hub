@@ -12,6 +12,7 @@ import {
   InsertUserPreference,
   InsertAIChatHistory,
   InsertLeaderboard,
+  InsertPost,
   studySessions,
   samplePapers,
   subjects,
@@ -21,6 +22,7 @@ import {
   userPreferences,
   aiChatHistory,
   leaderboard,
+  posts,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -424,4 +426,74 @@ export async function deleteUser(userId: number) {
   
   // Finally delete the user
   return db.delete(users).where(eq(users.id, userId));
+}
+
+
+// Posts
+export async function createPost(userId: number, data: Omit<InsertPost, 'userId'>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(posts).values({ ...data, userId });
+}
+
+export async function getAllPosts(limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.select().from(posts).orderBy(desc(posts.createdAt)).limit(limit);
+  // Join with user data
+  const postsWithUsers = await Promise.all(
+    result.map(async (post) => {
+      const user = await getUserByOpenId((await db.select().from(users).where(eq(users.id, post.userId)))[0]?.openId || "");
+      return { ...post, userName: user?.name || "Unknown User" };
+    })
+  );
+  return postsWithUsers;
+}
+
+export async function getPostsByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(posts).where(eq(posts.userId, userId)).orderBy(desc(posts.createdAt));
+}
+
+export async function deletePost(postId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(posts).where(eq(posts.id, postId));
+}
+
+export async function updatePostLikes(postId: number, likes: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(posts).set({ likes }).where(eq(posts.id, postId));
+}
+
+// Leaderboard - Initialize or update user leaderboard entry
+export async function initializeLeaderboardEntry(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await db.select().from(leaderboard).where(eq(leaderboard.userId, userId));
+  if (existing.length === 0) {
+    await db.insert(leaderboard).values({
+      userId,
+      totalHoursStudied: "0",
+      topicsCompleted: 0,
+      chaptersCompleted: 0,
+      samplePapersCompleted: 0,
+      averageScore: "0",
+      streakDays: 0,
+      points: 0,
+    });
+  }
+}
+
+export async function updateLeaderboardEntry(userId: number, updates: Partial<InsertLeaderboard>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Ensure entry exists
+  await initializeLeaderboardEntry(userId);
+  
+  return db.update(leaderboard).set(updates).where(eq(leaderboard.userId, userId));
 }
