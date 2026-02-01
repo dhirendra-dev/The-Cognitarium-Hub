@@ -10,7 +10,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Clock, BookOpen, Target, TrendingUp, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-const SEBA_EXAM_DATE = new Date("2026-02-10");
+const SEBA_EXAM_DATE = new Date("2026-02-10T09:00:00"); // 9:00 AM
 const CBSE_EXAM_DATE = new Date("2026-02-17T10:00:00"); // 10:00 AM
 
 interface CountdownState {
@@ -137,7 +137,7 @@ export default function Dashboard() {
                   <p className="text-xs text-gray-500">Pre-Board: Dec 30, 2025</p>
                 </div>
               </div>
-              <p className="text-gray-600 mb-6 font-semibold">Board Exam: February 17, 2026 @ 10:00 AM</p>
+              <p className="text-gray-600 mb-6 font-semibold">Board Exam: February 10, 2026 @ 9:00 AM</p>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { label: "Days", value: sebaCountdown.days },
