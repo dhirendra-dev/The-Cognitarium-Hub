@@ -82,3 +82,11 @@
 - [x] Fix leaderboard to populate with user data
 - [x] Test admin panel functionality
 - [ ] Create final checkpoint
+
+
+## Phase 12: CBSE Class 10 Countdown Timer
+- [x] Add CBSE Class 10 exam countdown timer (February 17, 10:00 AM)
+- [x] Update Dashboard to show dual countdown timers (SEBA + CBSE)
+- [ ] Add board selection option in settings
+- [x] Test countdown timers accuracy
+- [ ] Create final checkpoint

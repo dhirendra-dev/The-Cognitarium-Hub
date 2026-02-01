@@ -10,7 +10,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Clock, BookOpen, Target, TrendingUp, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-const EXAM_DATE = new Date("2026-02-10");
+const SEBA_EXAM_DATE = new Date("2026-02-10");
+const CBSE_EXAM_DATE = new Date("2026-02-17T10:00:00"); // 10:00 AM
 
 interface CountdownState {
   days: number;
@@ -21,7 +22,8 @@ interface CountdownState {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [countdown, setCountdown] = useState<CountdownState>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [sebaCountdown, setSebaCountdown] = useState<CountdownState>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [cbseCountdown, setCbseCountdown] = useState<CountdownState>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [hoursStudied, setHoursStudied] = useState("");
   const [subject, setSubject] = useState("");
   const [notes, setNotes] = useState("");
@@ -48,17 +50,31 @@ export default function Dashboard() {
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
-      const diff = EXAM_DATE.getTime() - now.getTime();
-
-      if (diff > 0) {
-        setCountdown({
-          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((diff / 1000 / 60) % 60),
-          seconds: Math.floor((diff / 1000) % 60),
+      
+      // SEBA countdown
+      const sebaDiff = SEBA_EXAM_DATE.getTime() - now.getTime();
+      if (sebaDiff > 0) {
+        setSebaCountdown({
+          days: Math.floor(sebaDiff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((sebaDiff / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((sebaDiff / 1000 / 60) % 60),
+          seconds: Math.floor((sebaDiff / 1000) % 60),
         });
       } else {
-        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        setSebaCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+      
+      // CBSE countdown
+      const cbseDiff = CBSE_EXAM_DATE.getTime() - now.getTime();
+      if (cbseDiff > 0) {
+        setCbseCountdown({
+          days: Math.floor(cbseDiff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((cbseDiff / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((cbseDiff / 1000 / 60) % 60),
+          seconds: Math.floor((cbseDiff / 1000) % 60),
+        });
+      } else {
+        setCbseCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
 
@@ -109,29 +125,62 @@ export default function Dashboard() {
           <p className="text-gray-600">{currentMessage}</p>
         </div>
 
-        {/* Countdown Timer */}
-        <Card className="mb-8 bg-white border-2 border-indigo-200 shadow-lg">
-          <div className="p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <Clock className="w-8 h-8 text-indigo-600" />
-              <h2 className="text-2xl font-bold text-gray-800">Board Exam Countdown</h2>
-            </div>
-            <p className="text-gray-600 mb-6">February 10, 2026</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: "Days", value: countdown.days },
-                { label: "Hours", value: countdown.hours },
-                { label: "Minutes", value: countdown.minutes },
-                { label: "Seconds", value: countdown.seconds },
-              ].map((item) => (
-                <div key={item.label} className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg p-6 text-white text-center">
-                  <div className="text-4xl font-bold mb-2">{String(item.value).padStart(2, "0")}</div>
-                  <div className="text-sm font-semibold">{item.label}</div>
+        {/* Countdown Timers */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          {/* SEBA Countdown */}
+          <Card className="bg-white border-2 border-blue-200 shadow-lg">
+            <div className="p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <Clock className="w-8 h-8 text-blue-600" />
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">SEBA Class 10</h2>
+                  <p className="text-xs text-gray-500">Pre-Board: Dec 30, 2025</p>
                 </div>
-              ))}
+              </div>
+              <p className="text-gray-600 mb-6 font-semibold">Board Exam: February 17, 2026 @ 10:00 AM</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Days", value: sebaCountdown.days },
+                  { label: "Hours", value: sebaCountdown.hours },
+                  { label: "Minutes", value: sebaCountdown.minutes },
+                  { label: "Seconds", value: sebaCountdown.seconds },
+                ].map((item) => (
+                  <div key={item.label} className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg p-4 text-white text-center">
+                    <div className="text-3xl font-bold mb-1">{String(item.value).padStart(2, "0")}</div>
+                    <div className="text-xs font-semibold">{item.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+
+          {/* CBSE Countdown */}
+          <Card className="bg-white border-2 border-purple-200 shadow-lg">
+            <div className="p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <Clock className="w-8 h-8 text-purple-600" />
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">CBSE Class 10</h2>
+                  <p className="text-xs text-gray-500">Feb 17 @ 10:00 AM</p>
+                </div>
+              </div>
+              <p className="text-gray-600 mb-6 font-semibold">Board Exam: February 17, 2026 @ 10:00 AM</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Days", value: cbseCountdown.days },
+                  { label: "Hours", value: cbseCountdown.hours },
+                  { label: "Minutes", value: cbseCountdown.minutes },
+                  { label: "Seconds", value: cbseCountdown.seconds },
+                ].map((item) => (
+                  <div key={item.label} className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg p-4 text-white text-center">
+                    <div className="text-3xl font-bold mb-1">{String(item.value).padStart(2, "0")}</div>
+                    <div className="text-xs font-semibold">{item.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
