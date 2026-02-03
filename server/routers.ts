@@ -44,6 +44,7 @@ import {
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { TRPCError } from "@trpc/server";
+import { storagePut } from "./storage";
 
 // Admin procedure - only allows admin users
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -384,6 +385,25 @@ export const appRouter = router({
       }),
   }),
   posts: router({
+    uploadPhoto: protectedProcedure
+      .input(z.object({
+        fileName: z.string(),
+        fileData: z.string(),
+        mimeType: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        try {
+          const buffer = Buffer.from(input.fileData, 'base64');
+          const fileKey = `posts/${ctx.user.id}/${Date.now()}-${input.fileName}`;
+          const { url } = await storagePut(fileKey, buffer, input.mimeType);
+          return { success: true, url };
+        } catch (error) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Photo upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          });
+        }
+      }),
     create: protectedProcedure
       .input(z.object({
         title: z.string(),

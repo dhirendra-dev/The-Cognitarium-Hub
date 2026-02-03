@@ -52,6 +52,12 @@ export default function Posts() {
     },
   });
 
+  const uploadPhotoMutation = trpc.posts.uploadPhoto.useMutation({
+    onError: (error) => {
+      toast.error(error.message || "Failed to upload photo");
+    },
+  });
+
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -77,30 +83,39 @@ export default function Posts() {
 
       // Upload photo if selected
       if (photoFile) {
-        const formData = new FormData();
-        formData.append("file", photoFile);
-
-        // Upload to S3
-        const uploadResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64Data = (reader.result as string).split(",")[1];
+          try {
+            const result = await uploadPhotoMutation.mutateAsync({
+              fileName: photoFile.name,
+              fileData: base64Data,
+              mimeType: photoFile.type,
+            });
+            photoUrl = result.url;
+            
+            // Create post with photo URL
+            createPostMutation.mutate({
+              title,
+              description: description || undefined,
+              photoUrl: photoUrl || undefined,
+            });
+          } catch (error) {
+            toast.error("Failed to upload photo");
+            setIsSubmitting(false);
+          }
+        };
+        reader.readAsDataURL(photoFile);
+      } else {
+        // Create post without photo
+        createPostMutation.mutate({
+          title,
+          description: description || undefined,
+          photoUrl: undefined,
         });
-
-        if (uploadResponse.ok) {
-          const data = await uploadResponse.json();
-          photoUrl = data.url;
-        }
       }
-
-      // Create post
-      createPostMutation.mutate({
-        title,
-        description: description || undefined,
-        photoUrl: photoUrl || undefined,
-      });
     } catch (error) {
-      toast.error("Failed to upload photo");
-    } finally {
+      toast.error("Failed to create post");
       setIsSubmitting(false);
     }
   };
