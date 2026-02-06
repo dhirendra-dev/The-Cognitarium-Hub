@@ -41,8 +41,21 @@ import {
   updatePostLikes,
   initializeLeaderboardEntry,
   updateLeaderboardEntry,
+  createBoardExamQuestion,
+  getBoardExamQuestionsBySubject,
+  searchBoardExamQuestions,
+  getBoardExamQuestionsByDifficulty,
+  createMCQOption,
+  getMCQOptionsByQuestion,
+  createQuestionAnswer,
+  getUserQuestionAnswers,
+  getUserQuestionStats,
+  getAllBoardExamQuestions,
+  updateBoardExamQuestion,
+  deleteBoardExamQuestion,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
+import axios from "axios";
 import { TRPCError } from "@trpc/server";
 import { storagePut } from "./storage";
 
@@ -434,6 +447,157 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         await updatePostLikes(input.postId, input.likes);
         return { success: true };
+      }),
+  }),
+  boardExamQuestions: router({
+    getBySubject: publicProcedure
+      .input(z.object({ subject: z.string(), limit: z.number().default(50) }))
+      .query(async ({ input }) => {
+        return await getBoardExamQuestionsBySubject(input.subject, input.limit);
+      }),
+    search: publicProcedure
+      .input(z.object({ query: z.string(), subject: z.string().optional() }))
+      .query(async ({ input }) => {
+        return await searchBoardExamQuestions(input.query, input.subject);
+      }),
+    getByDifficulty: publicProcedure
+      .input(z.object({ difficulty: z.string(), subject: z.string().optional() }))
+      .query(async ({ input }) => {
+        return await getBoardExamQuestionsByDifficulty(input.difficulty, input.subject);
+      }),
+    getAll: publicProcedure
+      .input(z.object({ limit: z.number().default(100) }))
+      .query(async ({ input }) => {
+        return await getAllBoardExamQuestions(input.limit);
+      }),
+    getMCQOptions: publicProcedure
+      .input(z.object({ questionId: z.number() }))
+      .query(async ({ input }) => {
+        return await getMCQOptionsByQuestion(input.questionId);
+      }),
+    submitAnswer: protectedProcedure
+      .input(z.object({
+        questionId: z.number(),
+        userAnswer: z.string(),
+        isCorrect: z.boolean(),
+        marksObtained: z.number().default(0),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await createQuestionAnswer({
+          userId: ctx.user.id,
+          questionId: input.questionId,
+          userAnswer: input.userAnswer,
+          isCorrect: input.isCorrect,
+          marksObtained: input.marksObtained,
+        });
+      }),
+    getUserAnswers: protectedProcedure
+      .input(z.object({ questionId: z.number().optional() }))
+      .query(async ({ ctx, input }) => {
+        return await getUserQuestionAnswers(ctx.user.id, input.questionId);
+      }),
+    getUserStats: protectedProcedure
+      .query(async ({ ctx }) => {
+        return await getUserQuestionStats(ctx.user.id);
+      }),
+    create: adminProcedure
+      .input(z.object({
+        subject: z.string(),
+        chapter: z.string(),
+        questionType: z.enum(["mcq", "shortAnswer", "longAnswer", "numericalProblem"]),
+        questionText: z.string(),
+        difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
+        marks: z.number().default(1),
+        source: z.string().optional(),
+        options: z.array(z.object({
+          optionText: z.string(),
+          isCorrect: z.boolean(),
+          explanation: z.string().optional(),
+        })).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const result = await createBoardExamQuestion({
+          subject: input.subject,
+          chapter: input.chapter,
+          questionType: input.questionType as any,
+          questionText: input.questionText,
+          difficulty: input.difficulty,
+          marks: input.marks,
+          source: input.source,
+          aiGenerated: false,
+          verified: false,
+        });
+        
+        if (input.options && result[0]?.insertId) {
+          for (const option of input.options) {
+            await createMCQOption({
+              questionId: result[0].insertId,
+              optionText: option.optionText,
+              isCorrect: option.isCorrect,
+              explanation: option.explanation,
+            });
+          }
+        }
+        
+        return result;
+      }),
+    delete: adminProcedure
+      .input(z.object({ questionId: z.number() }))
+      .mutation(async ({ input }) => {
+        await deleteBoardExamQuestion(input.questionId);
+        return { success: true };
+      }),
+    generateAIQuestions: adminProcedure
+      .input(z.object({
+        subject: z.string(),
+        chapter: z.string(),
+        count: z.number().default(5),
+      }))
+      .mutation(async ({ input }) => {
+        const prompt = `Generate ${input.count} probable CBSE Class 10 board exam questions for ${input.subject} - ${input.chapter}. Format as JSON array with fields: questionText, questionType (mcq/shortAnswer/longAnswer), difficulty (easy/medium/hard), marks, and for MCQ include options array with optionText and isCorrect fields. Only return valid JSON.`;
+        
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: "You are an expert CBSE Class 10 exam question generator. Generate realistic and probable board exam questions." },
+            { role: "user", content: prompt },
+          ],
+        });
+        
+        try {
+          const content = response.choices[0].message.content;
+          const jsonString = typeof content === 'string' ? content : JSON.stringify(content);
+          const questions = JSON.parse(jsonString);
+          const createdQuestions = [];
+          
+          for (const q of questions) {
+            const result = await createBoardExamQuestion({
+              subject: input.subject,
+              chapter: input.chapter,
+              questionType: q.questionType,
+              questionText: q.questionText,
+              difficulty: q.difficulty,
+              marks: q.marks,
+              aiGenerated: true,
+              verified: false,
+            });
+            
+            if (q.options && result[0]?.insertId) {
+              for (const option of q.options) {
+                await createMCQOption({
+                  questionId: result[0].insertId,
+                  optionText: option.optionText,
+                  isCorrect: option.isCorrect,
+                });
+              }
+            }
+            
+            createdQuestions.push(result);
+          }
+          
+          return { success: true, count: createdQuestions.length };
+        } catch (error) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to parse AI-generated questions" });
+        }
       }),
   }),
 });

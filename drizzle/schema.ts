@@ -187,3 +187,68 @@ export const posts = mysqlTable("posts", {
 
 export type Post = typeof posts.$inferSelect;
 export type InsertPost = typeof posts.$inferInsert;
+
+
+// Board Exam Questions - Probable questions for CBSE Class 10 exams
+export const boardExamQuestions = mysqlTable("boardExamQuestions", {
+  id: int("id").autoincrement().primaryKey(),
+  subject: varchar("subject", { length: 100 }).notNull(), // Math, Science, English, Hindi, SST
+  chapter: varchar("chapter", { length: 255 }).notNull(),
+  questionType: mysqlEnum("questionType", ["mcq", "shortAnswer", "longAnswer", "numericalProblem"]).notNull(),
+  questionText: text("questionText").notNull(),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium").notNull(),
+  marks: int("marks").default(1),
+  source: varchar("source", { length: 255 }), // Website or source where question was found
+  aiGenerated: boolean("aiGenerated").default(false),
+  verified: boolean("verified").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BoardExamQuestion = typeof boardExamQuestions.$inferSelect;
+export type InsertBoardExamQuestion = typeof boardExamQuestions.$inferInsert;
+
+// MCQ Options - Options for multiple choice questions
+export const mcqOptions = mysqlTable("mcqOptions", {
+  id: int("id").autoincrement().primaryKey(),
+  questionId: int("questionId").notNull(),
+  optionText: text("optionText").notNull(),
+  isCorrect: boolean("isCorrect").default(false),
+  explanation: text("explanation"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MCQOption = typeof mcqOptions.$inferSelect;
+export type InsertMCQOption = typeof mcqOptions.$inferInsert;
+
+// Question Answers - Store user answers to practice questions
+export const questionAnswers = mysqlTable("questionAnswers", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  questionId: int("questionId").notNull(),
+  userAnswer: text("userAnswer"),
+  isCorrect: boolean("isCorrect").default(false),
+  marksObtained: int("marksObtained").default(0),
+  attemptedAt: timestamp("attemptedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type QuestionAnswer = typeof questionAnswers.$inferSelect;
+export type InsertQuestionAnswer = typeof questionAnswers.$inferInsert;
+
+// Question Collections - Curated sets of questions for practice
+export const questionCollections = mysqlTable("questionCollections", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  totalQuestions: int("totalQuestions").default(0),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard", "mixed"]).default("mixed"),
+  createdBy: int("createdBy"), // Admin user ID
+  isPublic: boolean("isPublic").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type QuestionCollection = typeof questionCollections.$inferSelect;
+export type InsertQuestionCollection = typeof questionCollections.$inferInsert;

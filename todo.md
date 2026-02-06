@@ -100,3 +100,13 @@
 - [x] Implement admin delete post functionality
 - [x] Test leaderboard and posts features
 - [ ] Create final checkpoint
+
+
+## Phase 14: Board Exam Questions Feature
+- [x] Create database schema for board exam questions and MCQs
+- [x] Implement API endpoints for question management and retrieval
+- [x] Build AI-powered question collector from internet sources
+- [x] Create Board Exam Questions UI page with filtering and search
+- [x] Implement practice mode with answer tracking
+- [x] Add admin panel for question management
+- [x] Test all features and create checkpoint

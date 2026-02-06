@@ -27,7 +27,7 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-import { BookOpen, Calendar, Calculator, Sparkles, Info, Settings as SettingsIcon, Trophy, BookMarked, Shield, Image } from "lucide-react";
+import { BookOpen, Calendar, Calculator, Sparkles, Info, Settings as SettingsIcon, Trophy, BookMarked, Shield, Image, HelpCircle } from "lucide-react";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -35,6 +35,7 @@ const menuItems = [
   { icon: BookMarked, label: "Syllabus", path: "/syllabus" },
   { icon: Calculator, label: "Math Plan", path: "/math-plan" },
   { icon: Calendar, label: "Daily Tasks", path: "/daily-tasks" },
+  { icon: HelpCircle, label: "Board Questions", path: "/board-exam-questions" },
   { icon: Trophy, label: "Leaderboard", path: "/leaderboard" },
   { icon: Image, label: "Posts", path: "/posts" },
   { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },

@@ -29,6 +29,13 @@
       "when": 1769955989665,
       "tag": "0003_breezy_mac_gargan",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1770088701298,
+      "tag": "0004_military_thor",
+      "breakpoints": true
     }
   ]
 }

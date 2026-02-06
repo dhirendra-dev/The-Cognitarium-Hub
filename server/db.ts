@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -13,6 +13,10 @@ import {
   InsertAIChatHistory,
   InsertLeaderboard,
   InsertPost,
+  InsertBoardExamQuestion,
+  InsertMCQOption,
+  InsertQuestionAnswer,
+  InsertQuestionCollection,
   studySessions,
   samplePapers,
   subjects,
@@ -23,6 +27,10 @@ import {
   aiChatHistory,
   leaderboard,
   posts,
+  boardExamQuestions,
+  mcqOptions,
+  questionAnswers,
+  questionCollections,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -510,4 +518,124 @@ export async function updateLeaderboardEntry(userId: number, updates: Partial<In
   await initializeLeaderboardEntry(userId);
   
   return db.update(leaderboard).set(updates).where(eq(leaderboard.userId, userId));
+}
+
+
+// Board Exam Questions
+export async function createBoardExamQuestion(data: InsertBoardExamQuestion) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(boardExamQuestions).values(data);
+}
+
+export async function getBoardExamQuestionsBySubject(subject: string, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(boardExamQuestions).where(eq(boardExamQuestions.subject, subject)).limit(limit);
+}
+
+export async function searchBoardExamQuestions(query: string, subject?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions = [like(boardExamQuestions.questionText, `%${query}%`)];
+  if (subject) {
+    conditions.push(eq(boardExamQuestions.subject, subject));
+  }
+  
+  return db.select().from(boardExamQuestions).where(and(...conditions)).limit(50);
+}
+
+export async function getBoardExamQuestionsByDifficulty(difficulty: string, subject?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions = [eq(boardExamQuestions.difficulty, difficulty as any)];
+  if (subject) {
+    conditions.push(eq(boardExamQuestions.subject, subject));
+  }
+  
+  return db.select().from(boardExamQuestions).where(and(...conditions)).limit(50);
+}
+
+export async function createMCQOption(data: InsertMCQOption) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(mcqOptions).values(data);
+}
+
+export async function getMCQOptionsByQuestion(questionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(mcqOptions).where(eq(mcqOptions.questionId, questionId));
+}
+
+export async function createQuestionAnswer(data: InsertQuestionAnswer) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(questionAnswers).values(data);
+}
+
+export async function getUserQuestionAnswers(userId: number, questionId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (questionId) {
+    return db.select().from(questionAnswers).where(and(eq(questionAnswers.userId, userId), eq(questionAnswers.questionId, questionId)));
+  }
+  
+  return db.select().from(questionAnswers).where(eq(questionAnswers.userId, userId));
+}
+
+export async function getUserQuestionStats(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const answers = await db.select().from(questionAnswers).where(eq(questionAnswers.userId, userId));
+  const totalAttempts = answers.length;
+  const correctAnswers = answers.filter(a => a.isCorrect).length;
+  const totalMarks = answers.reduce((sum, a) => sum + (a.marksObtained || 0), 0);
+  
+  return {
+    totalAttempts,
+    correctAnswers,
+    accuracy: totalAttempts > 0 ? ((correctAnswers / totalAttempts) * 100).toFixed(2) : 0,
+    totalMarks,
+  };
+}
+
+export async function createQuestionCollection(data: InsertQuestionCollection) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(questionCollections).values(data);
+}
+
+export async function getQuestionCollections(subject?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (subject) {
+    return db.select().from(questionCollections).where(eq(questionCollections.subject, subject));
+  }
+  
+  return db.select().from(questionCollections);
+}
+
+export async function getAllBoardExamQuestions(limit: number = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(boardExamQuestions).limit(limit);
+}
+
+export async function updateBoardExamQuestion(questionId: number, data: Partial<InsertBoardExamQuestion>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(boardExamQuestions).set(data).where(eq(boardExamQuestions.id, questionId));
+}
+
+export async function deleteBoardExamQuestion(questionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(mcqOptions).where(eq(mcqOptions.questionId, questionId));
+  return db.delete(boardExamQuestions).where(eq(boardExamQuestions.id, questionId));
 }
