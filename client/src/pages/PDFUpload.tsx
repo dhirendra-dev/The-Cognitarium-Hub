@@ -97,19 +97,12 @@ export default function PDFUpload() {
         try {
           setUploadProgress(75);
 
-          // For now, we'll create a mock file URL
-          // In production, this would upload to S3
-          const fileUrl = `https://storage.example.com/pdfs/${Date.now()}-${selectedFile.name}`;
-          const fileKey = `pdfs/${Date.now()}-${selectedFile.name}`;
-
-          setUploadProgress(90);
-
-          // Create PDF document record
+          // Upload to S3 via tRPC
           await uploadMutation.mutateAsync({
             title,
             description,
-            fileKey: fileKey,
-            fileUrl: fileUrl,
+            fileData: base64Data,
+            fileName: selectedFile.name,
             fileSize: selectedFile.size,
             subject: selectedSubject,
           });
@@ -221,7 +214,7 @@ export default function PDFUpload() {
               </div>
 
               {/* Progress Bar */}
-              {uploadProgress > 0 && uploadProgress < 100 && (
+              {uploadProgress > 0 && (
                 <div className="mb-4">
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div

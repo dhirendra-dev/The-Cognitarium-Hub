@@ -615,23 +615,26 @@ export const appRouter = router({
         z.object({
           title: z.string().min(1).max(255),
           description: z.string().optional(),
-          fileKey: z.string(),
-          fileUrl: z.string(),
-          fileSize: z.number().min(1).max(400 * 1024 * 1024), // Max 400MB
+          fileData: z.string(),
+          fileName: z.string().min(1),
+          fileSize: z.number().min(1).max(400 * 1024 * 1024),
           subject: z.string().min(1),
         })
       )
       .mutation(async ({ input, ctx }) => {
-        // Validate file size
         if (input.fileSize > 400 * 1024 * 1024) {
           throw new TRPCError({ code: "BAD_REQUEST", message: "File size exceeds 400MB limit" });
         }
         
+        const buffer = Buffer.from(input.fileData, "base64");
+        const fileKey = `pdfs/${ctx.user.id}/${Date.now()}-${input.fileName}`;
+        const { url } = await storagePut(fileKey, buffer, "application/pdf");
+        
         return createPDFDocument({
           title: input.title,
           description: input.description,
-          fileKey: input.fileKey,
-          fileUrl: input.fileUrl,
+          fileKey: fileKey,
+          fileUrl: url,
           fileSize: input.fileSize,
           subject: input.subject,
           uploadedBy: ctx.user.id,

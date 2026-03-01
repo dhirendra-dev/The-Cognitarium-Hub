@@ -13,6 +13,9 @@
 - [x] Add PDF management tab to AdminDashboard
 - [x] Create vitest tests for PDF functionality
 - [x] All tests passing (9 tests passed)
+- [x] Implement real S3 storage for PDF uploads using storagePut helper
+- [x] Update PDFUpload component to send base64 file data to backend
+- [x] Fix mock URLs - now using actual Manus S3 storage
 
 ## Core Features (Previously Completed)
 - [x] Project initialized with tRPC, Auth, and Database
