@@ -1,112 +1,36 @@
-# HSLC Preparation Hub - Project TODO
+# HSLC Prep Hub - Project TODO
 
-## Phase 1: Database Schema & API Endpoints
-- [x] Create database schema for users, study sessions, subjects, topics, and progress tracking
-- [x] Implement API endpoints for study tracking (log hours, fetch progress)
-- [x] Implement API endpoints for subject completion (mark topics, fetch progress)
-- [x] Implement API endpoints for Advanced Mathematics study plan
-- [x] Implement API endpoints for daily subject trackers (SST, Science)
-- [x] Implement API endpoints for user preferences and customization
+## PDF Upload Feature
+- [x] Design database schema for PDF documents
+- [x] Create Drizzle schema for pdfDocuments table
+- [x] Run database migration (pnpm db:push)
+- [x] Create backend tRPC procedures: upload, get, delete, update, search
+- [x] Implement file size validation (max 400MB)
+- [x] Create admin PDF upload UI component (PDFUpload.tsx)
+- [x] Create user PDF browser/viewer UI (PDFBrowser.tsx)
+- [x] Add PDF routes to App.tsx
+- [x] Add PDF navigation to DashboardLayout
+- [x] Add PDF management tab to AdminDashboard
+- [x] Create vitest tests for PDF functionality
+- [x] All tests passing (9 tests passed)
 
-## Phase 2: Dashboard UI & Countdown Timer
-- [x] Design responsive dashboard layout with sidebar navigation
-- [x] Implement countdown timer to February 10, 2026 with motivational messages
-- [x] Create study hours logging form
-- [x] Create sample papers tracker with notes
-- [x] Implement progress charts showing study trends
-- [x] Add multi-user support with user switching/profile display
+## Core Features (Previously Completed)
+- [x] Project initialized with tRPC, Auth, and Database
+- [x] User authentication with Manus OAuth
+- [x] Study session tracking
+- [x] Daily tasks management
+- [x] Board exam questions
+- [x] AI assistant integration
+- [x] Admin dashboard
+- [x] Leaderboard system
+- [x] User posts/photos
+- [x] Math study plan
+- [x] Subjects tracker
+- [x] Settings and preferences
 
-## Phase 3: Advanced Mathematics Study Plan
-- [x] Create study plan tracker UI with daily schedule (Dec 16-22)
-- [x] Implement chapter completion checkboxes
-- [x] Add visual indicators for current day's focus
-- [x] Create progress tracking for each chapter
-
-## Phase 4: Daily Subject Trackers
-- [x] Implement SST revision tracker with daily logging
-- [x] Implement Science one-shot video completion tracker
-- [x] Add task completion checkboxes and notes functionality
-- [x] Create visual progress indicators for daily tasks
-
-## Phase 5: AI-Powered Study Assistance
-- [x] Integrate LLM for personalized study tips based on progress
-- [x] Create practice question generator
-- [x] Implement subject-specific Q&A section
-- [x] Add personalized recommendations based on study patterns
-
-## Phase 6: Customization Options
-- [x] Implement light/dark theme toggle
-- [x] Add dashboard layout customization options
-- [x] Create custom study goals and targets feature
-- [x] Allow custom subject list and schedule modifications
-- [x] Implement notification preference settings
-
-## Phase 7: About Section & Design Finalization
-- [x] Create About section with motivational content
-- [x] Add Class 10 student journey narrative
-- [x] Ensure consistent professional design across all pages
-- [x] Implement accessibility features
-- [x] Verify responsive design on mobile devices
-
-## Phase 8: Testing & Deployment
-- [x] Write vitest tests for critical API endpoints
-- [x] Test multi-user functionality and data isolation
-- [x] Verify countdown timer accuracy
-- [x] Test responsive design on various devices
-- [x] Create final checkpoint for deployment
-
-## Phase 9: Delivery
-- [x] Provide final website URL to user
-- [x] Create feature summary document
-
-## Phase 10: Leaderboard & Syllabus Updates
-- [ ] Add leaderboard database schema and API endpoints
-- [ ] Create Leaderboard UI page with top performers ranking
-- [ ] Update Advanced Mathematics syllabus with 9 chapters
-- [ ] Update Science syllabus with 16 chapters
-- [ ] Update English syllabus with prose and poetry sections
-- [ ] Update Hindi syllabus with poetry and prose sections
-- [ ] Integrate HSLC Board Prep logo throughout the application
-- [ ] Update pre-board exam date to December 30, 2025
-- [ ] Personalize About section with Dhirendra Kumar's introduction
-- [ ] Test all new features and create checkpoint
-
-## Phase 11: Admin Panel Implementation
-- [x] Create admin API endpoints for viewing all users
-- [x] Create admin endpoints for viewing all study sessions and statistics
-- [x] Create admin endpoints for leaderboard management
-- [x] Build Admin Dashboard UI with user list and statistics
-- [x] Add user management features (view, edit, delete)
-- [x] Implement admin access control and routing
-- [ ] Register Dhirendra Kumar as admin (manual database update needed)
-- [x] Fix leaderboard to populate with user data
-- [x] Test admin panel functionality
-- [ ] Create final checkpoint
-
-
-## Phase 12: CBSE Class 10 Countdown Timer
-- [x] Add CBSE Class 10 exam countdown timer (February 17, 10:00 AM)
-- [x] Update Dashboard to show dual countdown timers (SEBA + CBSE)
-- [ ] Add board selection option in settings
-- [x] Test countdown timers accuracy
-- [ ] Create final checkpoint
-
-
-## Phase 13: Leaderboard Fix & Posts Feature
-- [x] Fix leaderboard data population and display
-- [x] Create posts/updates database schema with photo support
-- [x] Implement API endpoints for creating, reading, and deleting posts
-- [x] Build Posts/Updates UI page with photo upload
-- [x] Implement admin delete post functionality
-- [x] Test leaderboard and posts features
-- [ ] Create final checkpoint
-
-
-## Phase 14: Board Exam Questions Feature
-- [x] Create database schema for board exam questions and MCQs
-- [x] Implement API endpoints for question management and retrieval
-- [x] Build AI-powered question collector from internet sources
-- [x] Create Board Exam Questions UI page with filtering and search
-- [x] Implement practice mode with answer tracking
-- [x] Add admin panel for question management
-- [x] Test all features and create checkpoint
+## Features Ready for Testing
+- [x] PDF upload (admin only, max 400MB)
+- [x] PDF browser (all users can view/download)
+- [x] PDF search functionality
+- [x] Download count tracking
+- [x] Subject-based organization

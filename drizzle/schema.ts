@@ -252,3 +252,22 @@ export const questionCollections = mysqlTable("questionCollections", {
 
 export type QuestionCollection = typeof questionCollections.$inferSelect;
 export type InsertQuestionCollection = typeof questionCollections.$inferInsert;
+
+// PDF Documents - Store uploaded PDF files for study materials
+export const pdfDocuments = mysqlTable("pdfDocuments", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 file key
+  fileUrl: text("fileUrl").notNull(), // S3 file URL
+  fileSize: int("fileSize").notNull(), // File size in bytes
+  subject: varchar("subject", { length: 100 }).notNull(), // Math, Science, English, Hindi, SST
+  uploadedBy: int("uploadedBy").notNull(), // User ID who uploaded
+  isPublic: boolean("isPublic").default(true), // Whether visible to all users
+  downloadCount: int("downloadCount").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PDFDocument = typeof pdfDocuments.$inferSelect;
+export type InsertPDFDocument = typeof pdfDocuments.$inferInsert;

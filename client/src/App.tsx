@@ -17,6 +17,8 @@ import SyllabusTracker from "./pages/SyllabusTracker";
 import AdminDashboard from "./pages/AdminDashboard";
 import Posts from "./pages/Posts";
 import BoardExamQuestions from "./pages/BoardExamQuestions";
+import PDFUpload from "./pages/PDFUpload";
+import PDFBrowser from "./pages/PDFBrowser";
 
 function Router() {
   return (
@@ -34,6 +36,8 @@ function Router() {
       <Route path={"/settings"} component={Settings} />
       <Route path={"/posts"} component={Posts} />
       <Route path={"/board-exam-questions"} component={BoardExamQuestions} />
+      <Route path={"/pdf-upload"} component={PDFUpload} />
+      <Route path={"/pdf-browser"} component={PDFBrowser} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

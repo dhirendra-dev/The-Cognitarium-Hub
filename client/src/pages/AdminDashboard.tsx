@@ -116,10 +116,11 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-white shadow-lg mb-8">
+          <TabsList className="grid w-full grid-cols-4 bg-white shadow-lg mb-8">
             <TabsTrigger value="users">All Users</TabsTrigger>
             <TabsTrigger value="sessions">Study Sessions</TabsTrigger>
             <TabsTrigger value="leaderboard">Top Performers</TabsTrigger>
+            <TabsTrigger value="pdfs">PDF Management</TabsTrigger>
           </TabsList>
 
           {/* Users Tab */}
@@ -279,6 +280,22 @@ export default function AdminDashboard() {
               ) : (
                 <div className="p-8 text-center text-gray-500">No leaderboard data available</div>
               )}
+            </Card>
+          </TabsContent>
+
+          {/* PDF Management Tab */}
+          <TabsContent value="pdfs">
+            <Card className="bg-white shadow-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">PDF Management</h2>
+                <Button
+                  onClick={() => window.location.href = '/pdf-upload'}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  Manage PDFs
+                </Button>
+              </div>
+              <p className="text-gray-600">Click the button above to upload, edit, or delete PDF study materials.</p>
             </Card>
           </TabsContent>
         </Tabs>

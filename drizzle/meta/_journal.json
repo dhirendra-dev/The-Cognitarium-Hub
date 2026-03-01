@@ -36,6 +36,13 @@
       "when": 1770088701298,
       "tag": "0004_military_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1772362157206,
+      "tag": "0005_secret_wolf_cub",
+      "breakpoints": true
     }
   ]
 }

@@ -17,6 +17,7 @@ import {
   InsertMCQOption,
   InsertQuestionAnswer,
   InsertQuestionCollection,
+  InsertPDFDocument,
   studySessions,
   samplePapers,
   subjects,
@@ -31,6 +32,7 @@ import {
   mcqOptions,
   questionAnswers,
   questionCollections,
+  pdfDocuments,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -638,4 +640,66 @@ export async function deleteBoardExamQuestion(questionId: number) {
   if (!db) throw new Error("Database not available");
   await db.delete(mcqOptions).where(eq(mcqOptions.questionId, questionId));
   return db.delete(boardExamQuestions).where(eq(boardExamQuestions.id, questionId));
+}
+
+
+// PDF Documents
+export async function createPDFDocument(data: InsertPDFDocument) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(pdfDocuments).values(data);
+}
+
+export async function getPDFDocuments(subject?: string, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (subject) {
+    return db.select().from(pdfDocuments)
+      .where(eq(pdfDocuments.subject, subject))
+      .orderBy(desc(pdfDocuments.createdAt))
+      .limit(limit);
+  }
+  
+  return db.select().from(pdfDocuments)
+    .orderBy(desc(pdfDocuments.createdAt))
+    .limit(limit);
+}
+
+export async function getPDFDocumentById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(pdfDocuments).where(eq(pdfDocuments.id, id));
+  return result[0] || null;
+}
+
+export async function updatePDFDocument(id: number, data: Partial<InsertPDFDocument>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(pdfDocuments).set(data).where(eq(pdfDocuments.id, id));
+}
+
+export async function deletePDFDocument(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(pdfDocuments).where(eq(pdfDocuments.id, id));
+}
+
+export async function incrementPDFDownloadCount(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const doc = await getPDFDocumentById(id);
+  if (!doc) throw new Error("PDF document not found");
+  return db.update(pdfDocuments)
+    .set({ downloadCount: (doc.downloadCount || 0) + 1 })
+    .where(eq(pdfDocuments.id, id));
+}
+
+export async function searchPDFDocuments(query: string, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pdfDocuments)
+    .where(like(pdfDocuments.title, `%${query}%`))
+    .orderBy(desc(pdfDocuments.createdAt))
+    .limit(limit);
 }

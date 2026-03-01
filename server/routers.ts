@@ -48,6 +48,13 @@ import {
   createMCQOption,
   getMCQOptionsByQuestion,
   createQuestionAnswer,
+  createPDFDocument,
+  getPDFDocuments,
+  getPDFDocumentById,
+  updatePDFDocument,
+  deletePDFDocument,
+  incrementPDFDownloadCount,
+  searchPDFDocuments,
   getUserQuestionAnswers,
   getUserQuestionStats,
   getAllBoardExamQuestions,
@@ -598,6 +605,94 @@ export const appRouter = router({
         } catch (error) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to parse AI-generated questions" });
         }
+      }),
+  }),
+
+  // PDF Documents
+  pdf: router({
+    upload: adminProcedure
+      .input(
+        z.object({
+          title: z.string().min(1).max(255),
+          description: z.string().optional(),
+          fileKey: z.string(),
+          fileUrl: z.string(),
+          fileSize: z.number().min(1).max(400 * 1024 * 1024), // Max 400MB
+          subject: z.string().min(1),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        // Validate file size
+        if (input.fileSize > 400 * 1024 * 1024) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "File size exceeds 400MB limit" });
+        }
+        
+        return createPDFDocument({
+          title: input.title,
+          description: input.description,
+          fileKey: input.fileKey,
+          fileUrl: input.fileUrl,
+          fileSize: input.fileSize,
+          subject: input.subject,
+          uploadedBy: ctx.user.id,
+          isPublic: true,
+          downloadCount: 0,
+        });
+      }),
+
+    getBySubject: protectedProcedure
+      .input(
+        z.object({
+          subject: z.string().optional(),
+          limit: z.number().min(1).max(100).default(50),
+        })
+      )
+      .query(async ({ input }) => {
+        return getPDFDocuments(input.subject, input.limit);
+      }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return getPDFDocumentById(input.id);
+      }),
+
+    search: protectedProcedure
+      .input(
+        z.object({
+          query: z.string().min(1),
+          limit: z.number().min(1).max(100).default(50),
+        })
+      )
+      .query(async ({ input }) => {
+        return searchPDFDocuments(input.query, input.limit);
+      }),
+
+    updateTitle: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          title: z.string().min(1).max(255),
+          description: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return updatePDFDocument(input.id, {
+          title: input.title,
+          description: input.description,
+        });
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return deletePDFDocument(input.id);
+      }),
+
+    incrementDownloadCount: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return incrementPDFDownloadCount(input.id);
       }),
   }),
 });
