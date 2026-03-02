@@ -8,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, Loader2, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
 
-const SUBJECTS = ["Mathematics", "Science", "English", "Hindi", "SST"];
-const DIFFICULTIES = ["easy", "medium", "hard"];
+const SUBJECTS = ["Physics", "Chemistry", "Mathematics"];
+const DIFFICULTIES = ["easy", "medium", "hard", "jeeAdvanced"];
 
 export default function BoardExamQuestions() {
   const [selectedSubject, setSelectedSubject] = useState("Mathematics");
@@ -96,8 +96,8 @@ export default function BoardExamQuestions() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Board Exam Questions</h1>
-          <p className="text-gray-600">Practice probable CBSE Class 10 board exam questions</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">JEE & Board Exam Questions</h1>
+          <p className="text-gray-600">Practice JEE Main, JEE Advanced, and board exam questions for Class 11-12</p>
         </div>
 
         {/* Stats Card */}

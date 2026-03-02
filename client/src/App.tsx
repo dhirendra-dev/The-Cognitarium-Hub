@@ -7,7 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import SubjectsTracker from "./pages/SubjectsTracker";
-import MathStudyPlan from "./pages/MathStudyPlan";
+import JEEPlan from "./pages/JEEPlan";
 import DailyTasks from "./pages/DailyTasks";
 import AIAssistant from "./pages/AIAssistant";
 import About from "./pages/About";
@@ -27,7 +27,7 @@ function Router() {
       <Route path={"/"} component={Dashboard} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/subjects"} component={SubjectsTracker} />
-      <Route path={"/math-plan"} component={MathStudyPlan} />
+      <Route path={"/jee-plan"} component={JEEPlan} />
       <Route path={"/daily-tasks"} component={DailyTasks} />
       <Route path={"/ai-assistant"} component={AIAssistant} />
       <Route path={"/leaderboard"} component={Leaderboard} />

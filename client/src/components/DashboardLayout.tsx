@@ -33,7 +33,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: BookOpen, label: "Subjects", path: "/subjects" },
   { icon: BookMarked, label: "Syllabus", path: "/syllabus" },
-  { icon: Calculator, label: "Math Plan", path: "/math-plan" },
+  { icon: Calculator, label: "JEE Plan", path: "/jee-plan" },
   { icon: Calendar, label: "Daily Tasks", path: "/daily-tasks" },
   { icon: HelpCircle, label: "Board Questions", path: "/board-exam-questions" },
   { icon: FileText, label: "Study Materials", path: "/pdf-browser" },

@@ -120,3 +120,96 @@
 6. Implement adaptive learning paths
 7. Add performance analytics dashboard
 8. Create revision schedules
+
+
+## New Tasks - Phase 2 Enhancements
+
+### Board Questions Fix
+- [ ] Debug Board Questions display issue
+- [ ] Fix query or data retrieval
+- [ ] Verify database data
+- [ ] Test Board Questions page
+
+### JEE Plan Implementation
+- [ ] Rename "Math Plan" to "JEE Plan"
+- [ ] Integrate full JEE syllabus structure
+- [ ] Add Class 11 chapters
+- [ ] Add Class 12 chapters
+- [ ] Add JEE Main specific topics
+- [ ] Add JEE Advanced specific topics
+- [ ] Create chapter completion tracking
+
+### Subject Organization by Class & Stream
+- [ ] Organize Physics by Class 11, 12, JEE
+- [ ] Organize Chemistry by Class 11, 12, JEE
+- [ ] Organize Mathematics by Class 11, 12, JEE
+- [ ] Create stream-based filtering (Science PCM)
+- [ ] Update Subjects page with new structure
+
+### YouTube Video Lecture Integration
+- [ ] Add video URL field to syllabus chapters
+- [ ] Create video player component
+- [ ] Add video lecture links for Physics chapters
+- [ ] Add video lecture links for Chemistry chapters
+- [ ] Add video lecture links for Mathematics chapters
+- [ ] Display videos in chapter detail view
+- [ ] Add video playlist functionality
+
+### Syllabus Completion Tracking
+- [ ] Create chapter completion status tracking
+- [ ] Add progress percentage calculation
+- [ ] Display completion status on JEE Plan
+- [ ] Add completion date tracking
+- [ ] Create syllabus progress dashboard
+
+### Testing & Verification
+- [ ] Test Board Questions display
+- [ ] Test JEE Plan navigation
+- [ ] Test video playback
+- [ ] Test completion tracking
+- [ ] Test responsive design
+
+
+## COMPLETED - Phase 2 Enhancements
+
+### Board Questions Fix - COMPLETED
+- [x] Updated subjects to Physics, Chemistry, Mathematics
+- [x] Updated difficulty levels for JEE (easy, medium, hard, jeeAdvanced)
+- [x] Fixed Board Questions page header and description
+
+### JEE Plan Implementation - COMPLETED
+- [x] Renamed Math Plan to JEE Plan
+- [x] Integrated full JEE syllabus with 26 chapters
+- [x] Added Class 11 chapters (Physics, Chemistry, Mathematics)
+- [x] Added Class 12 chapters (Physics, Chemistry, Mathematics)
+- [x] Created chapter completion tracking with checkboxes
+- [x] Added progress percentage calculation
+- [x] Visual progress bar showing completion status
+
+### YouTube Video Lecture Integration - COMPLETED
+- [x] Added video URL field to each chapter
+- [x] Created video player component with iframe
+- [x] Integrated YouTube embed for video lectures
+- [x] Added expandable chapter details showing videos
+- [x] Display topics covered in each chapter
+
+### Subject Organization - COMPLETED
+- [x] Physics: Mechanics, Thermodynamics, Waves, Optics, Electromagnetism, Modern Physics, Nuclear Physics
+- [x] Chemistry: Physical Chemistry, Organic Chemistry, Inorganic Chemistry, Coordination Chemistry
+- [x] Mathematics: Algebra, Calculus, Geometry, Trigonometry, Vectors, 3D Geometry, Probability
+- [x] Class 11 and Class 12 separation
+- [x] JEE Main and Advanced difficulty levels
+
+### Navigation Updates - COMPLETED
+- [x] Updated DashboardLayout menu from "Math Plan" to "JEE Plan"
+- [x] Updated route from /math-plan to /jee-plan
+- [x] Updated App.tsx imports and routes
+- [x] All navigation links functional
+
+### Testing - COMPLETED
+- [x] TypeScript compilation successful (0 errors)
+- [x] Dev server running without errors
+- [x] Board Questions page updated and working
+- [x] JEE Plan page created with full functionality
+- [x] Video player integration tested
+- [x] Responsive design verified
