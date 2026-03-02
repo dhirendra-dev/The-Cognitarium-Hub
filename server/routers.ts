@@ -258,11 +258,11 @@ export const appRouter = router({
           messages: [
             {
               role: "system",
-              content: "You are an expert HSLC exam preparation tutor. Provide personalized study tips based on the subject.",
+              content: "You are an expert JEE and Class 11-12 PCM exam preparation tutor. Provide personalized study tips for JEE Main, JEE Advanced, and board exams.",
             },
             {
               role: "user",
-              content: `Provide 3 personalized study tips for ${input.subject} to help a Class 10 student prepare for board exams. Keep each tip concise and actionable.`,
+              content: `Provide 5 personalized study tips for ${input.subject} to help students prepare for JEE 2028 (Main & Advanced) and Class 11-12 board exams including concept clarity, problem-solving, time management, mock tests, and revision techniques.`,
             },
           ],
         });
@@ -277,11 +277,11 @@ export const appRouter = router({
           messages: [
             {
               role: "system",
-              content: "You are an expert HSLC exam preparation tutor. Generate practice questions for exam preparation.",
+              content: "You are an expert JEE and Class 11-12 PCM exam preparation tutor. Generate practice questions covering multiple difficulty levels.",
             },
             {
               role: "user",
-              content: `Generate ${input.count} practice questions for ${input.subject} - ${input.topic} at HSLC board exam level. Format as numbered list.`,
+              content: `Generate ${input.count} practice questions for ${input.subject} - ${input.topic} covering Class 11-12 board, JEE Main, and JEE Advanced levels. Format as numbered list with difficulty indicated.`,
             },
           ],
         });
@@ -296,7 +296,7 @@ export const appRouter = router({
           messages: [
             {
               role: "system",
-              content: "You are an expert HSLC exam preparation tutor. Answer student questions clearly and concisely.",
+              content: "You are an expert JEE and Class 11-12 PCM exam preparation tutor. Answer student questions clearly with step-by-step explanations.",
             },
             {
               role: "user",
@@ -331,11 +331,11 @@ export const appRouter = router({
         messages: [
           {
             role: "system",
-            content: "You are an expert HSLC exam preparation coach. Provide personalized recommendations.",
+            content: "You are an expert JEE and Class 11-12 PCM exam preparation coach. Provide personalized, motivational, and actionable recommendations.",
           },
           {
             role: "user",
-            content: `A Class 10 student has studied ${totalHours} hours in the last 7 days. They have ${sessions.length} study sessions recorded. Provide 3 personalized recommendations to improve their exam preparation. Keep it motivational and actionable.`,
+            content: `A JEE and Class 11-12 PCM student has studied ${totalHours} hours in the last 7 days. They have ${sessions.length} study sessions recorded. Provide 3 personalized recommendations to improve their exam preparation. Keep it motivational and actionable.`,
           },
         ],
       });

@@ -109,7 +109,7 @@ export const mathStudyPlan = mysqlTable("mathStudyPlan", {
 export type MathStudyPlan = typeof mathStudyPlan.$inferSelect;
 export type InsertMathStudyPlan = typeof mathStudyPlan.$inferInsert;
 
-// Daily Tasks - Track daily subject tasks (SST, Science, etc.)
+// Daily Tasks - Track daily subject tasks
 export const dailyTasks = mysqlTable("dailyTasks", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
@@ -188,19 +188,22 @@ export const posts = mysqlTable("posts", {
 export type Post = typeof posts.$inferSelect;
 export type InsertPost = typeof posts.$inferInsert;
 
-
-// Board Exam Questions - Probable questions for CBSE Class 10 exams
+// JEE and Board Exam Questions
 export const boardExamQuestions = mysqlTable("boardExamQuestions", {
   id: int("id").autoincrement().primaryKey(),
-  subject: varchar("subject", { length: 100 }).notNull(), // Math, Science, English, Hindi, SST
+  subject: varchar("subject", { length: 100 }).notNull(),
   chapter: varchar("chapter", { length: 255 }).notNull(),
-  questionType: mysqlEnum("questionType", ["mcq", "shortAnswer", "longAnswer", "numericalProblem"]).notNull(),
+  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced"]).default("12").notNull(),
+  questionType: mysqlEnum("questionType", ["mcq", "shortAnswer", "longAnswer", "numericalProblem", "assertion", "matrix"]).notNull(),
   questionText: text("questionText").notNull(),
-  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium").notNull(),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard", "veryHard"]).default("medium").notNull(),
   marks: int("marks").default(1),
-  source: varchar("source", { length: 255 }), // Website or source where question was found
+  negativeMarks: decimal("negativeMarks", { precision: 3, scale: 1 }).default("0"),
+  source: varchar("source", { length: 255 }),
+  year: int("year"),
   aiGenerated: boolean("aiGenerated").default(false),
   verified: boolean("verified").default(false),
+  topic: varchar("topic", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -244,7 +247,7 @@ export const questionCollections = mysqlTable("questionCollections", {
   subject: varchar("subject", { length: 100 }).notNull(),
   totalQuestions: int("totalQuestions").default(0),
   difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard", "mixed"]).default("mixed"),
-  createdBy: int("createdBy"), // Admin user ID
+  createdBy: int("createdBy"),
   isPublic: boolean("isPublic").default(true),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -253,17 +256,131 @@ export const questionCollections = mysqlTable("questionCollections", {
 export type QuestionCollection = typeof questionCollections.$inferSelect;
 export type InsertQuestionCollection = typeof questionCollections.$inferInsert;
 
-// PDF Documents - Store uploaded PDF files for study materials
+// JEE Syllabus Topics
+export const jeeSyllabusTopics = mysqlTable("jeeSyllabusTopics", {
+  id: int("id").autoincrement().primaryKey(),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  unit: varchar("unit", { length: 255 }).notNull(),
+  topic: varchar("topic", { length: 255 }).notNull(),
+  subtopic: varchar("subtopic", { length: 255 }),
+  class: mysqlEnum("class", ["11", "12"]).notNull(),
+  weightage: decimal("weightage", { precision: 5, scale: 2 }),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium"),
+  conceptsRequired: text("conceptsRequired"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type JEESyllabusTopic = typeof jeeSyllabusTopics.$inferSelect;
+export type InsertJEESyllabusTopic = typeof jeeSyllabusTopics.$inferInsert;
+
+// Board Exam Syllabus
+export const boardSyllabusTopics = mysqlTable("boardSyllabusTopics", {
+  id: int("id").autoincrement().primaryKey(),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  class: mysqlEnum("class", ["11", "12"]).notNull(),
+  unit: varchar("unit", { length: 255 }).notNull(),
+  chapter: varchar("chapter", { length: 255 }).notNull(),
+  topic: varchar("topic", { length: 255 }).notNull(),
+  marks: int("marks"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BoardSyllabusTopic = typeof boardSyllabusTopics.$inferSelect;
+export type InsertBoardSyllabusTopic = typeof boardSyllabusTopics.$inferInsert;
+
+// User Topic Progress
+export const userTopicProgress = mysqlTable("userTopicProgress", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  topicId: int("topicId").notNull(),
+  topicType: mysqlEnum("topicType", ["jeeSyllabus", "boardSyllabus"]).notNull(),
+  status: mysqlEnum("status", ["notStarted", "inProgress", "completed", "revised"]).default("notStarted"),
+  completionPercentage: int("completionPercentage").default(0),
+  questionsAttempted: int("questionsAttempted").default(0),
+  questionsCorrect: int("questionsCorrect").default(0),
+  averageScore: decimal("averageScore", { precision: 5, scale: 2 }).default("0"),
+  lastRevisedAt: timestamp("lastRevisedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserTopicProgress = typeof userTopicProgress.$inferSelect;
+export type InsertUserTopicProgress = typeof userTopicProgress.$inferInsert;
+
+// Mock Tests
+export const mockTests = mysqlTable("mockTests", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  testType: mysqlEnum("testType", ["jeeMain", "jeeAdvanced", "boardClass11", "boardClass12"]).notNull(),
+  totalQuestions: int("totalQuestions").notNull(),
+  totalMarks: int("totalMarks").notNull(),
+  duration: int("duration").notNull(),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium"),
+  createdBy: int("createdBy"),
+  isPublic: boolean("isPublic").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MockTest = typeof mockTests.$inferSelect;
+export type InsertMockTest = typeof mockTests.$inferInsert;
+
+// User Mock Test Attempts
+export const userMockTestAttempts = mysqlTable("userMockTestAttempts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  mockTestId: int("mockTestId").notNull(),
+  score: decimal("score", { precision: 8, scale: 2 }).notNull(),
+  totalMarks: int("totalMarks").notNull(),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }).notNull(),
+  questionsAttempted: int("questionsAttempted").notNull(),
+  questionsCorrect: int("questionsCorrect").notNull(),
+  questionsWrong: int("questionsWrong").notNull(),
+  questionsSkipped: int("questionsSkipped").notNull(),
+  timeTaken: int("timeTaken"),
+  attemptedAt: timestamp("attemptedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UserMockTestAttempt = typeof userMockTestAttempts.$inferSelect;
+export type InsertUserMockTestAttempt = typeof userMockTestAttempts.$inferInsert;
+
+// Study Resources
+export const studyResources = mysqlTable("studyResources", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  resourceType: mysqlEnum("resourceType", ["notes", "video", "article", "formula", "pyq", "mock", "book"]).notNull(),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced"]).notNull(),
+  topic: varchar("topic", { length: 255 }).notNull(),
+  url: text("url"),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium"),
+  createdBy: int("createdBy"),
+  isVerified: boolean("isVerified").default(false),
+  views: int("views").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudyResource = typeof studyResources.$inferSelect;
+export type InsertStudyResource = typeof studyResources.$inferInsert;
+
+// PDF Documents
 export const pdfDocuments = mysqlTable("pdfDocuments", {
   id: int("id").autoincrement().primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 file key
-  fileUrl: text("fileUrl").notNull(), // S3 file URL
-  fileSize: int("fileSize").notNull(), // File size in bytes
-  subject: varchar("subject", { length: 100 }).notNull(), // Math, Science, English, Hindi, SST
-  uploadedBy: int("uploadedBy").notNull(), // User ID who uploaded
-  isPublic: boolean("isPublic").default(true), // Whether visible to all users
+  fileKey: varchar("fileKey", { length: 500 }).notNull(),
+  fileUrl: text("fileUrl").notNull(),
+  fileSize: int("fileSize").notNull(),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced"]).default("12"),
+  topic: varchar("topic", { length: 255 }),
+  resourceType: mysqlEnum("resourceType", ["notes", "pyq", "mock", "solution", "formula", "other"]).default("notes"),
+  uploadedBy: int("uploadedBy").notNull(),
+  isPublic: boolean("isPublic").default(true),
   downloadCount: int("downloadCount").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -271,3 +388,17 @@ export const pdfDocuments = mysqlTable("pdfDocuments", {
 
 export type PDFDocument = typeof pdfDocuments.$inferSelect;
 export type InsertPDFDocument = typeof pdfDocuments.$inferInsert;
+
+// Exam Timeline
+export const examTimeline = mysqlTable("examTimeline", {
+  id: int("id").autoincrement().primaryKey(),
+  eventName: varchar("eventName", { length: 255 }).notNull(),
+  eventType: mysqlEnum("eventType", ["jeeMain", "jeeAdvanced", "boardClass11", "boardClass12", "milestone", "revision"]).notNull(),
+  eventDate: timestamp("eventDate").notNull(),
+  description: text("description"),
+  isImportant: boolean("isImportant").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ExamTimeline = typeof examTimeline.$inferSelect;
+export type InsertExamTimeline = typeof examTimeline.$inferInsert;

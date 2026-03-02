@@ -43,6 +43,13 @@
       "when": 1772362157206,
       "tag": "0005_secret_wolf_cub",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1772413805065,
+      "tag": "0006_bored_nico_minoru",
+      "breakpoints": true
     }
   ]
 }

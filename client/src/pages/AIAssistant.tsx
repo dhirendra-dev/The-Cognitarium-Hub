@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -8,56 +8,85 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, Send, Lightbulb, HelpCircle, TrendingUp } from "lucide-react";
+import { Sparkles, Send, Lightbulb, HelpCircle, TrendingUp, Brain, BookOpen, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 
-const SUBJECTS = ["Advanced Mathematics", "Science", "SST", "English", "Hindi", "Optional Subject"];
+const SUBJECTS = ["Physics", "Chemistry", "Mathematics"];
+
+const TOPICS_BY_SUBJECT: Record<string, string[]> = {
+  Physics: [
+    "Mechanics",
+    "Thermodynamics",
+    "Waves & Oscillations",
+    "Optics",
+    "Electromagnetism",
+    "Modern Physics",
+    "Nuclear Physics",
+  ],
+  Chemistry: [
+    "Physical Chemistry",
+    "Organic Chemistry",
+    "Inorganic Chemistry",
+    "Coordination Chemistry",
+    "Qualitative Analysis",
+  ],
+  Mathematics: [
+    "Algebra",
+    "Calculus",
+    "Geometry",
+    "Trigonometry",
+    "Vectors",
+    "3D Geometry",
+    "Probability",
+  ],
+};
+
+const EXAM_TYPES = ["Class 11", "Class 12", "JEE Main", "JEE Advanced"];
 
 export default function AIAssistant() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("tips");
-  const [selectedSubject, setSelectedSubject] = useState("Advanced Mathematics");
-  const [selectedTopic, setSelectedTopic] = useState("");
-  const [questionCount, setQuestionCount] = useState("3");
+  const [selectedSubject, setSelectedSubject] = useState("Physics");
+  const [selectedTopic, setSelectedTopic] = useState("Mechanics");
+  const [selectedExam, setSelectedExam] = useState("JEE Main");
+  const [questionCount, setQuestionCount] = useState("5");
   const [userQuestion, setUserQuestion] = useState("");
   const [tips, setTips] = useState("");
-  const [questions, setQuestions] = useState("");
+  const [questions, setQuestions] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState("");
+  const [chatHistory, setChatHistory] = useState<any[]>([]);
 
   // tRPC mutations
   const generateTipsMutation = trpc.ai.generateTips.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       setTips(data);
       toast.success("Study tips generated!");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(error.message || "Failed to generate tips");
     },
   });
 
   const generateQuestionsMutation = trpc.ai.generateQuestions.useMutation({
-    onSuccess: (data) => {
-      setQuestions(data);
+    onSuccess: (data: any) => {
+      setQuestions(Array.isArray(data) ? data : [data]);
       toast.success("Practice questions generated!");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(error.message || "Failed to generate questions");
     },
   });
 
   const askQuestionMutation = trpc.ai.askQuestion.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
+      setChatHistory([...chatHistory, { question: userQuestion, answer: data }]);
       toast.success("Answer received!");
       setUserQuestion("");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(error.message || "Failed to get answer");
     },
-  });
-
-  const { data: chatHistory, refetch: refetchHistory } = trpc.ai.getChatHistory.useQuery({
-    subject: selectedSubject,
   });
 
   const getRecommendationsMutation = trpc.ai.getRecommendations.useQuery();
@@ -67,7 +96,9 @@ export default function AIAssistant() {
       toast.error("Please select a subject");
       return;
     }
-    generateTipsMutation.mutate({ subject: selectedSubject });
+    generateTipsMutation.mutate({
+      subject: selectedSubject,
+    });
   };
 
   const handleGenerateQuestions = () => {
@@ -82,238 +113,282 @@ export default function AIAssistant() {
     });
   };
 
-  const handleAskQuestion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userQuestion) {
+  const handleAskQuestion = () => {
+    if (!userQuestion.trim()) {
       toast.error("Please enter a question");
       return;
     }
     askQuestionMutation.mutate({
-      subject: selectedSubject,
       question: userQuestion,
+      subject: selectedSubject,
     });
-    await refetchHistory();
   };
 
+  const availableTopics = TOPICS_BY_SUBJECT[selectedSubject] || [];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Sparkles className="w-8 h-8 text-indigo-600" />
-            <h1 className="text-4xl font-bold text-gray-800">AI Study Assistant</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <Brain className="w-10 h-10 text-purple-400" />
+            <h1 className="text-4xl font-bold text-white">AI Study Assistant</h1>
           </div>
-          <p className="text-gray-600">Get personalized study tips, practice questions, and answers to your doubts</p>
+          <p className="text-purple-200">Powered by advanced AI for JEE 2028 & Class 11-12 PCM exams</p>
         </div>
 
-        {/* Subject Selector */}
-        <Card className="bg-white shadow-lg mb-8 p-6">
-          <Label className="text-sm font-semibold text-gray-700 block mb-3">Select Subject</Label>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            {SUBJECTS.map((subject) => (
-              <Button
-                key={subject}
-                onClick={() => setSelectedSubject(subject)}
-                variant={selectedSubject === subject ? "default" : "outline"}
-                className={`${
-                  selectedSubject === subject
-                    ? "bg-indigo-600 text-white"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {subject.split(" ")[0]}
-              </Button>
-            ))}
+        {/* Subject & Exam Selection */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div>
+            <Label className="text-white font-semibold mb-2 block">Subject</Label>
+            <select
+              value={selectedSubject}
+              onChange={(e) => {
+                setSelectedSubject(e.target.value);
+                setSelectedTopic(TOPICS_BY_SUBJECT[e.target.value]?.[0] || "");
+              }}
+              className="w-full bg-white/20 border border-white/30 text-white rounded px-3 py-2"
+            >
+              {SUBJECTS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
           </div>
-        </Card>
 
-        {/* Tabs */}
+          <div>
+            <Label className="text-white font-semibold mb-2 block">Topic</Label>
+            <select
+              value={selectedTopic}
+              onChange={(e) => setSelectedTopic(e.target.value)}
+              className="w-full bg-white/20 border border-white/30 text-white rounded px-3 py-2"
+            >
+              {availableTopics.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <Label className="text-white font-semibold mb-2 block">Exam Type</Label>
+            <select
+              value={selectedExam}
+              onChange={(e) => setSelectedExam(e.target.value)}
+              className="w-full bg-white/20 border border-white/30 text-white rounded px-3 py-2"
+            >
+              {EXAM_TYPES.map((e) => (
+                <option key={e} value={e}>
+                  {e}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <Label className="text-white font-semibold mb-2 block">Questions</Label>
+            <Input
+              type="number"
+              min="1"
+              max="20"
+              value={questionCount}
+              onChange={(e) => setQuestionCount(e.target.value)}
+              className="bg-white/20 border-white/30 text-white"
+            />
+          </div>
+        </div>
+
+        {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-white shadow-lg mb-8">
-            <TabsTrigger value="tips" className="flex items-center gap-2">
-              <Lightbulb className="w-4 h-4" />
-              <span className="hidden sm:inline">Tips</span>
+          <TabsList className="grid w-full grid-cols-4 bg-white/10 border border-white/20">
+            <TabsTrigger value="tips" className="text-white data-[state=active]:bg-purple-600">
+              <Lightbulb className="w-4 h-4 mr-2" />
+              Study Tips
             </TabsTrigger>
-            <TabsTrigger value="questions" className="flex items-center gap-2">
-              <HelpCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Questions</span>
+            <TabsTrigger value="questions" className="text-white data-[state=active]:bg-purple-600">
+              <BookOpen className="w-4 h-4 mr-2" />
+              Questions
             </TabsTrigger>
-            <TabsTrigger value="qa" className="flex items-center gap-2">
-              <Send className="w-4 h-4" />
-              <span className="hidden sm:inline">Q&A</span>
+            <TabsTrigger value="chat" className="text-white data-[state=active]:bg-purple-600">
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Ask Doubt
             </TabsTrigger>
-            <TabsTrigger value="recommendations" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Recommendations</span>
+            <TabsTrigger value="recommendations" className="text-white data-[state=active]:bg-purple-600">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Recommendations
             </TabsTrigger>
           </TabsList>
 
           {/* Study Tips Tab */}
-          <TabsContent value="tips" className="space-y-6">
-            <Card className="bg-white shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Personalized Study Tips</h3>
-              <p className="text-gray-600 mb-6">
-                Get expert tips tailored to {selectedSubject} to improve your exam preparation
-              </p>
-              <Button
-                onClick={handleGenerateTips}
-                disabled={generateTipsMutation.isPending}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-              >
-                {generateTipsMutation.isPending ? "Generating..." : "Generate Tips"}
-              </Button>
-            </Card>
-
-            {tips && (
-              <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg p-6 border-2 border-indigo-200">
-                <h4 className="text-lg font-bold text-gray-800 mb-4">Study Tips for {selectedSubject}</h4>
-                <ScrollArea className="h-96">
-                  <div className="pr-4">
-                    <Streamdown>{tips}</Streamdown>
-                  </div>
-                </ScrollArea>
+          <TabsContent value="tips" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="bg-white/10 backdrop-blur border-white/20 text-white lg:col-span-1">
+                <div className="p-6">
+                  <h3 className="text-lg font-bold mb-4">Generate Study Tips</h3>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Get AI-generated study tips tailored for {selectedSubject} - {selectedTopic}
+                  </p>
+                  <Button
+                    onClick={handleGenerateTips}
+                    disabled={generateTipsMutation.isPending}
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                  >
+                    {generateTipsMutation.isPending ? "Generating..." : "Generate Tips"}
+                  </Button>
+                </div>
               </Card>
-            )}
+
+              <Card className="bg-white/10 backdrop-blur border-white/20 text-white lg:col-span-2">
+                <div className="p-6">
+                  <h3 className="text-lg font-bold mb-4">Tips for {selectedTopic}</h3>
+                  {tips ? (
+                    <ScrollArea className="h-96">
+                      <Streamdown>{tips}</Streamdown>
+                    </ScrollArea>
+                  ) : (
+                    <div className="h-96 flex items-center justify-center text-gray-400">
+                      <p>Generate tips to see recommendations here</p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Practice Questions Tab */}
-          <TabsContent value="questions" className="space-y-6">
-            <Card className="bg-white shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-6">Practice Question Generator</h3>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="topic" className="text-sm font-semibold text-gray-700">
-                    Topic/Chapter
-                  </Label>
-                  <Input
-                    id="topic"
-                    value={selectedTopic}
-                    onChange={(e) => setSelectedTopic(e.target.value)}
-                    placeholder="e.g., Quadratic Equations, Photosynthesis"
-                    className="mt-2"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="count" className="text-sm font-semibold text-gray-700">
-                    Number of Questions
-                  </Label>
-                  <select
-                    id="count"
-                    value={questionCount}
-                    onChange={(e) => setQuestionCount(e.target.value)}
-                    className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          <TabsContent value="questions" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="bg-white/10 backdrop-blur border-white/20 text-white lg:col-span-1">
+                <div className="p-6">
+                  <h3 className="text-lg font-bold mb-4">Generate Questions</h3>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Generate {questionCount} practice questions for {selectedTopic}
+                  </p>
+                  <Button
+                    onClick={handleGenerateQuestions}
+                    disabled={generateQuestionsMutation.isPending}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                   >
-                    <option value="3">3 Questions</option>
-                    <option value="5">5 Questions</option>
-                    <option value="10">10 Questions</option>
-                  </select>
+                    {generateQuestionsMutation.isPending ? "Generating..." : "Generate Questions"}
+                  </Button>
                 </div>
-
-                <Button
-                  onClick={handleGenerateQuestions}
-                  disabled={generateQuestionsMutation.isPending}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-                >
-                  {generateQuestionsMutation.isPending ? "Generating..." : "Generate Questions"}
-                </Button>
-              </div>
-            </Card>
-
-            {questions && (
-              <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 shadow-lg p-6 border-2 border-yellow-200">
-                <h4 className="text-lg font-bold text-gray-800 mb-4">
-                  Practice Questions for {selectedTopic}
-                </h4>
-                <ScrollArea className="h-96">
-                  <div className="pr-4">
-                    <Streamdown>{questions}</Streamdown>
-                  </div>
-                </ScrollArea>
               </Card>
-            )}
+
+              <Card className="bg-white/10 backdrop-blur border-white/20 text-white lg:col-span-2">
+                <div className="p-6">
+                  <h3 className="text-lg font-bold mb-4">Practice Questions</h3>
+                  {questions.length > 0 ? (
+                    <ScrollArea className="h-96">
+                      <div className="space-y-4">
+                        {questions.map((q, idx) => (
+                          <div key={idx} className="bg-white/10 p-4 rounded border border-white/20">
+                            <p className="font-semibold mb-2">Q{idx + 1}: {typeof q === "string" ? q : q.question || "Question"}</p>
+                            {typeof q !== "string" && q.options && (
+                              <div className="space-y-2 ml-4">
+                                {q.options.map((opt: string, i: number) => (
+                                  <p key={i} className="text-sm text-gray-300">
+                                    {String.fromCharCode(65 + i)}) {opt}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <div className="h-96 flex items-center justify-center text-gray-400">
+                      <p>Generate questions to see them here</p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
           </TabsContent>
 
-          {/* Q&A Tab */}
-          <TabsContent value="qa" className="space-y-6">
-            <Card className="bg-white shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-6">Ask Your Questions</h3>
-
-              <form onSubmit={handleAskQuestion} className="space-y-4">
-                <div>
-                  <Label htmlFor="question" className="text-sm font-semibold text-gray-700">
-                    Your Question
-                  </Label>
+          {/* Ask Doubt Tab */}
+          <TabsContent value="chat" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="bg-white/10 backdrop-blur border-white/20 text-white lg:col-span-1">
+                <div className="p-6">
+                  <h3 className="text-lg font-bold mb-4">Ask Your Doubt</h3>
                   <Textarea
-                    id="question"
                     value={userQuestion}
                     onChange={(e) => setUserQuestion(e.target.value)}
-                    placeholder="Ask any question related to this subject..."
-                    className="mt-2 resize-none"
-                    rows={4}
+                    placeholder="Ask any question about the topic..."
+                    className="bg-white/20 border-white/30 text-white placeholder:text-gray-400 mb-4 h-24"
                   />
+                  <Button
+                    onClick={handleAskQuestion}
+                    disabled={askQuestionMutation.isPending}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    {askQuestionMutation.isPending ? "Getting answer..." : "Ask"}
+                  </Button>
                 </div>
-
-                <Button
-                  type="submit"
-                  disabled={askQuestionMutation.isPending}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-                >
-                  {askQuestionMutation.isPending ? "Getting Answer..." : "Get Answer"}
-                </Button>
-              </form>
-            </Card>
-
-            {/* Chat History */}
-            {chatHistory && chatHistory.length > 0 && (
-              <Card className="bg-white shadow-lg p-6">
-                <h4 className="text-lg font-bold text-gray-800 mb-6">Previous Q&A</h4>
-                <ScrollArea className="h-96">
-                  <div className="space-y-6 pr-4">
-                    {chatHistory.map((entry) => (
-                      <div key={entry.id} className="border-l-4 border-indigo-500 pl-4 pb-4">
-                        <p className="font-semibold text-gray-800 mb-2">Q: {entry.question}</p>
-                        <div className="bg-indigo-50 p-3 rounded-lg">
-                          <Streamdown>{entry.answer}</Streamdown>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
               </Card>
-            )}
+
+              <Card className="bg-white/10 backdrop-blur border-white/20 text-white lg:col-span-2">
+                <div className="p-6">
+                  <h3 className="text-lg font-bold mb-4">Chat History</h3>
+                  <ScrollArea className="h-96">
+                    <div className="space-y-4">
+                      {chatHistory.length > 0 ? (
+                        chatHistory.map((msg, idx) => (
+                          <div key={idx} className="space-y-2">
+                            <div className="bg-blue-600/30 p-3 rounded">
+                              <p className="text-sm font-semibold text-blue-200">You:</p>
+                              <p className="text-sm">{msg.question}</p>
+                            </div>
+                            <div className="bg-green-600/30 p-3 rounded">
+                              <p className="text-sm font-semibold text-green-200">AI:</p>
+                              <p className="text-sm">{msg.answer}</p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-gray-400">
+                          <p>Ask a question to start the conversation</p>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Recommendations Tab */}
-          <TabsContent value="recommendations" className="space-y-6">
-            <Card className="bg-white shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Personalized Recommendations</h3>
-              <p className="text-gray-600 mb-6">
-                Based on your study patterns and progress, here are personalized recommendations to improve your exam preparation
-              </p>
-              <Button
-                onClick={() => getRecommendationsMutation.refetch()}
-                disabled={getRecommendationsMutation.isLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-              >
-                {getRecommendationsMutation.isLoading ? "Loading..." : "Get Recommendations"}
-              </Button>
-            </Card>
-
-            {getRecommendationsMutation.data && (
-              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg p-6 border-2 border-green-200">
-                <h4 className="text-lg font-bold text-gray-800 mb-4">Your Personalized Plan</h4>
-                <ScrollArea className="h-96">
-                  <div className="pr-4">
+          <TabsContent value="recommendations" className="mt-6">
+            <Card className="bg-white/10 backdrop-blur border-white/20 text-white">
+              <div className="p-6">
+                <h3 className="text-lg font-bold mb-4">Personalized Study Recommendations</h3>
+                {getRecommendationsMutation.data ? (
+                  <ScrollArea className="h-96">
                     <Streamdown>{getRecommendationsMutation.data}</Streamdown>
+                  </ScrollArea>
+                ) : (
+                  <div className="h-96 flex items-center justify-center text-gray-400">
+                    <div className="text-center">
+                      <Zap className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>Loading your personalized recommendations...</p>
+                    </div>
                   </div>
-                </ScrollArea>
-              </Card>
-            )}
+                )}
+              </div>
+            </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Footer */}
+        <div className="mt-12 text-center text-white">
+          <p className="text-lg font-semibold text-purple-300">
+            💡 Tip: Use the AI Assistant daily to strengthen your concepts and solve doubts instantly!
+          </p>
+        </div>
       </div>
     </div>
   );
