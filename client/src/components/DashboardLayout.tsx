@@ -21,13 +21,13 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-import { BookOpen, Calendar, Calculator, Sparkles, Info, Settings as SettingsIcon, Trophy, BookMarked, Shield, Image, HelpCircle, FileText } from "lucide-react";
+import { BookOpen, Calendar, Calculator, Sparkles, Info, Settings as SettingsIcon, Trophy, BookMarked, Shield, Image, HelpCircle, FileText, Users as UsersIcon } from "lucide-react";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -38,6 +38,7 @@ const menuItems = [
   { icon: HelpCircle, label: "Board Questions", path: "/board-exam-questions" },
   { icon: FileText, label: "Study Materials", path: "/pdf-browser" },
   { icon: Trophy, label: "Leaderboard", path: "/leaderboard" },
+  { icon: UsersIcon, label: "Community Links", path: "/study-links" },
   { icon: Image, label: "Posts", path: "/posts" },
   { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },
   { icon: Shield, label: "Admin Panel", path: "/admin" },

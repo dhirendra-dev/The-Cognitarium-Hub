@@ -6,12 +6,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Clock, BookOpen, Target, TrendingUp, Plus } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Clock, BookOpen, Target, TrendingUp, Plus, FileText, Users, Trophy, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { useLocation } from "wouter";
 
-const SEBA_EXAM_DATE = new Date("2026-02-10T09:00:00"); // 9:00 AM
-const CBSE_EXAM_DATE = new Date("2026-02-17T10:00:00"); // 10:00 AM
+const JEE_EXAM_DATE = new Date("2026-04-03T09:00:00"); // JEE Main 2026
+const BOARD_EXAM_DATE = new Date("2026-03-01T10:00:00"); // Board exams
 
 interface CountdownState {
   days: number;
@@ -22,8 +23,9 @@ interface CountdownState {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [sebaCountdown, setSebaCountdown] = useState<CountdownState>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [cbseCountdown, setCbseCountdown] = useState<CountdownState>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [, navigate] = useLocation();
+  const [jeeCountdown, setJeeCountdown] = useState<CountdownState>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [boardCountdown, setBoardCountdown] = useState<CountdownState>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [hoursStudied, setHoursStudied] = useState("");
   const [subject, setSubject] = useState("");
   const [notes, setNotes] = useState("");
@@ -32,6 +34,9 @@ export default function Dashboard() {
   // tRPC queries and mutations
   const { data: studySessions, refetch: refetchSessions } = trpc.studySessions.getByUser.useQuery({ daysBack: 30 });
   const { data: totalHours } = trpc.studySessions.getTotalHours.useQuery({ daysBack: 30 });
+  const { data: pdfDocuments } = trpc.pdf.getBySubject.useQuery({ limit: 5 });
+  const { data: leaderboardTop } = trpc.leaderboard.getTop.useQuery({ limit: 5 });
+  
   const createSessionMutation = trpc.studySessions.create.useMutation({
     onSuccess: () => {
       toast.success("Study session logged successfully!");
@@ -51,30 +56,30 @@ export default function Dashboard() {
     const updateCountdown = () => {
       const now = new Date();
       
-      // SEBA countdown
-      const sebaDiff = SEBA_EXAM_DATE.getTime() - now.getTime();
-      if (sebaDiff > 0) {
-        setSebaCountdown({
-          days: Math.floor(sebaDiff / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((sebaDiff / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((sebaDiff / 1000 / 60) % 60),
-          seconds: Math.floor((sebaDiff / 1000) % 60),
+      // JEE countdown
+      const jeeDiff = JEE_EXAM_DATE.getTime() - now.getTime();
+      if (jeeDiff > 0) {
+        setJeeCountdown({
+          days: Math.floor(jeeDiff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((jeeDiff / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((jeeDiff / 1000 / 60) % 60),
+          seconds: Math.floor((jeeDiff / 1000) % 60),
         });
       } else {
-        setSebaCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        setJeeCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
       
-      // CBSE countdown
-      const cbseDiff = CBSE_EXAM_DATE.getTime() - now.getTime();
-      if (cbseDiff > 0) {
-        setCbseCountdown({
-          days: Math.floor(cbseDiff / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((cbseDiff / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((cbseDiff / 1000 / 60) % 60),
-          seconds: Math.floor((cbseDiff / 1000) % 60),
+      // Board countdown
+      const boardDiff = BOARD_EXAM_DATE.getTime() - now.getTime();
+      if (boardDiff > 0) {
+        setBoardCountdown({
+          days: Math.floor(boardDiff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((boardDiff / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((boardDiff / 1000 / 60) % 60),
+          seconds: Math.floor((boardDiff / 1000) % 60),
         });
       } else {
-        setCbseCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        setBoardCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
 
@@ -107,11 +112,11 @@ export default function Dashboard() {
     }));
 
   const motivationalMessages = [
+    "Stay disciplined. Stay focused. Stay consistent. 💪",
     "Every hour of study brings you closer to success! 📚",
-    "Your dedication today determines your tomorrow! 💪",
-    "The exam is approaching - stay focused and consistent! 🎯",
-    "You've got this! Keep pushing forward! 🚀",
-    "Remember: small daily efforts lead to big results! ⭐",
+    "Your dedication today determines your tomorrow! 🎯",
+    "The exam is approaching - stay focused and consistent! 🚀",
+    "You've got this! Keep pushing forward! ⭐",
   ];
 
   const currentMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
@@ -122,61 +127,101 @@ export default function Dashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">Welcome back, {user?.name}! 👋</h1>
-          <p className="text-gray-600">{currentMessage}</p>
+          <p className="text-lg text-gray-600">{currentMessage}</p>
         </div>
 
-        {/* Countdown Timers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          {/* SEBA Countdown */}
-          <Card className="bg-white border-2 border-blue-200 shadow-lg">
-            <div className="p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <Clock className="w-8 h-8 text-blue-600" />
+        {/* Exam Countdowns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* JEE Countdown */}
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Clock className="w-8 h-8" />
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">SEBA Class 10</h2>
-                  <p className="text-xs text-gray-500">Pre-Board: Dec 30, 2025</p>
+                  <h2 className="text-2xl font-bold">JEE Main 2026</h2>
+                  <p className="text-blue-100 text-sm">April 3, 2026</p>
                 </div>
               </div>
-              <p className="text-gray-600 mb-6 font-semibold">Board Exam: February 10, 2026 @ 9:00 AM</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 {[
-                  { label: "Days", value: sebaCountdown.days },
-                  { label: "Hours", value: sebaCountdown.hours },
-                  { label: "Minutes", value: sebaCountdown.minutes },
-                  { label: "Seconds", value: sebaCountdown.seconds },
+                  { label: "Days", value: jeeCountdown.days },
+                  { label: "Hours", value: jeeCountdown.hours },
+                  { label: "Mins", value: jeeCountdown.minutes },
+                  { label: "Secs", value: jeeCountdown.seconds },
                 ].map((item) => (
-                  <div key={item.label} className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg p-4 text-white text-center">
-                    <div className="text-3xl font-bold mb-1">{String(item.value).padStart(2, "0")}</div>
-                    <div className="text-xs font-semibold">{item.label}</div>
+                  <div key={item.label} className="bg-white/20 rounded p-2 text-center">
+                    <div className="text-2xl font-bold">{String(item.value).padStart(2, "0")}</div>
+                    <div className="text-xs">{item.label}</div>
                   </div>
                 ))}
               </div>
             </div>
           </Card>
 
-          {/* CBSE Countdown */}
-          <Card className="bg-white border-2 border-purple-200 shadow-lg">
-            <div className="p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <Clock className="w-8 h-8 text-purple-600" />
+          {/* Board Exam Countdown */}
+          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Clock className="w-8 h-8" />
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">CBSE Class 10</h2>
-                  <p className="text-xs text-gray-500">Feb 17 @ 10:00 AM</p>
+                  <h2 className="text-2xl font-bold">Board Exams</h2>
+                  <p className="text-purple-100 text-sm">March 1, 2026</p>
                 </div>
               </div>
-              <p className="text-gray-600 mb-6 font-semibold">Board Exam: February 17, 2026 @ 10:00 AM</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 {[
-                  { label: "Days", value: cbseCountdown.days },
-                  { label: "Hours", value: cbseCountdown.hours },
-                  { label: "Minutes", value: cbseCountdown.minutes },
-                  { label: "Seconds", value: cbseCountdown.seconds },
+                  { label: "Days", value: boardCountdown.days },
+                  { label: "Hours", value: boardCountdown.hours },
+                  { label: "Mins", value: boardCountdown.minutes },
+                  { label: "Secs", value: boardCountdown.seconds },
                 ].map((item) => (
-                  <div key={item.label} className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg p-4 text-white text-center">
-                    <div className="text-3xl font-bold mb-1">{String(item.value).padStart(2, "0")}</div>
-                    <div className="text-xs font-semibold">{item.label}</div>
+                  <div key={item.label} className="bg-white/20 rounded p-2 text-center">
+                    <div className="text-2xl font-bold">{String(item.value).padStart(2, "0")}</div>
+                    <div className="text-xs">{item.label}</div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="bg-white shadow-lg">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm font-semibold">Hours Studied</p>
+                  <p className="text-4xl font-bold text-blue-600 mt-2">{totalHours?.toFixed(1) || "0"}</p>
+                  <p className="text-xs text-gray-500 mt-1">Last 30 days</p>
+                </div>
+                <BookOpen className="w-12 h-12 text-blue-100" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-white shadow-lg">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm font-semibold">Study Sessions</p>
+                  <p className="text-4xl font-bold text-green-600 mt-2">{studySessions?.length || "0"}</p>
+                  <p className="text-xs text-gray-500 mt-1">Total sessions</p>
+                </div>
+                <Target className="w-12 h-12 text-green-100" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-white shadow-lg">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm font-semibold">Study Materials</p>
+                  <p className="text-4xl font-bold text-purple-600 mt-2">{pdfDocuments?.length || "0"}</p>
+                  <p className="text-xs text-gray-500 mt-1">PDFs available</p>
+                </div>
+                <FileText className="w-12 h-12 text-purple-100" />
               </div>
             </div>
           </Card>
@@ -184,13 +229,15 @@ export default function Dashboard() {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Study Stats */}
+          {/* Study Progress Chart */}
           <div className="lg:col-span-2">
-            <Card className="bg-white shadow-lg mb-8">
+            <Card className="bg-white shadow-lg">
               <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <TrendingUp className="w-6 h-6 text-indigo-600" />
-                  <h2 className="text-xl font-bold text-gray-800">Study Progress (Last 7 Days)</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="w-6 h-6 text-indigo-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Study Progress (Last 7 Days)</h2>
+                  </div>
                 </div>
                 {chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
@@ -210,32 +257,14 @@ export default function Dashboard() {
                 )}
               </div>
             </Card>
-
-            {/* Study Statistics */}
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
-                <div className="p-6">
-                  <BookOpen className="w-8 h-8 text-green-600 mb-3" />
-                  <div className="text-3xl font-bold text-green-700 mb-1">{totalHours?.toFixed(1) || "0"}</div>
-                  <div className="text-sm text-green-600 font-semibold">Hours Studied (30 days)</div>
-                </div>
-              </Card>
-              <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200">
-                <div className="p-6">
-                  <Target className="w-8 h-8 text-orange-600 mb-3" />
-                  <div className="text-3xl font-bold text-orange-700 mb-1">{(studySessions?.length || 0)}</div>
-                  <div className="text-sm text-orange-600 font-semibold">Study Sessions</div>
-                </div>
-              </Card>
-            </div>
           </div>
 
           {/* Log Study Session Form */}
-          <Card className="bg-white shadow-lg h-fit sticky top-8">
+          <Card className="bg-white shadow-lg h-fit">
             <div className="p-6">
               <div className="flex items-center gap-3 mb-6">
                 <Plus className="w-6 h-6 text-indigo-600" />
-                <h2 className="text-xl font-bold text-gray-800">Log Study Session</h2>
+                <h2 className="text-xl font-bold text-gray-800">Log Session</h2>
               </div>
 
               <form onSubmit={handleLogSession} className="space-y-4">
@@ -258,36 +287,35 @@ export default function Dashboard() {
 
                 <div>
                   <Label htmlFor="subject" className="text-sm font-semibold text-gray-700">
-                    Subject (Optional)
+                    Subject
                   </Label>
                   <Input
                     id="subject"
                     type="text"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    placeholder="e.g., Mathematics"
+                    placeholder="e.g., Physics"
                     className="mt-2"
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="notes" className="text-sm font-semibold text-gray-700">
-                    Notes (Optional)
+                    Notes
                   </Label>
                   <Textarea
                     id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="What did you study?"
-                    className="mt-2 resize-none"
-                    rows={3}
+                    placeholder="Add notes..."
+                    className="mt-2 h-20"
                   />
                 </div>
 
                 <Button
                   type="submit"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700"
                   disabled={createSessionMutation.isPending}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
                 >
                   {createSessionMutation.isPending ? "Logging..." : "Log Session"}
                 </Button>
@@ -296,30 +324,56 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Recent Sessions */}
-        {studySessions && studySessions.length > 0 && (
-          <Card className="bg-white shadow-lg">
+        {/* Featured Sections */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Study Materials */}
+          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate("/pdf-browser")}>
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-6">Recent Study Sessions</h2>
-              <div className="space-y-4">
-                {studySessions.slice(0, 5).map((session) => (
-                  <div key={session.id} className="border-l-4 border-indigo-500 pl-4 py-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-gray-800">{session.subject || "General Study"}</p>
-                        <p className="text-sm text-gray-600">{new Date(session.date).toLocaleDateString()}</p>
-                        {session.notes && <p className="text-sm text-gray-700 mt-1">{session.notes}</p>}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-indigo-600">{session.hoursStudied} hrs</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center gap-3 mb-4">
+                <FileText className="w-8 h-8 text-purple-600" />
+                <h3 className="text-lg font-bold text-gray-800">Study Materials</h3>
               </div>
+              <p className="text-gray-600 text-sm mb-4">
+                Access {pdfDocuments?.length || 0} study materials including notes, PYQs, and practice papers.
+              </p>
+              <Button variant="outline" className="w-full">
+                Browse PDFs <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
             </div>
           </Card>
-        )}
+
+          {/* Community */}
+          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate("/study-links")}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Users className="w-8 h-8 text-blue-600" />
+                <h3 className="text-lg font-bold text-gray-800">Community</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                Join official WhatsApp groups, Telegram channels, and Google Classroom for discussions and updates.
+              </p>
+              <Button variant="outline" className="w-full">
+                Join Community <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </Card>
+
+          {/* Leaderboard */}
+          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate("/leaderboard")}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Trophy className="w-8 h-8 text-yellow-600" />
+                <h3 className="text-lg font-bold text-gray-800">Leaderboard</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                See where you rank among peers and get motivated by top performers.
+              </p>
+              <Button variant="outline" className="w-full">
+                View Rankings <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

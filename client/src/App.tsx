@@ -19,6 +19,7 @@ import Posts from "./pages/Posts";
 import BoardExamQuestions from "./pages/BoardExamQuestions";
 import PDFUpload from "./pages/PDFUpload";
 import PDFBrowser from "./pages/PDFBrowser";
+import StudyLinks from "./pages/StudyLinks";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
       <Route path={"/board-exam-questions"} component={BoardExamQuestions} />
       <Route path={"/pdf-upload"} component={PDFUpload} />
       <Route path={"/pdf-browser"} component={PDFBrowser} />
+      <Route path={"/study-links"} component={StudyLinks} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

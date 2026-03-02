@@ -622,25 +622,43 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input, ctx }) => {
-        if (input.fileSize > 400 * 1024 * 1024) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "File size exceeds 400MB limit" });
+        try {
+          if (input.fileSize > 400 * 1024 * 1024) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "File size exceeds 400MB limit" });
+          }
+          
+          console.log(`[PDF Upload] Starting upload for user ${ctx.user.id}, file: ${input.fileName}, size: ${input.fileSize}`);
+          
+          const buffer = Buffer.from(input.fileData, "base64");
+          console.log(`[PDF Upload] Buffer created, size: ${buffer.length} bytes`);
+          
+          const fileKey = `pdfs/${ctx.user.id}/${Date.now()}-${input.fileName}`;
+          console.log(`[PDF Upload] Uploading to S3 with key: ${fileKey}`);
+          
+          const { url } = await storagePut(fileKey, buffer, "application/pdf");
+          console.log(`[PDF Upload] S3 upload successful, URL: ${url}`);
+          
+          const result = await createPDFDocument({
+            title: input.title,
+            description: input.description,
+            fileKey: fileKey,
+            fileUrl: url,
+            fileSize: input.fileSize,
+            subject: input.subject,
+            uploadedBy: ctx.user.id,
+            isPublic: true,
+            downloadCount: 0,
+          });
+          
+          console.log(`[PDF Upload] Document created successfully`);
+          return result;
+        } catch (error) {
+          console.error(`[PDF Upload Error]`, error);
+          if (error instanceof Error) {
+            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Upload failed: ${error.message}` });
+          }
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Upload failed: Unknown error" });
         }
-        
-        const buffer = Buffer.from(input.fileData, "base64");
-        const fileKey = `pdfs/${ctx.user.id}/${Date.now()}-${input.fileName}`;
-        const { url } = await storagePut(fileKey, buffer, "application/pdf");
-        
-        return createPDFDocument({
-          title: input.title,
-          description: input.description,
-          fileKey: fileKey,
-          fileUrl: url,
-          fileSize: input.fileSize,
-          subject: input.subject,
-          uploadedBy: ctx.user.id,
-          isPublic: true,
-          downloadCount: 0,
-        });
       }),
 
     getBySubject: protectedProcedure

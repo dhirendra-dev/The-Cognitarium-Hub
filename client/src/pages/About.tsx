@@ -7,9 +7,9 @@ export default function About() {
       <div className="max-w-4xl mx-auto">
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">HSLC Preparation Hub</h1>
+          <h1 className="text-5xl font-bold text-gray-800 mb-4">JEE & Board Exam Prep Hub</h1>
           <p className="text-xl text-gray-600">
-            Your companion for a successful Class 10 board exam journey
+            Your comprehensive companion for Class 11-12 and JEE Main/Advanced success
           </p>
         </div>
 
@@ -18,15 +18,15 @@ export default function About() {
           <h2 className="text-3xl font-bold text-gray-800 mb-6">About This Platform</h2>
           <div className="space-y-6 text-gray-700 leading-relaxed">
             <p>
-              Welcome to HSLC Preparation Hub – a comprehensive study platform designed specifically for Class 10 students preparing for their board examinations. This platform is built with the understanding that board exams are a crucial milestone in every student's academic journey, and proper preparation is key to success.
+              Welcome to JEE & Board Exam Prep Hub – a comprehensive study platform designed for Class 11-12 students preparing for board exams and JEE Main/Advanced. This platform understands that you're juggling multiple goals: excelling in board exams while preparing for competitive exams like JEE.
             </p>
 
             <p>
-              As a Class 10 student, you face unique challenges: managing multiple subjects, keeping track of your progress, staying motivated, and finding effective study strategies. This platform addresses all these challenges by providing a centralized hub where you can track your study progress, organize your preparation, and access personalized guidance.
+              As a Class 11-12 student, you face unique challenges: managing Physics, Chemistry, and Mathematics simultaneously, balancing board exam preparation with JEE prep, tracking your progress across multiple exams, staying motivated through the grind, and finding effective study strategies. This platform addresses all these challenges by providing a centralized hub for your entire preparation journey.
             </p>
 
             <p>
-              Whether you're just starting your preparation or in the final stages of revision, this platform adapts to your needs. From logging your daily study hours to tracking topic completion across six subjects, from following a structured Advanced Mathematics study plan to accessing AI-powered study tips and practice questions – everything is designed to support your success.
+              Whether you're in Class 11, Class 12, or preparing for JEE, this platform adapts to your needs. From logging your daily study hours to tracking topic completion across all subjects, from accessing structured study materials to connecting with a community of thousands of students – everything is designed to support your success.
             </p>
           </div>
         </Card>
@@ -44,7 +44,7 @@ export default function About() {
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Organize Your Studies</h3>
                 <p className="text-gray-700 mt-2">
-                  Track all six subjects systematically. Break down each subject into chapters and topics, mark your progress, and never lose sight of what you've covered and what's left.
+                  Track Physics, Chemistry, and Mathematics systematically. Break down each subject into chapters and topics, mark your progress, and never lose sight of what you've covered.
                 </p>
               </div>
             </div>
@@ -58,7 +58,7 @@ export default function About() {
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Stay Consistent</h3>
                 <p className="text-gray-700 mt-2">
-                  Log your daily study hours, track your study sessions, and visualize your progress through charts. Consistency is the key to success, and this platform helps you maintain it.
+                  Log your daily study hours, track your study sessions, and visualize your progress through charts. Consistency is the key to cracking JEE and board exams.
                 </p>
               </div>
             </div>
@@ -70,9 +70,9 @@ export default function About() {
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Follow a Structured Plan</h3>
+                <h3 className="text-lg font-bold text-gray-800">Access Study Materials</h3>
                 <p className="text-gray-700 mt-2">
-                  The Advanced Mathematics study plan provides a day-by-day schedule for intensive revision. Follow it or customize it based on your needs – the choice is yours.
+                  Download comprehensive notes, previous year questions, practice papers, and study guides. All materials are curated for both board exams and JEE preparation.
                 </p>
               </div>
             </div>
@@ -80,13 +80,13 @@ export default function About() {
             <div className="flex gap-4">
               <div className="flex-shrink-0">
                 <div className="flex items-center justify-center h-12 w-12 rounded-md bg-purple-600 text-white">
-                  <Zap className="h-6 w-6" />
+                  <Users className="h-6 w-6" />
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Get Personalized Guidance</h3>
+                <h3 className="text-lg font-bold text-gray-800">Join the Community</h3>
                 <p className="text-gray-700 mt-2">
-                  Our AI-powered study assistant generates personalized tips, practice questions, and answers your subject-specific questions. Get expert guidance whenever you need it.
+                  Connect with thousands of students through official WhatsApp groups, Telegram channels, and Google Classroom. Get doubt clarification, share resources, and stay motivated together.
                 </p>
               </div>
             </div>
@@ -98,9 +98,9 @@ export default function About() {
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Stay Motivated</h3>
+                <h3 className="text-lg font-bold text-gray-800">Get AI-Powered Guidance</h3>
                 <p className="text-gray-700 mt-2">
-                  The countdown timer keeps you aware of the time remaining until the exam. Motivational messages and your progress visualization help you stay focused and inspired.
+                  Our AI assistant generates personalized tips, practice questions, and answers your subject-specific questions. Get expert guidance whenever you need it.
                 </p>
               </div>
             </div>
@@ -109,18 +109,18 @@ export default function About() {
 
         {/* Why This Matters */}
         <Card className="bg-white shadow-lg p-8 mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Why Board Exams Matter</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-6">Why This Preparation Matters</h2>
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p>
-              Class 10 board exams are not just another test – they are a significant milestone that shapes your academic future. These exams test not just your knowledge but also your ability to manage stress, organize information, and perform under pressure.
+              Class 11-12 board exams and JEE are not just tests – they are crucial milestones that shape your academic and professional future. These exams test not just your knowledge but also your ability to manage stress, organize information, and perform under pressure.
             </p>
 
             <p>
-              Success in board exams opens doors to better colleges, streams of your choice, and career opportunities. More importantly, it builds confidence and develops study habits that will serve you throughout your academic journey.
+              Success in board exams and JEE opens doors to top colleges, desired branches, and career opportunities. More importantly, it builds confidence and develops study habits that will serve you throughout your life.
             </p>
 
             <p>
-              This platform is designed to help you navigate this crucial phase with confidence. By providing tools for organization, tracking, and personalized guidance, we aim to make your preparation more effective and less stressful.
+              This platform is designed to help you navigate this critical phase with confidence. By providing tools for organization, tracking, community support, and personalized guidance, we aim to make your preparation more effective, collaborative, and less stressful.
             </p>
           </div>
         </Card>
@@ -129,11 +129,11 @@ export default function About() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg p-6 border-2 border-blue-200">
             <div className="flex items-center gap-3 mb-4">
-              <Trophy className="w-6 h-6 text-blue-600" />
+              <BookOpen className="w-6 h-6 text-blue-600" />
               <h3 className="text-lg font-bold text-gray-800">Multi-Subject Tracking</h3>
             </div>
             <p className="text-gray-700">
-              Track all 6 subjects with individual progress indicators, topic completion, and notes for each chapter.
+              Track Physics, Chemistry, and Mathematics with individual progress indicators, topic completion, and notes for each chapter.
             </p>
           </Card>
 
@@ -143,27 +143,27 @@ export default function About() {
               <h3 className="text-lg font-bold text-gray-800">Daily Progress Tracking</h3>
             </div>
             <p className="text-gray-700">
-              Log your study hours daily, track sample papers, and visualize your progress through interactive charts.
+              Log your study hours daily, track practice papers, and visualize your progress through interactive charts and statistics.
             </p>
           </Card>
 
           <Card className="bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg p-6 border-2 border-purple-200">
             <div className="flex items-center gap-3 mb-4">
-              <BookOpen className="w-6 h-6 text-purple-600" />
-              <h3 className="text-lg font-bold text-gray-800">Structured Study Plans</h3>
+              <Trophy className="w-6 h-6 text-purple-600" />
+              <h3 className="text-lg font-bold text-gray-800">Study Materials & Resources</h3>
             </div>
             <p className="text-gray-700">
-              Follow pre-designed study schedules or create your own. The Advanced Mathematics plan covers all chapters systematically.
+              Access comprehensive notes, PYQs, practice papers, and study guides curated for both board exams and JEE preparation.
             </p>
           </Card>
 
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 shadow-lg p-6 border-2 border-orange-200">
             <div className="flex items-center gap-3 mb-4">
               <Users className="w-6 h-6 text-orange-600" />
-              <h3 className="text-lg font-bold text-gray-800">AI Study Assistant</h3>
+              <h3 className="text-lg font-bold text-gray-800">Community Support</h3>
             </div>
             <p className="text-gray-700">
-              Get personalized tips, practice questions, Q&A support, and recommendations based on your study patterns.
+              Connect with thousands of students through official WhatsApp groups, Telegram channels, and Google Classroom for doubt clarification and motivation.
             </p>
           </Card>
         </div>
@@ -177,11 +177,15 @@ export default function About() {
             </p>
 
             <p>
-              Your board exam is not a measure of your intelligence – it's a measure of your preparation and dedication. With the right tools, the right mindset, and consistent effort, you can achieve excellent results.
+              Your board exam and JEE are not measures of your intelligence – they are measures of your preparation and dedication. With the right tools, the right mindset, and consistent effort, you can achieve excellent results.
             </p>
 
             <p className="font-bold text-xl">
-              This platform is here to support you every step of the way. Let's make your Class 10 board exam a success story! 🚀
+              Stay disciplined. Stay focused. Stay consistent. 💪
+            </p>
+
+            <p className="font-bold text-xl">
+              This platform is here to support you every step of the way. Let's make your Class 11-12 and JEE journey a success story! 🚀
             </p>
           </div>
         </Card>
@@ -189,10 +193,10 @@ export default function About() {
         {/* Footer */}
         <div className="text-center mt-12 text-gray-600">
           <p>
-            Built with ❤️ for Class 10 students preparing for board exams
+            Built with ❤️ for Class 11-12 students preparing for board exams and JEE
           </p>
           <p className="mt-2 text-sm">
-            © 2025 HSLC Preparation Hub. All rights reserved.
+            © 2025 JEE & Board Exam Prep Hub. All rights reserved.
           </p>
         </div>
       </div>
