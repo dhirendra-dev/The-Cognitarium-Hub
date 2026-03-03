@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Clock, BookOpen, Target, TrendingUp, Plus, FileText, Users, Trophy, ArrowRight, Zap, Award } from "lucide-react";
+import { Clock, BookOpen, Target, TrendingUp, Plus, FileText, Users, Trophy, ArrowRight, Zap, Award, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import JEEResourceMap from "@/components/JEEResourceMap";
 
 // JEE 2028 Exam Dates
 const JEE_MAIN_2028_DATE = new Date("2028-01-22T09:00:00");
@@ -125,6 +126,15 @@ export default function Dashboard() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Welcome back, {user?.name}! 🎯</h1>
           <p className="text-blue-200">JEE 2028 & Class 11-12 Board Exam Preparation</p>
+        </div>
+
+        {/* JEE Resources Map - Featured at Top */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+            <MapPin className="w-6 h-6" />
+            JEE Study Resources & MCQ Practice Centers
+          </h2>
+          <JEEResourceMap height="h-96" />
         </div>
 
         {/* Exam Countdowns - 2x2 Grid */}
