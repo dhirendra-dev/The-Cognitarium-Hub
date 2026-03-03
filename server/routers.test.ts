@@ -302,3 +302,124 @@ describe("Auth Router", () => {
     expect(result.success).toBe(true);
   });
 });
+
+
+describe("Internet Study Resources Router", () => {
+  it("should get all internet study resources", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const resources = await caller.internetStudyResources.getAll({
+      limit: 10,
+    });
+
+    expect(resources).toBeDefined();
+    expect(Array.isArray(resources)).toBe(true);
+  });
+
+  it("should search internet study resources", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const results = await caller.internetStudyResources.search({
+      query: "physics",
+      limit: 10,
+    });
+
+    expect(results).toBeDefined();
+    expect(Array.isArray(results)).toBe(true);
+  });
+
+  it("should get resources by type", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const resources = await caller.internetStudyResources.getByType({
+      resourceType: "youtube",
+      limit: 10,
+    });
+
+    expect(resources).toBeDefined();
+    expect(Array.isArray(resources)).toBe(true);
+  });
+
+  it("should get resources by subject", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const resources = await caller.internetStudyResources.getBySubject({
+      subject: "Physics",
+      limit: 10,
+    });
+
+    expect(resources).toBeDefined();
+    expect(Array.isArray(resources)).toBe(true);
+  });
+
+  it("should get free resources", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const resources = await caller.internetStudyResources.getFreeResources({
+      limit: 10,
+    });
+
+    expect(resources).toBeDefined();
+    expect(Array.isArray(resources)).toBe(true);
+  });
+
+  it("should get top rated resources", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const resources = await caller.internetStudyResources.getTopRated({
+      limit: 10,
+    });
+
+    expect(resources).toBeDefined();
+    expect(Array.isArray(resources)).toBe(true);
+  });
+
+  it("should increment resource access count", async () => {
+    const ctx = createMockContext();
+    ctx.user.role = "admin";
+    const caller = appRouter.createCaller(ctx);
+
+    // First create a resource
+    const created = await caller.internetStudyResources.create({
+      title: "Test Physics Resource",
+      description: "A test resource for physics",
+      url: "https://example.com/physics",
+      resourceType: "website",
+      subject: "Physics",
+      class: "jeeMain",
+      difficulty: "intermediate",
+      platform: "Example",
+      isFree: true,
+      rating: 4.5,
+    });
+
+    expect(created).toBeDefined();
+  });
+
+  it("should create a new internet study resource as admin", async () => {
+    const ctx = createMockContext();
+    ctx.user.role = "admin";
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.internetStudyResources.create({
+      title: "Advanced Physics Lectures",
+      description: "Comprehensive physics lectures for JEE",
+      url: "https://youtube.com/physics",
+      resourceType: "youtube",
+      subject: "Physics",
+      class: "jeeAdvanced",
+      difficulty: "advanced",
+      platform: "YouTube",
+      isFree: true,
+      rating: 4.8,
+    });
+
+    expect(result).toBeDefined();
+  });
+});

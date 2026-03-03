@@ -389,6 +389,29 @@ export const pdfDocuments = mysqlTable("pdfDocuments", {
 export type PDFDocument = typeof pdfDocuments.$inferSelect;
 export type InsertPDFDocument = typeof pdfDocuments.$inferInsert;
 
+// Internet Study Resources - Curated links to online study materials
+export const internetStudyResources = mysqlTable("internetStudyResources", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  url: text("url").notNull(),
+  resourceType: mysqlEnum("resourceType", ["website", "youtube", "pdf", "mockTest", "pyq", "book", "course", "community"]).notNull(),
+  subject: varchar("subject", { length: 100 }),
+  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced", "all"]).default("all"),
+  difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced", "all"]).default("all"),
+  platform: varchar("platform", { length: 100 }),
+  isFree: boolean("isFree").default(true),
+  rating: decimal("rating", { precision: 3, scale: 1 }).default("0"),
+  reviewCount: int("reviewCount").default(0),
+  accessCount: int("accessCount").default(0),
+  isVerified: boolean("isVerified").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InternetStudyResource = typeof internetStudyResources.$inferSelect;
+export type InsertInternetStudyResource = typeof internetStudyResources.$inferInsert;
+
 // Exam Timeline
 export const examTimeline = mysqlTable("examTimeline", {
   id: int("id").autoincrement().primaryKey(),

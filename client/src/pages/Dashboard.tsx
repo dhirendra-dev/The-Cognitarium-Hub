@@ -11,6 +11,7 @@ import { Clock, BookOpen, Target, TrendingUp, Plus, FileText, Users, Trophy, Arr
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import JEEResourceMap from "@/components/JEEResourceMap";
+import StudyResourcesBrowser from "@/components/StudyResourcesBrowser";
 
 // JEE 2028 Exam Dates
 const JEE_MAIN_2028_DATE = new Date("2028-01-22T09:00:00");
@@ -457,6 +458,11 @@ export default function Dashboard() {
               </div>
             </Card>
           </div>
+        </div>
+
+        {/* Study Resources Browser Section */}
+        <div className="mt-12 bg-white/10 rounded-lg p-6 backdrop-blur-sm border border-white/20">
+          <StudyResourcesBrowser />
         </div>
 
         {/* Motivational Footer */}

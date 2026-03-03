@@ -60,6 +60,14 @@ import {
   getAllBoardExamQuestions,
   updateBoardExamQuestion,
   deleteBoardExamQuestion,
+  getInternetStudyResources,
+  searchInternetStudyResources,
+  getResourcesByType,
+  getResourcesBySubject,
+  incrementResourceAccess,
+  createInternetStudyResource,
+  getFreeResources,
+  getTopRatedResources,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import axios from "axios";
@@ -714,6 +722,74 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         return incrementPDFDownloadCount(input.id);
+      }),
+  }),
+
+  internetStudyResources: router({
+    getAll: publicProcedure
+      .input(z.object({
+        resourceType: z.string().optional(),
+        subject: z.string().optional(),
+        class: z.string().optional(),
+        difficulty: z.string().optional(),
+        isFree: z.boolean().optional(),
+        limit: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return getInternetStudyResources(input);
+      }),
+
+    search: publicProcedure
+      .input(z.object({ query: z.string(), limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        return searchInternetStudyResources(input.query, input.limit);
+      }),
+
+    getByType: publicProcedure
+      .input(z.object({ resourceType: z.string(), limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        return getResourcesByType(input.resourceType, input.limit);
+      }),
+
+    getBySubject: publicProcedure
+      .input(z.object({ subject: z.string(), limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        return getResourcesBySubject(input.subject, input.limit);
+      }),
+
+    getFreeResources: publicProcedure
+      .input(z.object({ limit: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return getFreeResources(input?.limit);
+      }),
+
+    getTopRated: publicProcedure
+      .input(z.object({ limit: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return getTopRatedResources(input?.limit);
+      }),
+
+    incrementAccess: protectedProcedure
+      .input(z.object({ resourceId: z.number() }))
+      .mutation(async ({ input }) => {
+        return incrementResourceAccess(input.resourceId);
+      }),
+
+    create: adminProcedure
+      .input(z.object({
+        title: z.string(),
+        description: z.string().optional(),
+        url: z.string(),
+        resourceType: z.string(),
+        subject: z.string().optional(),
+        class: z.string().optional(),
+        difficulty: z.string().optional(),
+        platform: z.string().optional(),
+        isFree: z.boolean().optional(),
+        rating: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return createInternetStudyResource(input as any);
       }),
   }),
 });
