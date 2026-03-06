@@ -18,7 +18,6 @@ import {
   InsertQuestionAnswer,
   InsertQuestionCollection,
   InsertPDFDocument,
-  InsertInternetStudyResource,
   studySessions,
   samplePapers,
   subjects,
@@ -29,7 +28,6 @@ import {
   aiChatHistory,
   leaderboard,
   posts,
-  internetStudyResources,
   boardExamQuestions,
   mcqOptions,
   questionAnswers,
@@ -703,107 +701,5 @@ export async function searchPDFDocuments(query: string, limit: number = 50) {
   return db.select().from(pdfDocuments)
     .where(like(pdfDocuments.title, `%${query}%`))
     .orderBy(desc(pdfDocuments.createdAt))
-    .limit(limit);
-}
-
-
-// Internet Study Resources
-export async function getInternetStudyResources(filters?: {
-  resourceType?: string;
-  subject?: string;
-  class?: string;
-  difficulty?: string;
-  isFree?: boolean;
-  limit?: number;
-}) {
-  const db = await getDb();
-  if (!db) return [];
-
-  const conditions: any[] = [];
-
-  if (filters?.resourceType) {
-    conditions.push(eq(internetStudyResources.resourceType, filters.resourceType as any));
-  }
-  if (filters?.subject) {
-    conditions.push(eq(internetStudyResources.subject, filters.subject));
-  }
-  if (filters?.class) {
-    conditions.push(eq(internetStudyResources.class, filters.class as any));
-  }
-  if (filters?.difficulty) {
-    conditions.push(eq(internetStudyResources.difficulty, filters.difficulty as any));
-  }
-  if (filters?.isFree !== undefined) {
-    conditions.push(eq(internetStudyResources.isFree, filters.isFree));
-  }
-
-  let query = db.select().from(internetStudyResources);
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-
-  return query
-    .orderBy(desc(internetStudyResources.rating), desc(internetStudyResources.accessCount))
-    .limit(filters?.limit || 50);
-}
-
-export async function searchInternetStudyResources(query: string, limit: number = 50) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(internetStudyResources)
-    .where(like(internetStudyResources.title, `%${query}%`))
-    .orderBy(desc(internetStudyResources.rating))
-    .limit(limit);
-}
-
-export async function getResourcesByType(resourceType: string, limit: number = 20) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(internetStudyResources)
-    .where(eq(internetStudyResources.resourceType, resourceType as any))
-    .orderBy(desc(internetStudyResources.rating))
-    .limit(limit);
-}
-
-export async function getResourcesBySubject(subject: string, limit: number = 20) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(internetStudyResources)
-    .where(eq(internetStudyResources.subject, subject))
-    .orderBy(desc(internetStudyResources.rating))
-    .limit(limit);
-}
-
-export async function incrementResourceAccess(resourceId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const resource = await db.select().from(internetStudyResources).where(eq(internetStudyResources.id, resourceId)).limit(1);
-  if (!resource.length) throw new Error("Resource not found");
-  return db.update(internetStudyResources)
-    .set({ accessCount: (resource[0].accessCount || 0) + 1 })
-    .where(eq(internetStudyResources.id, resourceId));
-}
-
-export async function createInternetStudyResource(data: InsertInternetStudyResource) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(internetStudyResources).values(data);
-  return result;
-}
-
-export async function getFreeResources(limit: number = 50) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(internetStudyResources)
-    .where(eq(internetStudyResources.isFree, true))
-    .orderBy(desc(internetStudyResources.rating))
-    .limit(limit);
-}
-
-export async function getTopRatedResources(limit: number = 20) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(internetStudyResources)
-    .orderBy(desc(internetStudyResources.rating), desc(internetStudyResources.reviewCount))
     .limit(limit);
 }
