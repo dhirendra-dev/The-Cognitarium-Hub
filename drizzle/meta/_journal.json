@@ -50,6 +50,20 @@
       "when": 1772413805065,
       "tag": "0006_bored_nico_minoru",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1772508972971,
+      "tag": "0007_pink_millenium_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1772814911969,
+      "tag": "0008_slippery_felicia_hardy",
+      "breakpoints": true
     }
   ]
 }
