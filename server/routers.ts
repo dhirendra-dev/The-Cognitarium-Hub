@@ -55,6 +55,15 @@ import {
   deletePDFDocument,
   incrementPDFDownloadCount,
   searchPDFDocuments,
+  createPostReply,
+  getPostReplies,
+  getPostReplyCount,
+  deletePostReply,
+  updatePostReply,
+  createStudyTimerSession,
+  getStudyTimerSessions,
+  getDailyStudyTime,
+  completeStudyTimerSession,
   getUserQuestionAnswers,
   getUserQuestionStats,
   getAllBoardExamQuestions,
@@ -714,6 +723,94 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         return incrementPDFDownloadCount(input.id);
+      }),
+  }),
+
+  // Post Replies
+  postReplies: router({
+    create: protectedProcedure
+      .input(
+        z.object({
+          postId: z.number(),
+          replyText: z.string().min(1).max(1000),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        return createPostReply({
+          postId: input.postId,
+          userId: ctx.user.id,
+          replyText: input.replyText,
+        });
+      }),
+
+    getByPost: publicProcedure
+      .input(z.object({ postId: z.number() }))
+      .query(async ({ input }) => {
+        return getPostReplies(input.postId);
+      }),
+
+    getCount: publicProcedure
+      .input(z.object({ postId: z.number() }))
+      .query(async ({ input }) => {
+        return getPostReplyCount(input.postId);
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const reply = await getPostReplies(0);
+        return deletePostReply(input.id);
+      }),
+
+    update: protectedProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          replyText: z.string().min(1).max(1000),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return updatePostReply(input.id, { replyText: input.replyText });
+      }),
+  }),
+
+  // Study Timer
+  studyTimer: router({
+    create: protectedProcedure
+      .input(
+        z.object({
+          date: z.date(),
+          subject: z.string().optional(),
+          duration: z.number().min(1).max(480),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        return createStudyTimerSession({
+          userId: ctx.user.id,
+          date: input.date,
+          subject: input.subject,
+          duration: input.duration,
+          startTime: new Date(),
+          isCompleted: false,
+        });
+      }),
+
+    getSessions: protectedProcedure
+      .input(z.object({ date: z.date() }))
+      .query(async ({ input, ctx }) => {
+        return getStudyTimerSessions(ctx.user.id, input.date);
+      }),
+
+    getDailyTime: protectedProcedure
+      .input(z.object({ date: z.date() }))
+      .query(async ({ input, ctx }) => {
+        return getDailyStudyTime(ctx.user.id, input.date);
+      }),
+
+    complete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return completeStudyTimerSession(input.id, new Date());
       }),
   }),
 });

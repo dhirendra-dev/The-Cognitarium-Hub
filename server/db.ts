@@ -1,4 +1,4 @@
-import { and, desc, eq, sql, like } from "drizzle-orm";
+import { and, desc, eq, sql, like, gte, lte, count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -18,6 +18,8 @@ import {
   InsertQuestionAnswer,
   InsertQuestionCollection,
   InsertPDFDocument,
+  InsertPostReply,
+  InsertStudyTimerSession,
   studySessions,
   samplePapers,
   subjects,
@@ -33,6 +35,8 @@ import {
   questionAnswers,
   questionCollections,
   pdfDocuments,
+  postReplies,
+  studyTimerSessions,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -702,4 +706,80 @@ export async function searchPDFDocuments(query: string, limit: number = 50) {
     .where(like(pdfDocuments.title, `%${query}%`))
     .orderBy(desc(pdfDocuments.createdAt))
     .limit(limit);
+}
+
+
+// Post Replies
+export async function createPostReply(data: InsertPostReply) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(postReplies).values(data);
+}
+
+export async function getPostReplies(postId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(postReplies)
+    .where(eq(postReplies.postId, postId))
+    .orderBy(desc(postReplies.createdAt));
+}
+
+export async function getPostReplyCount(postId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.select({ count: count() })
+    .from(postReplies)
+    .where(eq(postReplies.postId, postId));
+  return result[0]?.count || 0;
+}
+
+export async function deletePostReply(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(postReplies).where(eq(postReplies.id, id));
+}
+
+export async function updatePostReply(id: number, data: Partial<InsertPostReply>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(postReplies).set(data).where(eq(postReplies.id, id));
+}
+
+// Study Timer Sessions
+export async function createStudyTimerSession(data: InsertStudyTimerSession) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(studyTimerSessions).values(data);
+}
+
+export async function getStudyTimerSessions(userId: number, date: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+  
+  return db.select().from(studyTimerSessions)
+    .where(and(
+      eq(studyTimerSessions.userId, userId),
+      gte(studyTimerSessions.date, startOfDay),
+      lte(studyTimerSessions.date, endOfDay)
+    ))
+    .orderBy(desc(studyTimerSessions.createdAt));
+}
+
+export async function getDailyStudyTime(userId: number, date: Date) {
+  const db = await getDb();
+  if (!db) return 0;
+  const sessions = await getStudyTimerSessions(userId, date);
+  return sessions.reduce((total, session) => total + (session.duration || 0), 0);
+}
+
+export async function completeStudyTimerSession(id: number, endTime: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(studyTimerSessions)
+    .set({ isCompleted: true, endTime })
+    .where(eq(studyTimerSessions.id, id));
 }

@@ -402,3 +402,35 @@ export const examTimeline = mysqlTable("examTimeline", {
 
 export type ExamTimeline = typeof examTimeline.$inferSelect;
 export type InsertExamTimeline = typeof examTimeline.$inferInsert;
+
+// Post Replies - Replies to community posts
+export const postReplies = mysqlTable("postReplies", {
+  id: int("id").autoincrement().primaryKey(),
+  postId: int("postId").notNull(),
+  userId: int("userId").notNull(),
+  replyText: text("replyText").notNull(),
+  likes: int("likes").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PostReply = typeof postReplies.$inferSelect;
+export type InsertPostReply = typeof postReplies.$inferInsert;
+
+// Study Timer Sessions - Track study sessions with timer
+export const studyTimerSessions = mysqlTable("studyTimerSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  date: timestamp("date").notNull(),
+  subject: varchar("subject", { length: 100 }),
+  duration: int("duration").notNull(), // in minutes
+  startTime: timestamp("startTime").notNull(),
+  endTime: timestamp("endTime"),
+  isCompleted: boolean("isCompleted").default(false),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudyTimerSession = typeof studyTimerSessions.$inferSelect;
+export type InsertStudyTimerSession = typeof studyTimerSessions.$inferInsert;

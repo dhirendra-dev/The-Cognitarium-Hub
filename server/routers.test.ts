@@ -302,3 +302,93 @@ describe("Auth Router", () => {
     expect(result.success).toBe(true);
   });
 });
+
+
+describe("Post Replies Router", () => {
+  it("should create a post reply", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.postReplies.create({
+      postId: 1,
+      replyText: "Great post! Thanks for sharing.",
+    });
+
+    expect(result).toBeDefined();
+  });
+
+  it("should get replies for a post", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.postReplies.getByPost({ postId: 1 });
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("should get reply count for a post", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.postReplies.getCount({ postId: 1 });
+    expect(typeof result).toBe("number");
+    expect(result).toBeGreaterThanOrEqual(0);
+  });
+
+  it("should update a post reply", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.postReplies.update({
+      id: 1,
+      replyText: "Updated reply text",
+    });
+
+    expect(result).toBeDefined();
+  });
+});
+
+describe("Study Timer Router", () => {
+  it("should create a study timer session", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.studyTimer.create({
+      date: new Date(),
+      subject: "Physics",
+      duration: 25,
+    });
+
+    expect(result).toBeDefined();
+  });
+
+  it("should get study sessions for a date", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.studyTimer.getSessions({
+      date: new Date(),
+    });
+
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("should get daily study time", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.studyTimer.getDailyTime({
+      date: new Date(),
+    });
+
+    expect(typeof result).toBe("number");
+    expect(result).toBeGreaterThanOrEqual(0);
+  });
+
+  it("should complete a study timer session", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.studyTimer.complete({ id: 1 });
+    expect(result).toBeDefined();
+  });
+});

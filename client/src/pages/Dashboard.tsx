@@ -10,6 +10,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Clock, BookOpen, Target, TrendingUp, Plus, FileText, Users, Trophy, ArrowRight, Zap, Award } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import StudyTimer from "@/components/StudyTimer";
 
 // JEE 2028 Exam Dates
 const JEE_MAIN_2028_DATE = new Date("2028-01-22T09:00:00");
@@ -447,6 +448,42 @@ export default function Dashboard() {
               </div>
             </Card>
           </div>
+        </div>
+
+        {/* Study Timer Section */}
+        <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <StudyTimer />
+          
+          {/* PDF Browser */}
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-bold text-gray-900">Study Materials (PDF)</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">Download and study from curated PDFs</p>
+              {pdfDocuments && pdfDocuments.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {pdfDocuments.slice(0, 5).map((pdf) => (
+                    <div key={pdf.id} className="flex items-center justify-between p-2 bg-white rounded border border-green-200 hover:border-green-400">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{pdf.title}</p>
+                        <p className="text-xs text-gray-500">{pdf.subject}</p>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => navigate("/pdf-browser")}>
+                        View
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-4">No PDFs available yet</p>
+              )}
+              <Button className="w-full mt-4 bg-green-600 hover:bg-green-700" onClick={() => navigate("/pdf-browser")}>
+                Browse All PDFs
+              </Button>
+            </div>
+          </Card>
         </div>
 
         {/* Motivational Footer */}
