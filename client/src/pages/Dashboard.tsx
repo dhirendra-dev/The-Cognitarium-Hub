@@ -45,9 +45,9 @@ export default function Dashboard() {
   // tRPC queries
   const { data: studySessions, refetch: refetchSessions } = trpc.studySessions.getByUser.useQuery({ daysBack: 30 });
   const { data: totalHours } = trpc.studySessions.getTotalHours.useQuery({ daysBack: 30 });
-  const { data: pdfDocuments } = trpc.pdf.getBySubject.useQuery({ limit: 8 });
   const { data: leaderboardTop } = trpc.leaderboard.getTop.useQuery({ limit: 5 });
-  
+
+  // tRPC mutations
   const createSessionMutation = trpc.studySessions.create.useMutation({
     onSuccess: () => {
       toast.success("Study session logged!");
@@ -60,37 +60,36 @@ export default function Dashboard() {
     },
   });
 
-  // Countdown timer effect
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-      
-      const updateState = (targetDate: Date, setState: any) => {
-        const diff = targetDate.getTime() - now.getTime();
-        if (diff > 0) {
-          setState({
-            days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-            hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-            minutes: Math.floor((diff / 1000 / 60) % 60),
-            seconds: Math.floor((diff / 1000) % 60),
-          });
-        } else {
-          setState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        }
-      };
+  // Calculate countdown
+  const calculateCountdown = (targetDate: Date): CountdownState => {
+    const now = new Date();
+    const difference = targetDate.getTime() - now.getTime();
 
-      updateState(JEE_MAIN_2028_DATE, setJeeMainCountdown);
-      updateState(JEE_ADVANCED_2028_DATE, setJeeAdvCountdown);
-      updateState(BOARD_CLASS_12_DATE, setBoard12Countdown);
-      updateState(BOARD_CLASS_11_DATE, setBoard11Countdown);
+    if (difference <= 0) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    }
+
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+      seconds: Math.floor((difference / 1000) % 60),
     };
+  };
 
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
+  // Update countdowns every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setJeeMainCountdown(calculateCountdown(JEE_MAIN_2028_DATE));
+      setJeeAdvCountdown(calculateCountdown(JEE_ADVANCED_2028_DATE));
+      setBoard12Countdown(calculateCountdown(BOARD_CLASS_12_DATE));
+      setBoard11Countdown(calculateCountdown(BOARD_CLASS_11_DATE));
+    }, 1000);
+
     return () => clearInterval(interval);
   }, []);
 
-  const handleLogSession = async (e: React.FormEvent) => {
+  const handleSubmitSession = (e: React.FormEvent) => {
     e.preventDefault();
     if (!hoursStudied) {
       toast.error("Please enter hours studied");
@@ -100,357 +99,309 @@ export default function Dashboard() {
     createSessionMutation.mutate({
       date: new Date(),
       hoursStudied: parseFloat(hoursStudied),
-      subject: subject || undefined,
+      subject,
       notes: notes || undefined,
     });
   };
 
-  // Prepare chart data
-  const chartData = (studySessions || [])
-    .slice(-7)
-    .map((session) => ({
-      date: new Date(session.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      hours: parseFloat(session.hoursStudied as any),
-    }));
-
   const subjectProgress: SubjectProgress[] = [
-    { subject: "Physics", completion: 65, color: "from-blue-500 to-cyan-500" },
-    { subject: "Chemistry", completion: 72, color: "from-purple-500 to-pink-500" },
-    { subject: "Mathematics", completion: 58, color: "from-green-500 to-emerald-500" },
+    { subject: "Physics", completion: 65, color: "#3b82f6" },
+    { subject: "Chemistry", completion: 58, color: "#10b981" },
+    { subject: "Mathematics", completion: 72, color: "#f59e0b" },
+  ];
+
+  const chartData = [
+    { day: "Mon", hours: 3 },
+    { day: "Tue", hours: 4 },
+    { day: "Wed", hours: 2 },
+    { day: "Thu", hours: 5 },
+    { day: "Fri", hours: 3 },
+    { day: "Sat", hours: 6 },
+    { day: "Sun", hours: 4 },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Welcome back, {user?.name}! 🎯</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+            Welcome back, {user?.name || "Student"}! 🎯
+          </h1>
           <p className="text-blue-200">JEE 2028 & Class 11-12 Board Exam Preparation</p>
         </div>
 
-        {/* Exam Countdowns - 2x2 Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Exam Countdowns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           {/* JEE Main 2028 */}
-          <Card className="bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-2xl border-0">
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Trophy className="w-8 h-8" />
-                <div>
-                  <h2 className="text-2xl font-bold">JEE Main 2028</h2>
-                  <p className="text-blue-100 text-sm">January 22, 2028</p>
-                </div>
+          <Card className="bg-gradient-to-br from-blue-600 to-blue-800 border-blue-400 shadow-xl">
+            <div className="p-6 text-white">
+              <div className="flex items-center gap-2 mb-4">
+                <Trophy className="w-6 h-6" />
+                <h2 className="text-2xl font-bold">JEE Main 2028</h2>
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { label: "Days", value: jeeMainCountdown.days },
-                  { label: "Hrs", value: jeeMainCountdown.hours },
-                  { label: "Min", value: jeeMainCountdown.minutes },
-                  { label: "Sec", value: jeeMainCountdown.seconds },
-                ].map((item) => (
-                  <div key={item.label} className="bg-white/20 rounded p-2 text-center">
-                    <div className="text-2xl font-bold">{String(item.value).padStart(2, "0")}</div>
-                    <div className="text-xs">{item.label}</div>
-                  </div>
-                ))}
+              <p className="text-blue-100 mb-6">January 22, 2028</p>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-blue-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{jeeMainCountdown.days}</div>
+                  <div className="text-xs text-blue-200">Days</div>
+                </div>
+                <div className="bg-blue-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{jeeMainCountdown.hours}</div>
+                  <div className="text-xs text-blue-200">Hrs</div>
+                </div>
+                <div className="bg-blue-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{jeeMainCountdown.minutes}</div>
+                  <div className="text-xs text-blue-200">Min</div>
+                </div>
+                <div className="bg-blue-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{jeeMainCountdown.seconds}</div>
+                  <div className="text-xs text-blue-200">Sec</div>
+                </div>
               </div>
             </div>
           </Card>
 
           {/* JEE Advanced 2028 */}
-          <Card className="bg-gradient-to-br from-purple-600 to-purple-800 text-white shadow-2xl border-0">
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Zap className="w-8 h-8" />
-                <div>
-                  <h2 className="text-2xl font-bold">JEE Advanced 2028</h2>
-                  <p className="text-purple-100 text-sm">June 4, 2028</p>
-                </div>
+          <Card className="bg-gradient-to-br from-purple-600 to-purple-800 border-purple-400 shadow-xl">
+            <div className="p-6 text-white">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-6 h-6" />
+                <h2 className="text-2xl font-bold">JEE Advanced 2028</h2>
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { label: "Days", value: jeeAdvCountdown.days },
-                  { label: "Hrs", value: jeeAdvCountdown.hours },
-                  { label: "Min", value: jeeAdvCountdown.minutes },
-                  { label: "Sec", value: jeeAdvCountdown.seconds },
-                ].map((item) => (
-                  <div key={item.label} className="bg-white/20 rounded p-2 text-center">
-                    <div className="text-2xl font-bold">{String(item.value).padStart(2, "0")}</div>
-                    <div className="text-xs">{item.label}</div>
-                  </div>
-                ))}
+              <p className="text-purple-100 mb-6">June 4, 2028</p>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-purple-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{jeeAdvCountdown.days}</div>
+                  <div className="text-xs text-purple-200">Days</div>
+                </div>
+                <div className="bg-purple-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{jeeAdvCountdown.hours}</div>
+                  <div className="text-xs text-purple-200">Hrs</div>
+                </div>
+                <div className="bg-purple-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{jeeAdvCountdown.minutes}</div>
+                  <div className="text-xs text-purple-200">Min</div>
+                </div>
+                <div className="bg-purple-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{jeeAdvCountdown.seconds}</div>
+                  <div className="text-xs text-purple-200">Sec</div>
+                </div>
               </div>
             </div>
           </Card>
 
           {/* Class 12 Board Exam */}
-          <Card className="bg-gradient-to-br from-green-600 to-green-800 text-white shadow-2xl border-0">
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <BookOpen className="w-8 h-8" />
-                <div>
-                  <h2 className="text-2xl font-bold">Class 12 Board Exam</h2>
-                  <p className="text-green-100 text-sm">February 15, 2028</p>
-                </div>
+          <Card className="bg-gradient-to-br from-green-600 to-green-800 border-green-400 shadow-xl">
+            <div className="p-6 text-white">
+              <div className="flex items-center gap-2 mb-4">
+                <BookOpen className="w-6 h-6" />
+                <h2 className="text-2xl font-bold">Class 12 Board Exam</h2>
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { label: "Days", value: board12Countdown.days },
-                  { label: "Hrs", value: board12Countdown.hours },
-                  { label: "Min", value: board12Countdown.minutes },
-                  { label: "Sec", value: board12Countdown.seconds },
-                ].map((item) => (
-                  <div key={item.label} className="bg-white/20 rounded p-2 text-center">
-                    <div className="text-2xl font-bold">{String(item.value).padStart(2, "0")}</div>
-                    <div className="text-xs">{item.label}</div>
-                  </div>
-                ))}
+              <p className="text-green-100 mb-6">February 15, 2028</p>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-green-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{board12Countdown.days}</div>
+                  <div className="text-xs text-green-200">Days</div>
+                </div>
+                <div className="bg-green-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{board12Countdown.hours}</div>
+                  <div className="text-xs text-green-200">Hrs</div>
+                </div>
+                <div className="bg-green-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{board12Countdown.minutes}</div>
+                  <div className="text-xs text-green-200">Min</div>
+                </div>
+                <div className="bg-green-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{board12Countdown.seconds}</div>
+                  <div className="text-xs text-green-200">Sec</div>
+                </div>
               </div>
             </div>
           </Card>
 
           {/* Class 11 Board Exam */}
-          <Card className="bg-gradient-to-br from-orange-600 to-orange-800 text-white shadow-2xl border-0">
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Award className="w-8 h-8" />
-                <div>
-                  <h2 className="text-2xl font-bold">Class 11 Board Exam</h2>
-                  <p className="text-orange-100 text-sm">November 20, 2027</p>
+          <Card className="bg-gradient-to-br from-orange-600 to-orange-800 border-orange-400 shadow-xl">
+            <div className="p-6 text-white">
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="w-6 h-6" />
+                <h2 className="text-2xl font-bold">Class 11 Board Exam</h2>
+              </div>
+              <p className="text-orange-100 mb-6">November 20, 2027</p>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-orange-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{board11Countdown.days}</div>
+                  <div className="text-xs text-orange-200">Days</div>
+                </div>
+                <div className="bg-orange-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{board11Countdown.hours}</div>
+                  <div className="text-xs text-orange-200">Hrs</div>
+                </div>
+                <div className="bg-orange-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{board11Countdown.minutes}</div>
+                  <div className="text-xs text-orange-200">Min</div>
+                </div>
+                <div className="bg-orange-700 bg-opacity-50 p-3 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{board11Countdown.seconds}</div>
+                  <div className="text-xs text-orange-200">Sec</div>
                 </div>
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { label: "Days", value: board11Countdown.days },
-                  { label: "Hrs", value: board11Countdown.hours },
-                  { label: "Min", value: board11Countdown.minutes },
-                  { label: "Sec", value: board11Countdown.seconds },
-                ].map((item) => (
-                  <div key={item.label} className="bg-white/20 rounded p-2 text-center">
-                    <div className="text-2xl font-bold">{String(item.value).padStart(2, "0")}</div>
-                    <div className="text-xs">{item.label}</div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Study Statistics & Progress */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+          {/* Subject Progress */}
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-700 border-slate-600 shadow-lg lg:col-span-2">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-blue-400" />
+                Subject Progress
+              </h3>
+              <div className="space-y-4">
+                {subjectProgress.map((item) => (
+                  <div key={item.subject}>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-gray-300 font-medium">{item.subject}</span>
+                      <span className="text-blue-300 font-bold">{item.completion}%</span>
+                    </div>
+                    <div className="w-full bg-slate-600 rounded-full h-2">
+                      <div
+                        className="h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${item.completion}%`, backgroundColor: item.color }}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           </Card>
-        </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-white/10 backdrop-blur border-white/20 text-white">
+          {/* Quick Stats */}
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-700 border-slate-600 shadow-lg">
             <div className="p-6">
-              <BookOpen className="w-8 h-8 text-blue-400 mb-2" />
-              <p className="text-gray-300 text-sm">Hours Studied</p>
-              <p className="text-3xl font-bold mt-2">{totalHours?.toFixed(1) || "0"}</p>
-              <p className="text-xs text-gray-400 mt-1">Last 30 days</p>
-            </div>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur border-white/20 text-white">
-            <div className="p-6">
-              <Target className="w-8 h-8 text-green-400 mb-2" />
-              <p className="text-gray-300 text-sm">Study Sessions</p>
-              <p className="text-3xl font-bold mt-2">{studySessions?.length || "0"}</p>
-              <p className="text-xs text-gray-400 mt-1">Total sessions</p>
-            </div>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur border-white/20 text-white">
-            <div className="p-6">
-              <FileText className="w-8 h-8 text-purple-400 mb-2" />
-              <p className="text-gray-300 text-sm">Study Materials</p>
-              <p className="text-3xl font-bold mt-2">{pdfDocuments?.length || "0"}</p>
-              <p className="text-xs text-gray-400 mt-1">PDFs available</p>
-            </div>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur border-white/20 text-white">
-            <div className="p-6">
-              <Trophy className="w-8 h-8 text-yellow-400 mb-2" />
-              <p className="text-gray-300 text-sm">Your Rank</p>
-              <p className="text-3xl font-bold mt-2">#42</p>
-              <p className="text-xs text-gray-400 mt-1">Leaderboard</p>
-            </div>
-          </Card>
-        </div>
-
-        {/* Subject Progress & Study Chart */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Subject Progress */}
-          <div className="lg:col-span-1">
-            <Card className="bg-white/10 backdrop-blur border-white/20 text-white">
-              <div className="p-6">
-                <h3 className="text-lg font-bold mb-6">Subject Progress</h3>
-                <div className="space-y-4">
-                  {subjectProgress.map((item) => (
-                    <div key={item.subject}>
-                      <div className="flex justify-between mb-2">
-                        <span className="text-sm font-medium">{item.subject}</span>
-                        <span className="text-sm text-gray-300">{item.completion}%</span>
-                      </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div
-                          className={`bg-gradient-to-r ${item.color} h-2 rounded-full`}
-                          style={{ width: `${item.completion}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+              <h3 className="text-xl font-bold text-white mb-6">Quick Stats</h3>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-gray-400 text-sm">Total Study Hours</p>
+                  <p className="text-3xl font-bold text-blue-400">{totalHours || 0}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Study Sessions</p>
+                  <p className="text-3xl font-bold text-green-400">{studySessions?.length || 0}</p>
                 </div>
               </div>
-            </Card>
-          </div>
-
-          {/* Study Chart */}
-          <div className="lg:col-span-2">
-            <Card className="bg-white/10 backdrop-blur border-white/20 text-white">
-              <div className="p-6">
-                <h3 className="text-lg font-bold mb-6">Study Progress (Last 7 Days)</h3>
-                {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                      <XAxis dataKey="date" stroke="rgba(255,255,255,0.5)" />
-                      <YAxis stroke="rgba(255,255,255,0.5)" />
-                      <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(255,255,255,0.2)" }} />
-                      <Line type="monotone" dataKey="hours" stroke="#3b82f6" strokeWidth={3} dot={{ fill: "#3b82f6", r: 5 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-64 flex items-center justify-center text-gray-400">
-                    <p>No study data yet. Start logging your sessions!</p>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         </div>
 
-        {/* Log Study Session & Featured Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Log Session Form */}
-          <Card className="bg-white/10 backdrop-blur border-white/20 text-white">
-            <div className="p-6">
-              <h3 className="text-lg font-bold mb-6">Log Study Session</h3>
-              <form onSubmit={handleLogSession} className="space-y-4">
+        {/* Study Session Form */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-700 border-slate-600 shadow-lg mb-12">
+          <div className="p-6">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Plus className="w-5 h-5 text-green-400" />
+              Log Study Session
+            </h3>
+            <form onSubmit={handleSubmitSession} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label className="text-sm font-semibold text-gray-300">Hours Studied</Label>
+                  <Label className="text-gray-300">Hours Studied</Label>
                   <Input
                     type="number"
                     step="0.5"
-                    min="0"
-                    max="24"
                     value={hoursStudied}
                     onChange={(e) => setHoursStudied(e.target.value)}
                     placeholder="e.g., 2.5"
-                    className="mt-2 bg-white/20 border-white/30 text-white placeholder:text-gray-400"
+                    className="mt-2 bg-slate-700 border-slate-600 text-white"
                   />
                 </div>
-
                 <div>
-                  <Label className="text-sm font-semibold text-gray-300">Subject</Label>
+                  <Label className="text-gray-300">Subject</Label>
                   <select
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="mt-2 w-full bg-white/20 border border-white/30 text-white rounded px-3 py-2"
+                    className="mt-2 w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white"
                   >
-                    <option value="Physics">Physics</option>
-                    <option value="Chemistry">Chemistry</option>
-                    <option value="Mathematics">Mathematics</option>
+                    <option>Physics</option>
+                    <option>Chemistry</option>
+                    <option>Mathematics</option>
+                    <option>Biology</option>
                   </select>
                 </div>
-
                 <div>
-                  <Label className="text-sm font-semibold text-gray-300">Notes</Label>
-                  <Textarea
+                  <Label className="text-gray-300">Notes (Optional)</Label>
+                  <Input
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Add notes..."
-                    className="mt-2 bg-white/20 border-white/30 text-white placeholder:text-gray-400 h-20"
+                    placeholder="What did you study?"
+                    className="mt-2 bg-slate-700 border-slate-600 text-white"
                   />
                 </div>
+              </div>
+              <Button
+                type="submit"
+                disabled={createSessionMutation.isPending}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2"
+              >
+                {createSessionMutation.isPending ? "Logging..." : "Log Session"}
+              </Button>
+            </form>
+          </div>
+        </Card>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                  disabled={createSessionMutation.isPending}
-                >
-                  {createSessionMutation.isPending ? "Logging..." : "Log Session"}
-                </Button>
-              </form>
+        {/* Weekly Study Chart */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-700 border-slate-600 shadow-lg mb-12">
+          <div className="p-6">
+            <h3 className="text-xl font-bold text-white mb-6">Weekly Study Hours</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+                <XAxis dataKey="day" stroke="#94a3b8" />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #475569" }} />
+                <Bar dataKey="hours" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        {/* Quick Access Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <Card className="bg-gradient-to-br from-blue-600 to-blue-700 border-blue-500 shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate("/study-materials")}>
+            <div className="p-6 text-white text-center">
+              <FileText className="w-8 h-8 mx-auto mb-3" />
+              <h4 className="font-bold mb-1">Study Materials</h4>
+              <p className="text-sm text-blue-100">Browse PDFs & Notes</p>
             </div>
           </Card>
 
-          {/* Featured Sections */}
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Study Materials */}
-            <Card
-              className="bg-gradient-to-br from-purple-600 to-purple-800 text-white shadow-lg hover:shadow-xl transition-all cursor-pointer"
-              onClick={() => navigate("/pdf-browser")}
-            >
-              <div className="p-6">
-                <FileText className="w-8 h-8 mb-3" />
-                <h3 className="text-lg font-bold mb-2">Study Materials</h3>
-                <p className="text-sm text-purple-100 mb-4">
-                  Access {pdfDocuments?.length || 0} comprehensive notes, PYQs, and practice papers
-                </p>
-                <Button variant="outline" className="w-full text-white border-white hover:bg-white/20">
-                  Browse <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </Card>
+          <Card className="bg-gradient-to-br from-green-600 to-green-700 border-green-500 shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate("/board-questions")}>
+            <div className="p-6 text-white text-center">
+              <Target className="w-8 h-8 mx-auto mb-3" />
+              <h4 className="font-bold mb-1">Board Questions</h4>
+              <p className="text-sm text-green-100">Practice MCQs</p>
+            </div>
+          </Card>
 
-            {/* Mock Tests */}
-            <Card className="bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-lg hover:shadow-xl transition-all cursor-pointer">
-              <div className="p-6">
-                <Target className="w-8 h-8 mb-3" />
-                <h3 className="text-lg font-bold mb-2">Mock Tests</h3>
-                <p className="text-sm text-blue-100 mb-4">
-                  Take full-length JEE Main, JEE Advanced, and board exam mock tests
-                </p>
-                <Button variant="outline" className="w-full text-white border-white hover:bg-white/20">
-                  Start Test <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </Card>
+          <Card className="bg-gradient-to-br from-purple-600 to-purple-700 border-purple-500 shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate("/posts")}>
+            <div className="p-6 text-white text-center">
+              <Users className="w-8 h-8 mx-auto mb-3" />
+              <h4 className="font-bold mb-1">Community</h4>
+              <p className="text-sm text-purple-100">Share & Learn</p>
+            </div>
+          </Card>
 
-            {/* Community */}
-            <Card
-              className="bg-gradient-to-br from-green-600 to-green-800 text-white shadow-lg hover:shadow-xl transition-all cursor-pointer"
-              onClick={() => navigate("/study-links")}
-            >
-              <div className="p-6">
-                <Users className="w-8 h-8 mb-3" />
-                <h3 className="text-lg font-bold mb-2">Community</h3>
-                <p className="text-sm text-green-100 mb-4">
-                  Join official WhatsApp groups and Telegram channels
-                </p>
-                <Button variant="outline" className="w-full text-white border-white hover:bg-white/20">
-                  Join Now <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </Card>
-
-            {/* Leaderboard */}
-            <Card
-              className="bg-gradient-to-br from-yellow-600 to-yellow-800 text-white shadow-lg hover:shadow-xl transition-all cursor-pointer"
-              onClick={() => navigate("/leaderboard")}
-            >
-              <div className="p-6">
-                <Trophy className="w-8 h-8 mb-3" />
-                <h3 className="text-lg font-bold mb-2">Leaderboard</h3>
-                <p className="text-sm text-yellow-100 mb-4">
-                  See your rank and compete with top performers
-                </p>
-                <Button variant="outline" className="w-full text-white border-white hover:bg-white/20">
-                  View <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </Card>
-          </div>
+          <Card className="bg-gradient-to-br from-orange-600 to-orange-700 border-orange-500 shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate("/leaderboard")}>
+            <div className="p-6 text-white text-center">
+              <Trophy className="w-8 h-8 mx-auto mb-3" />
+              <h4 className="font-bold mb-1">Leaderboard</h4>
+              <p className="text-sm text-orange-100">Top Performers</p>
+            </div>
+          </Card>
         </div>
 
-        {/* Study Timer Section */}
+        {/* Study Timer & PDF Section */}
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
           <StudyTimer />
           
@@ -461,26 +412,9 @@ export default function Dashboard() {
                 <FileText className="w-5 h-5 text-green-600" />
                 <h3 className="text-lg font-bold text-gray-900">Study Materials (PDF)</h3>
               </div>
-              <p className="text-sm text-gray-600 mb-4">Download and study from curated PDFs</p>
-              {pdfDocuments && pdfDocuments.length > 0 ? (
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {pdfDocuments.slice(0, 5).map((pdf) => (
-                    <div key={pdf.id} className="flex items-center justify-between p-2 bg-white rounded border border-green-200 hover:border-green-400">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{pdf.title}</p>
-                        <p className="text-xs text-gray-500">{pdf.subject}</p>
-                      </div>
-                      <Button size="sm" variant="outline" onClick={() => navigate("/pdf-browser")}>
-                        View
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-4">No PDFs available yet</p>
-              )}
-              <Button className="w-full mt-4 bg-green-600 hover:bg-green-700" onClick={() => navigate("/pdf-browser")}>
-                Browse All PDFs
+              <p className="text-sm text-gray-600 mb-4">Access curated study materials and notes for PCMb stream</p>
+              <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={() => navigate("/study-materials")}>
+                Browse Study Materials
               </Button>
             </div>
           </Card>
