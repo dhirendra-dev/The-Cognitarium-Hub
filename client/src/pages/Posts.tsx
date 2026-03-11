@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Heart, Trash2, Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import PostReplies from "@/components/PostReplies";
 
 export default function Posts() {
   const { user } = useAuth();
@@ -252,14 +253,17 @@ export default function Posts() {
                   )}
 
                   <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
-                  <button
-                        onClick={() => handleLikePost(post.id, post.likes || 0)}
-                        className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors"
-                      >
-                        <Heart className="w-5 h-5" />
-                        <span>{post.likes || 0} Likes</span>
-                      </button>
+                    <button
+                      onClick={() => handleLikePost(post.id, post.likes || 0)}
+                      className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors"
+                    >
+                      <Heart className="w-5 h-5" />
+                      <span>{post.likes || 0} Likes</span>
+                    </button>
                   </div>
+
+                  {/* Post Replies Section */}
+                  <PostReplies postId={post.id} />
                 </div>
               </Card>
             ))
