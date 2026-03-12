@@ -20,6 +20,12 @@ import {
   InsertPDFDocument,
   InsertPostReply,
   InsertStudyTimerSession,
+  InsertNotice,
+  InsertCommunityGroup,
+  InsertGroupLink,
+  InsertTestSeries,
+  InsertTestSeriesQuestion,
+  InsertUserTestAttempt,
   studySessions,
   samplePapers,
   subjects,
@@ -37,6 +43,12 @@ import {
   pdfDocuments,
   postReplies,
   studyTimerSessions,
+  notices,
+  communityGroups,
+  groupLinks,
+  testSeries,
+  testSeriesQuestions,
+  userTestAttempts,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;

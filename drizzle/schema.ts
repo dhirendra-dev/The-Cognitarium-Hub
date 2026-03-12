@@ -434,3 +434,101 @@ export const studyTimerSessions = mysqlTable("studyTimerSessions", {
 
 export type StudyTimerSession = typeof studyTimerSessions.$inferSelect;
 export type InsertStudyTimerSession = typeof studyTimerSessions.$inferInsert;
+
+
+// Notices - Admin announcements
+export const notices = mysqlTable("notices", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  type: mysqlEnum("type", ["announcement", "important", "update", "event"]).default("announcement"),
+  createdBy: int("createdBy").notNull(),
+  isActive: boolean("isActive").default(true),
+  priority: int("priority").default(0), // Higher number = higher priority
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Notice = typeof notices.$inferSelect;
+export type InsertNotice = typeof notices.$inferInsert;
+
+
+// Community Groups - Study groups and links
+export const communityGroups = mysqlTable("communityGroups", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  type: mysqlEnum("type", ["telegram", "whatsapp", "discord", "other"]).notNull(),
+  createdBy: int("createdBy").notNull(),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CommunityGroup = typeof communityGroups.$inferSelect;
+export type InsertCommunityGroup = typeof communityGroups.$inferInsert;
+
+// Group Links - Links for each community group
+export const groupLinks = mysqlTable("groupLinks", {
+  id: int("id").autoincrement().primaryKey(),
+  groupId: int("groupId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  url: text("url").notNull(),
+  subject: varchar("subject", { length: 100 }),
+  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced"]).notNull(),
+  createdBy: int("createdBy").notNull(),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type GroupLink = typeof groupLinks.$inferSelect;
+export type InsertGroupLink = typeof groupLinks.$inferInsert;
+
+// Test Series - Admin-created test series
+export const testSeries = mysqlTable("testSeries", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced"]).notNull(),
+  totalQuestions: int("totalQuestions").notNull(),
+  duration: int("duration").notNull(), // in minutes
+  createdBy: int("createdBy").notNull(),
+  isPublished: boolean("isPublished").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type TestSeries = typeof testSeries.$inferSelect;
+export type InsertTestSeries = typeof testSeries.$inferInsert;
+
+// Test Series Questions
+export const testSeriesQuestions = mysqlTable("testSeriesQuestions", {
+  id: int("id").autoincrement().primaryKey(),
+  testSeriesId: int("testSeriesId").notNull(),
+  questionText: text("questionText").notNull(),
+  optionA: text("optionA").notNull(),
+  optionB: text("optionB").notNull(),
+  optionC: text("optionC").notNull(),
+  optionD: text("optionD").notNull(),
+  correctOption: mysqlEnum("correctOption", ["A", "B", "C", "D"]).notNull(),
+  explanation: text("explanation"),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TestSeriesQuestion = typeof testSeriesQuestions.$inferSelect;
+export type InsertTestSeriesQuestion = typeof testSeriesQuestions.$inferInsert;
+
+// User Test Attempts - Track user attempts on test series
+export const userTestAttempts = mysqlTable("userTestAttempts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  testSeriesId: int("testSeriesId").notNull(),
+  score: decimal("score", { precision: 5, scale: 2 }).notNull(),
+  totalQuestions: int("totalQuestions").notNull(),
+  correctAnswers: int("correctAnswers").notNull(),
+  wrongAnswers: int("wrongAnswers").notNull(),
+  skippedQuestions: int("skippedQuestions").notNull(),
+  timeTaken: int("timeTaken"), // in seconds
+  attemptedAt: timestamp("attemptedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type UserTestAttempt = typeof userTestAttempts.$inferSelect;
+export type InsertUserTestAttempt = typeof userTestAttempts.$inferInsert;
