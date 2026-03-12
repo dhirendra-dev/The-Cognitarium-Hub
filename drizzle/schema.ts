@@ -544,3 +544,148 @@ export const userTestAttempts = mysqlTable("userTestAttempts", {
 });
 export type UserTestAttempt = typeof userTestAttempts.$inferSelect;
 export type InsertUserTestAttempt = typeof userTestAttempts.$inferInsert;
+
+
+// Courses - Course management system
+export const courses = mysqlTable("courses", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  thumbnail: text("thumbnail"),
+  category: varchar("category", { length: 100 }),
+  difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("beginner"),
+  isFree: boolean("isFree").default(true),
+  price: decimal("price", { precision: 10, scale: 2 }).default("0"),
+  createdBy: int("createdBy").notNull(),
+  isPublished: boolean("isPublished").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Course = typeof courses.$inferSelect;
+export type InsertCourse = typeof courses.$inferInsert;
+
+// Lessons - Individual lessons within courses
+export const lessons = mysqlTable("lessons", {
+  id: int("id").autoincrement().primaryKey(),
+  courseId: int("courseId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  videoUrl: text("videoUrl"),
+  content: text("content"), // Rich text content
+  pdfUrl: text("pdfUrl"),
+  duration: int("duration"), // in minutes
+  order: int("order").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Lesson = typeof lessons.$inferSelect;
+export type InsertLesson = typeof lessons.$inferInsert;
+
+// Course Enrollments - Track student enrollments
+export const courseEnrollments = mysqlTable("courseEnrollments", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  courseId: int("courseId").notNull(),
+  enrolledAt: timestamp("enrolledAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  progressPercentage: decimal("progressPercentage", { precision: 5, scale: 2 }).default("0"),
+});
+
+export type CourseEnrollment = typeof courseEnrollments.$inferSelect;
+export type InsertCourseEnrollment = typeof courseEnrollments.$inferInsert;
+
+// Lesson Progress - Track which lessons students have completed
+export const lessonProgress = mysqlTable("lessonProgress", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  lessonId: int("lessonId").notNull(),
+  isCompleted: boolean("isCompleted").default(false),
+  completedAt: timestamp("completedAt"),
+  watchedDuration: int("watchedDuration").default(0), // in seconds
+});
+
+export type LessonProgress = typeof lessonProgress.$inferSelect;
+export type InsertLessonProgress = typeof lessonProgress.$inferInsert;
+
+// Quizzes - Quiz management
+export const quizzes = mysqlTable("quizzes", {
+  id: int("id").autoincrement().primaryKey(),
+  courseId: int("courseId"),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  passPercentage: int("passPercentage").default(70),
+  timeLimit: int("timeLimit"), // in minutes
+  shuffleQuestions: boolean("shuffleQuestions").default(false),
+  shuffleOptions: boolean("shuffleOptions").default(false),
+  createdBy: int("createdBy").notNull(),
+  isPublished: boolean("isPublished").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Quiz = typeof quizzes.$inferSelect;
+export type InsertQuiz = typeof quizzes.$inferInsert;
+
+// Quiz Questions - Questions within quizzes
+export const quizQuestions = mysqlTable("quizQuestions", {
+  id: int("id").autoincrement().primaryKey(),
+  quizId: int("quizId").notNull(),
+  questionText: text("questionText").notNull(),
+  questionType: mysqlEnum("questionType", ["mcq", "truefalse", "fillblank"]).default("mcq"),
+  correctAnswer: text("correctAnswer").notNull(),
+  explanation: text("explanation"),
+  order: int("order").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type QuizQuestion = typeof quizQuestions.$inferSelect;
+export type InsertQuizQuestion = typeof quizQuestions.$inferInsert;
+
+// Quiz Options - Answer options for MCQ questions
+export const quizOptions = mysqlTable("quizOptions", {
+  id: int("id").autoincrement().primaryKey(),
+  questionId: int("questionId").notNull(),
+  optionText: text("optionText").notNull(),
+  order: int("order").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type QuizOption = typeof quizOptions.$inferSelect;
+export type InsertQuizOption = typeof quizOptions.$inferInsert;
+
+// Quiz Attempts - Track student quiz attempts
+export const quizAttempts = mysqlTable("quizAttempts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  quizId: int("quizId").notNull(),
+  score: decimal("score", { precision: 5, scale: 2 }).notNull(),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }).notNull(),
+  totalQuestions: int("totalQuestions").notNull(),
+  correctAnswers: int("correctAnswers").notNull(),
+  timeTaken: int("timeTaken"), // in seconds
+  passed: boolean("passed").notNull(),
+  attemptedAt: timestamp("attemptedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type QuizAttempt = typeof quizAttempts.$inferSelect;
+export type InsertQuizAttempt = typeof quizAttempts.$inferInsert;
+
+// Certificates - Auto-generated certificates
+export const certificates = mysqlTable("certificates", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  courseId: int("courseId"),
+  quizId: int("quizId"),
+  certificateType: mysqlEnum("certificateType", ["course", "quiz"]).notNull(),
+  certificateId: varchar("certificateId", { length: 100 }).unique().notNull(),
+  certificateUrl: text("certificateUrl"),
+  certificateKey: varchar("certificateKey", { length: 500 }),
+  issuedAt: timestamp("issuedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Certificate = typeof certificates.$inferSelect;
+export type InsertCertificate = typeof certificates.$inferInsert;
