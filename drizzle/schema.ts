@@ -19,6 +19,8 @@ export const users = mysqlTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   theme: mysqlEnum("theme", ["light", "dark"]).default("light").notNull(),
+  stream: mysqlEnum("stream", ["science", "commerce", "arts"]),
+  scienceStream: mysqlEnum("scienceStream", ["PCM", "PCB", "PCMB"]),
   dailyGoalHours: decimal("dailyGoalHours", { precision: 4, scale: 2 }).default("4.00"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
