@@ -1,4 +1,4 @@
-import { and, desc, eq, sql, like, gte, lte, count } from "drizzle-orm";
+import { and, desc, eq, sql, like, gte, lte, count, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -794,4 +794,66 @@ export async function completeStudyTimerSession(id: number, endTime: Date) {
   return db.update(studyTimerSessions)
     .set({ isCompleted: true, endTime })
     .where(eq(studyTimerSessions.id, id));
+}
+
+
+// Admin Leaderboard Ranking Functions
+export async function updateAdminRank(userId: number, adminRank: number, bonusPoints: number, rankNotes: string, adminId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(leaderboard)
+    .set({
+      adminRank,
+      bonusPoints,
+      rankNotes,
+      lastRankedBy: adminId,
+      lastRankedAt: new Date(),
+    })
+    .where(eq(leaderboard.userId, userId));
+}
+
+export async function lockRank(userId: number, adminId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(leaderboard)
+    .set({
+      isRankLocked: true,
+      rankLockedBy: adminId,
+    })
+    .where(eq(leaderboard.userId, userId));
+}
+
+export async function unlockRank(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(leaderboard)
+    .set({ isRankLocked: false })
+    .where(eq(leaderboard.userId, userId));
+}
+
+export async function getAdminRankingList() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    userId: leaderboard.userId,
+    rank: leaderboard.rank,
+    adminRank: leaderboard.adminRank,
+    points: leaderboard.points,
+    bonusPoints: leaderboard.bonusPoints,
+    isRankLocked: leaderboard.isRankLocked,
+    rankNotes: leaderboard.rankNotes,
+    lastRankedAt: leaderboard.lastRankedAt,
+    totalHoursStudied: leaderboard.totalHoursStudied,
+    averageScore: leaderboard.averageScore,
+  })
+    .from(leaderboard)
+    .orderBy(leaderboard.adminRank ? asc(leaderboard.adminRank) : desc(leaderboard.points));
+}
+
+export async function getLeaderboardWithAdminRanks() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select()
+    .from(leaderboard)
+    .orderBy(leaderboard.adminRank ? asc(leaderboard.adminRank) : desc(leaderboard.points));
 }

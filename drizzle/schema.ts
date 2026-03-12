@@ -168,6 +168,13 @@ export const leaderboard = mysqlTable("leaderboard", {
   streakDays: int("streakDays").default(0),
   rank: int("rank"),
   points: int("points").default(0),
+  adminRank: int("adminRank"),
+  bonusPoints: int("bonusPoints").default(0),
+  isRankLocked: boolean("isRankLocked").default(false),
+  rankLockedBy: int("rankLockedBy"),
+  rankNotes: text("rankNotes"),
+  lastRankedBy: int("lastRankedBy"),
+  lastRankedAt: timestamp("lastRankedAt"),
   lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

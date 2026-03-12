@@ -69,6 +69,11 @@ import {
   getAllBoardExamQuestions,
   updateBoardExamQuestion,
   deleteBoardExamQuestion,
+  updateAdminRank,
+  lockRank,
+  unlockRank,
+  getAdminRankingList,
+  getLeaderboardWithAdminRanks,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import axios from "axios";
@@ -812,6 +817,43 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         return completeStudyTimerSession(input.id, new Date());
       }),
+  }),
+  // Admin Leaderboard Ranking
+  adminLeaderboard: router({
+    updateRank: adminProcedure
+      .input(
+        z.object({
+          userId: z.number(),
+          adminRank: z.number().min(1),
+          bonusPoints: z.number().default(0),
+          rankNotes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        return updateAdminRank(
+          input.userId,
+          input.adminRank,
+          input.bonusPoints,
+          input.rankNotes || "",
+          ctx.user.id
+        );
+      }),
+    lockRank: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        return lockRank(input.userId, ctx.user.id);
+      }),
+    unlockRank: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        return unlockRank(input.userId);
+      }),
+    getRankingList: adminProcedure.query(async () => {
+      return getAdminRankingList();
+    }),
+    getLeaderboard: protectedProcedure.query(async () => {
+      return getLeaderboardWithAdminRanks();
+    }),
   }),
 });
 export type AppRouter = typeof appRouter;
