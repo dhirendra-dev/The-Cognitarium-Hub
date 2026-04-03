@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Download, Award, Loader2, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CertificateShareButtons } from "@/components/CertificateShareButtons";
 
 interface Certificate {
   id: number;
@@ -225,6 +226,15 @@ export default function CertificatesPage() {
                       {cert.isDownloaded && (
                         <div className="text-xs text-green-600 text-center">✓ Downloaded</div>
                       )}
+                      <div className="border-t border-green-200 pt-3 mt-3">
+                        <CertificateShareButtons
+                          certificateTitle={cert.title}
+                          certificateType={cert.certificateType}
+                          verificationCode={cert.verificationCode}
+                          certificateUrl={cert.certificateUrl}
+                          studentName="Student"
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

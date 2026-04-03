@@ -1069,3 +1069,120 @@ export async function getUserContributionStats(userId: number) {
 }
 
 
+/**
+ * Admin function: Award certificate to user manually
+ */
+export async function awardCertificateManually(
+  userId: number,
+  certificateType: string,
+  reason: string,
+  awardedBy: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if user already has this certificate
+  const existing = await db.select()
+    .from(communityContributionCertificates)
+    .where(
+      and(
+        eq(communityContributionCertificates.userId, userId),
+        eq(communityContributionCertificates.certificateType, certificateType as any)
+      )
+    )
+    .limit(1);
+  
+  if (existing.length > 0) {
+    throw new Error("User already has this certificate");
+  }
+  
+  const verificationCode = sql`UUID()`;
+  
+  return db.insert(communityContributionCertificates).values({
+    userId,
+    certificateType: certificateType as any,
+    title: `${certificateType} - Awarded by Admin`,
+    description: reason,
+    contributionMetric: `Manually awarded: ${reason}`,
+    certificateUrl: "",
+    certificateKey: "",
+    verificationCode: verificationCode.toString(),
+  });
+}
+
+/**
+ * Get all users for admin certificate awarding
+ */
+export async function getAllUsersForCertificateAward() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    profilePhotoUrl: users.profilePhotoUrl,
+  })
+    .from(users)
+    .where(eq(users.role, "user"))
+    .orderBy(desc(users.createdAt));
+}
+
+/**
+ * Get certificate statistics for admin dashboard
+ */
+export async function getCertificateStats() {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const totalCertificates = await db.select({ count: sql<number>`COUNT(*)`.mapWith(Number) })
+    .from(communityContributionCertificates);
+  
+  const certificatesByType = await db.select({
+    type: communityContributionCertificates.certificateType,
+    count: sql<number>`COUNT(*)`.mapWith(Number),
+  })
+    .from(communityContributionCertificates)
+    .groupBy(communityContributionCertificates.certificateType);
+  
+  const totalDownloads = await db.select({ count: sql<number>`COUNT(*)`.mapWith(Number) })
+    .from(communityContributionCertificates)
+    .where(eq(communityContributionCertificates.isDownloaded, true));
+  
+  const usersWithCertificates = await db.select({ count: sql<number>`COUNT(DISTINCT userId)`.mapWith(Number) })
+    .from(communityContributionCertificates);
+  
+  return {
+    totalCertificates: totalCertificates[0]?.count || 0,
+    totalDownloads: totalDownloads[0]?.count || 0,
+    usersWithCertificates: usersWithCertificates[0]?.count || 0,
+    certificatesByType: certificatesByType || [],
+  };
+}
+
+/**
+ * Delete a certificate (admin only)
+ */
+export async function deleteCertificate(certificateId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.delete(communityContributionCertificates)
+    .where(eq(communityContributionCertificates.id, certificateId));
+}
+
+/**
+ * Revoke all certificates of a type from a user
+ */
+export async function revokeCertificateType(userId: number, certificateType: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.delete(communityContributionCertificates)
+    .where(
+      and(
+        eq(communityContributionCertificates.userId, userId),
+        eq(communityContributionCertificates.certificateType, certificateType as any)
+      )
+    );
+}

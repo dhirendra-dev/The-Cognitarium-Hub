@@ -83,8 +83,14 @@ import {
   getCertificateCriteria,
   userHasCertificateType,
   getUserContributionStats,
+  awardCertificateManually,
+  getAllUsersForCertificateAward,
+  getCertificateStats,
+  deleteCertificate,
+  revokeCertificateType,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
+import { sendCertificateEarnedEmail } from "./certificate-email";
 import axios from "axios";
 import { TRPCError } from "@trpc/server";
 import { storagePut } from "./storage";
@@ -970,6 +976,21 @@ export const appRouter = router({
           verificationCode,
         });
 
+        // Send notification email
+        try {
+          await sendCertificateEarnedEmail({
+            studentName: ctx.user.name || "Student",
+            studentEmail: ctx.user.email || "",
+            certificateType: input.certificateType,
+            certificateTitle: criteria.description || "Certificate of Achievement",
+            certificateUrl: url,
+            verificationCode,
+            contributionMetric: getContributionMetric(stats, input.certificateType),
+          });
+        } catch (error) {
+          console.error("Failed to send certificate email:", error);
+        }
+
         return {
           success: true,
           certificateId: certificate[0]?.insertId,
@@ -1015,6 +1036,48 @@ export const appRouter = router({
       await initializeCertificateCriteria();
       return { success: true };
     }),
+
+    awardManually: adminProcedure
+      .input(
+        z.object({
+          userId: z.number(),
+          certificateType: z.string(),
+          reason: z.string(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        return awardCertificateManually(
+          input.userId,
+          input.certificateType,
+          input.reason,
+          ctx.user.id
+        );
+      }),
+
+    getAllUsersForAward: adminProcedure.query(async () => {
+      return getAllUsersForCertificateAward();
+    }),
+
+    getStats: adminProcedure.query(async () => {
+      return getCertificateStats();
+    }),
+
+    delete: adminProcedure
+      .input(z.object({ certificateId: z.number() }))
+      .mutation(async ({ input }) => {
+        return deleteCertificate(input.certificateId);
+      }),
+
+    revoke: adminProcedure
+      .input(
+        z.object({
+          userId: z.number(),
+          certificateType: z.string(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return revokeCertificateType(input.userId, input.certificateType);
+      }),
   }),
   // Admin Leaderboard Ranking
   adminLeaderboard: router({

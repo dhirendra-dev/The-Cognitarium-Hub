@@ -4,9 +4,10 @@ import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, BookOpen, BarChart3, Trash2, Shield, User } from "lucide-react";
+import { Users, BookOpen, BarChart3, Trash2, Shield, User, Award } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import { AdminCertificateManager } from "@/components/AdminCertificateManager";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -116,10 +117,11 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-white shadow-lg mb-8">
+          <TabsList className="grid w-full grid-cols-5 bg-white shadow-lg mb-8">
             <TabsTrigger value="users">All Users</TabsTrigger>
             <TabsTrigger value="sessions">Study Sessions</TabsTrigger>
             <TabsTrigger value="leaderboard">Top Performers</TabsTrigger>
+            <TabsTrigger value="certificates">Certificates</TabsTrigger>
             <TabsTrigger value="pdfs">PDF Management</TabsTrigger>
           </TabsList>
 
@@ -281,6 +283,11 @@ export default function AdminDashboard() {
                 <div className="p-8 text-center text-gray-500">No leaderboard data available</div>
               )}
             </Card>
+          </TabsContent>
+
+          {/* Certificates Management Tab */}
+          <TabsContent value="certificates">
+            <AdminCertificateManager />
           </TabsContent>
 
           {/* PDF Management Tab */}
