@@ -857,3 +857,215 @@ export async function getLeaderboardWithAdminRanks() {
     .from(leaderboard)
     .orderBy(leaderboard.adminRank ? asc(leaderboard.adminRank) : desc(leaderboard.points));
 }
+
+
+// ============ Certificate Management Functions ============
+
+import { communityContributionCertificates, certificateEligibilityCriteria, InsertCommunityContributionCertificate, InsertCertificateEligibilityCriteria } from "../drizzle/schema";
+
+/**
+ * Create a new certificate for a user
+ */
+export async function createCertificate(data: InsertCommunityContributionCertificate) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(communityContributionCertificates).values(data);
+  return result;
+}
+
+/**
+ * Get certificates for a user
+ */
+export async function getUserCertificates(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select()
+    .from(communityContributionCertificates)
+    .where(eq(communityContributionCertificates.userId, userId))
+    .orderBy(desc(communityContributionCertificates.issuedAt));
+}
+
+/**
+ * Get a specific certificate by ID
+ */
+export async function getCertificateById(certificateId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select()
+    .from(communityContributionCertificates)
+    .where(eq(communityContributionCertificates.id, certificateId))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+/**
+ * Update certificate download status
+ */
+export async function markCertificateAsDownloaded(certificateId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(communityContributionCertificates)
+    .set({
+      isDownloaded: true,
+      downloadedAt: new Date(),
+    })
+    .where(eq(communityContributionCertificates.id, certificateId));
+}
+
+/**
+ * Get all certificates (admin view)
+ */
+export async function getAllCertificates() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select()
+    .from(communityContributionCertificates)
+    .orderBy(desc(communityContributionCertificates.issuedAt));
+}
+
+/**
+ * Initialize certificate eligibility criteria
+ */
+export async function initializeCertificateCriteria() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const criteria: InsertCertificateEligibilityCriteria[] = [
+    {
+      certificateType: "activeMember" as const,
+      minPostCount: 5,
+      minLikesReceived: 10,
+      minRepliesCount: 3,
+      description: "Active Community Member - 5+ posts with 10+ likes",
+    },
+    {
+      certificateType: "topContributor",
+      minPostCount: 20,
+      minLikesReceived: 100,
+      minRepliesCount: 15,
+      description: "Top Community Contributor - 20+ posts with 100+ likes",
+    },
+    {
+      certificateType: "helpfulCommunity",
+      minRepliesCount: 50,
+      minLikesReceived: 200,
+      description: "Helpful Community Member - 50+ helpful replies",
+    },
+    {
+      certificateType: "consistentLearner" as const,
+      minStudyHours: "100.00",
+      minConsecutiveDays: 30,
+      description: "Consistent Learner - 100+ study hours with 30-day streak",
+    },
+    {
+      certificateType: "leaderboardTop10",
+      minLeaderboardRank: 10,
+      description: "Leaderboard Top 10 - Ranked in top 10 students",
+    },
+    {
+      certificateType: "courseCompletion",
+      minCourseCompletion: 1,
+      description: "Course Completion - Completed at least 1 full course",
+    },
+    {
+      certificateType: "quizMastery" as const,
+      minQuizScore: "90.00",
+      description: "Quiz Mastery - Achieved 90%+ score on quizzes",
+    },
+    {
+      certificateType: "studyStreak" as const,
+      minConsecutiveDays: 60,
+      minStudyHours: "200.00",
+      description: "Study Streak Champion - 60-day streak with 200+ hours",
+    },
+  ];
+  
+  // Check if criteria already exist
+  const existing = await db.select().from(certificateEligibilityCriteria).limit(1);
+  if (existing.length > 0) {
+    return; // Already initialized
+  }
+  
+  await db.insert(certificateEligibilityCriteria).values(criteria);
+}
+
+/**
+ * Get certificate eligibility criteria
+ */
+export async function getCertificateCriteria(certificateType: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select()
+    .from(certificateEligibilityCriteria)
+    .where(eq(certificateEligibilityCriteria.certificateType, certificateType as any))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+/**
+ * Check if user already has a certificate of this type
+ */
+export async function userHasCertificateType(userId: number, certificateType: string) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const result = await db.select()
+    .from(communityContributionCertificates)
+    .where(
+      and(
+        eq(communityContributionCertificates.userId, userId),
+        eq(communityContributionCertificates.certificateType, certificateType as any)
+      )
+    )
+    .limit(1);
+  
+  return result.length > 0;
+}
+
+/**
+ * Get user's contribution stats for certificate eligibility
+ */
+export async function getUserContributionStats(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Get post count
+  const userPosts = await db.select({ count: sql<number>`COUNT(*)`.mapWith(Number) })
+    .from(posts)
+    .where(eq(posts.userId, userId));
+  
+  // Get total likes received
+  const likesReceived = await db.select({ totalLikes: sql<number>`SUM(${posts.likes})`.mapWith(Number) })
+    .from(posts)
+    .where(eq(posts.userId, userId));
+  
+  // Get reply count
+  const replies = await db.select({ count: sql<number>`COUNT(*)`.mapWith(Number) })
+    .from(postReplies)
+    .where(eq(postReplies.userId, userId));
+  
+  // Get leaderboard info
+  const leaderboardData = await db.select()
+    .from(leaderboard)
+    .where(eq(leaderboard.userId, userId))
+    .limit(1);
+  
+  return {
+    postCount: userPosts[0]?.count || 0,
+    totalLikesReceived: likesReceived[0]?.totalLikes || 0,
+    replyCount: replies[0]?.count || 0,
+    leaderboardRank: leaderboardData[0]?.rank,
+    totalHoursStudied: leaderboardData[0]?.totalHoursStudied,
+    streakDays: leaderboardData[0]?.streakDays,
+  };
+}
+
+

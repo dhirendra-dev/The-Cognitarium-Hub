@@ -74,11 +74,22 @@ import {
   unlockRank,
   getAdminRankingList,
   getLeaderboardWithAdminRanks,
+  createCertificate,
+  getUserCertificates,
+  getCertificateById,
+  markCertificateAsDownloaded,
+  getAllCertificates,
+  initializeCertificateCriteria,
+  getCertificateCriteria,
+  userHasCertificateType,
+  getUserContributionStats,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import axios from "axios";
 import { TRPCError } from "@trpc/server";
 import { storagePut } from "./storage";
+import { generateCertificate, uploadCertificateToS3 } from "./certificate-generator";
+import crypto from "crypto";
 
 // Admin procedure - only allows admin users
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -88,6 +99,38 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+function checkCertificateEligibility(stats: any, criteria: any): boolean {
+  if (criteria.minPostCount && stats.postCount < criteria.minPostCount) return false;
+  if (criteria.minLikesReceived && stats.totalLikesReceived < criteria.minLikesReceived) return false;
+  if (criteria.minRepliesCount && stats.replyCount < criteria.minRepliesCount) return false;
+  if (criteria.minStudyHours && Number(stats.totalHoursStudied || 0) < Number(criteria.minStudyHours)) return false;
+  if (criteria.minConsecutiveDays && stats.streakDays < criteria.minConsecutiveDays) return false;
+  if (criteria.minLeaderboardRank && stats.leaderboardRank && stats.leaderboardRank > criteria.minLeaderboardRank) return false;
+  return true;
+}
+
+function getContributionMetric(stats: any, certificateType: string): string {
+  switch (certificateType) {
+    case "activeMember":
+      return `${stats.postCount} community posts with ${stats.totalLikesReceived} likes`;
+    case "topContributor":
+      return `${stats.postCount} high-quality posts and ${stats.replyCount} helpful replies`;
+    case "helpfulCommunity":
+      return `${stats.replyCount} helpful community replies`;
+    case "consistentLearner":
+      return `${stats.totalHoursStudied} study hours with ${stats.streakDays}-day streak`;
+    case "leaderboardTop10":
+      return `Ranked #${stats.leaderboardRank} on the leaderboard`;
+    case "courseCompletion":
+      return "Successfully completed course with excellent performance";
+    case "quizMastery":
+      return "Achieved 90%+ score on multiple quizzes";
+    case "studyStreak":
+      return `${stats.streakDays}-day study streak with ${stats.totalHoursStudied}+ hours`;
+    default:
+      return "Outstanding community contribution";
+  }
+}
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -817,6 +860,161 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         return completeStudyTimerSession(input.id, new Date());
       }),
+  }),
+  // Community Contribution Certificates
+  certificates: router({
+    /**
+     * Get user's certificates
+     */
+    getUserCertificates: protectedProcedure.query(async ({ ctx }) => {
+      return getUserCertificates(ctx.user.id);
+    }),
+
+    /**
+     * Get a specific certificate
+     */
+    getCertificate: protectedProcedure
+      .input(z.object({ certificateId: z.number() }))
+      .query(async ({ input }) => {
+        return getCertificateById(input.certificateId);
+      }),
+
+    /**
+     * Generate certificate for user based on contribution
+     */
+    generateCertificate: protectedProcedure
+      .input(
+        z.object({
+          certificateType: z.enum([
+            "activeMember",
+            "topContributor",
+            "helpfulCommunity",
+            "consistentLearner",
+            "leaderboardTop10",
+            "courseCompletion",
+            "quizMastery",
+            "studyStreak",
+          ]),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        // Check if user already has this certificate
+        const hasExisting = await userHasCertificateType(
+          ctx.user.id,
+          input.certificateType
+        );
+        if (hasExisting) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "User already has this certificate",
+          });
+        }
+
+        // Get certificate criteria
+        const criteria = await getCertificateCriteria(input.certificateType);
+        if (!criteria) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Certificate criteria not found",
+          });
+        }
+
+        // Get user contribution stats
+        const stats = await getUserContributionStats(ctx.user.id);
+        if (!stats) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User stats not found",
+          });
+        }
+
+        // Check eligibility
+        const isEligible = checkCertificateEligibility(stats, criteria);
+        if (!isEligible) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "User does not meet certificate eligibility criteria",
+          });
+        }
+
+        // Generate verification code
+        const verificationCode = crypto.randomBytes(16).toString("hex");
+
+        // Generate PDF certificate
+        const { pdfBytes, fileName } = await generateCertificate({
+          userName: ctx.user.name || "Student",
+          certificateType: input.certificateType,
+          title: criteria.description || "Certificate of Achievement",
+          description: criteria.description || "",
+          contributionMetric: getContributionMetric(stats, input.certificateType),
+          issuedDate: new Date(),
+          verificationCode,
+        });
+
+        // Upload to S3
+        const { url, key } = await uploadCertificateToS3(
+          pdfBytes,
+          fileName,
+          ctx.user.id
+        );
+
+        // Save certificate to database
+        const certificate = await createCertificate({
+          userId: ctx.user.id,
+          certificateType: input.certificateType as any,
+          title: criteria.description || "Certificate of Achievement",
+          description: criteria.description,
+          contributionMetric: getContributionMetric(stats, input.certificateType),
+          certificateUrl: url,
+          certificateKey: key,
+          verificationCode,
+        });
+
+        return {
+          success: true,
+          certificateId: certificate[0]?.insertId,
+          certificateUrl: url,
+          verificationCode,
+        };
+      }),
+
+    /**
+     * Mark certificate as downloaded
+     */
+    markAsDownloaded: protectedProcedure
+      .input(z.object({ certificateId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const cert = await getCertificateById(input.certificateId);
+        if (!cert || cert.userId !== ctx.user.id) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Certificate not found or unauthorized",
+          });
+        }
+        return markCertificateAsDownloaded(input.certificateId);
+      }),
+
+    /**
+     * Get user's contribution stats
+     */
+    getContributionStats: protectedProcedure.query(async ({ ctx }) => {
+      return getUserContributionStats(ctx.user.id);
+    }),
+
+    /**
+     * Get all certificates (admin only)
+     */
+    getAllCertificates: adminProcedure.query(async () => {
+      return getAllCertificates();
+    }),
+
+    /**
+     * Initialize certificate criteria (admin only, called once)
+     */
+    initializeCriteria: adminProcedure.mutation(async () => {
+      await initializeCertificateCriteria();
+      return { success: true };
+    }),
   }),
   // Admin Leaderboard Ranking
   adminLeaderboard: router({

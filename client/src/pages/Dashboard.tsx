@@ -11,6 +11,7 @@ import { Clock, BookOpen, Target, TrendingUp, Plus, FileText, Users, Trophy, Arr
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import StudyTimer from "@/components/StudyTimer";
+import { CertificateWidget } from "@/components/CertificateWidget";
 
 // JEE 2028 Exam Dates
 const JEE_MAIN_2028_DATE = new Date("2028-01-22T09:00:00");
@@ -402,8 +403,9 @@ export default function Dashboard() {
         </div>
 
         {/* Study Timer & PDF Section */}
-        <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <StudyTimer />
+          <CertificateWidget />
           
           {/* PDF Browser */}
           <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">

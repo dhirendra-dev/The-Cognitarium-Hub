@@ -544,3 +544,64 @@ export const userTestAttempts = mysqlTable("userTestAttempts", {
 });
 export type UserTestAttempt = typeof userTestAttempts.$inferSelect;
 export type InsertUserTestAttempt = typeof userTestAttempts.$inferInsert;
+
+
+// Community Contribution Certificates - Track certificates earned by community members
+export const communityContributionCertificates = mysqlTable("communityContributionCertificates", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  certificateType: mysqlEnum("certificateType", [
+    "activeMember",
+    "topContributor",
+    "helpfulCommunity",
+    "consistentLearner",
+    "leaderboardTop10",
+    "courseCompletion",
+    "quizMastery",
+    "studyStreak"
+  ]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(), // e.g., "Active Community Member"
+  description: text("description"), // Reason for certificate
+  contributionMetric: varchar("contributionMetric", { length: 100 }), // e.g., "10 helpful posts"
+  certificateUrl: text("certificateUrl"), // S3 URL to PDF certificate
+  certificateKey: varchar("certificateKey", { length: 500 }), // S3 key for certificate
+  issuedAt: timestamp("issuedAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt"), // Optional expiration date
+  verificationCode: varchar("verificationCode", { length: 64 }).unique(), // For verification
+  isDownloaded: boolean("isDownloaded").default(false),
+  downloadedAt: timestamp("downloadedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CommunityContributionCertificate = typeof communityContributionCertificates.$inferSelect;
+export type InsertCommunityContributionCertificate = typeof communityContributionCertificates.$inferInsert;
+
+// Certificate Eligibility Criteria - Define thresholds for each certificate type
+export const certificateEligibilityCriteria = mysqlTable("certificateEligibilityCriteria", {
+  id: int("id").autoincrement().primaryKey(),
+  certificateType: mysqlEnum("certificateType", [
+    "activeMember",
+    "topContributor",
+    "helpfulCommunity",
+    "consistentLearner",
+    "leaderboardTop10",
+    "courseCompletion",
+    "quizMastery",
+    "studyStreak"
+  ]).notNull().unique(),
+  minPostCount: int("minPostCount").default(0),
+  minLikesReceived: int("minLikesReceived").default(0),
+  minRepliesCount: int("minRepliesCount").default(0),
+  minStudyHours: decimal("minStudyHours", { precision: 6, scale: 2 }).default("0"),
+  minLeaderboardRank: int("minLeaderboardRank"),
+  minConsecutiveDays: int("minConsecutiveDays").default(0),
+  minCourseCompletion: int("minCourseCompletion").default(0),
+  minQuizScore: decimal("minQuizScore", { precision: 5, scale: 2 }).default("0"),
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CertificateEligibilityCriteria = typeof certificateEligibilityCriteria.$inferSelect;
+export type InsertCertificateEligibilityCriteria = typeof certificateEligibilityCriteria.$inferInsert;
