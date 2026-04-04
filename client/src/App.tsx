@@ -21,10 +21,14 @@ import PDFUpload from "./pages/PDFUpload";
 import PDFBrowser from "./pages/PDFBrowser";
 import StudyLinks from "./pages/StudyLinks";
 import Certificates from "./pages/Certificates";
+import LoginPage from "./pages/Login";
+import SignupPage from "./pages/Signup";
 
 function Router() {
   return (
     <Switch>
+      <Route path={"/login"} component={LoginPage} />
+      <Route path={"/signup"} component={SignupPage} />
       <Route path={"/"} component={Dashboard} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/subjects"} component={SubjectsTracker} />

@@ -85,13 +85,19 @@ export default function DashboardLayout({
           </div>
           <Button
             onClick={() => {
-              window.location.href = getLoginUrl();
+              window.location.href = "/login";
             }}
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"
           >
             Sign in
           </Button>
+          <p className="text-xs text-gray-500 text-center">
+            Don't have an account?{" "}
+            <a href="/signup" className="text-blue-600 hover:underline">
+              Create one
+            </a>
+          </p>
         </div>
       </div>
     );

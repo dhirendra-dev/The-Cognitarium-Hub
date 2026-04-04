@@ -70,12 +70,7 @@ export default function Settings() {
               <Label className="text-sm font-semibold text-gray-700">Email</Label>
               <p className="mt-2 text-lg text-gray-800">{user?.email || "Not set"}</p>
             </div>
-            <div>
-              <Label className="text-sm font-semibold text-gray-700">Member Since</Label>
-              <p className="mt-2 text-lg text-gray-800">
-                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Not available"}
-              </p>
-            </div>
+
           </div>
         </Card>
 
