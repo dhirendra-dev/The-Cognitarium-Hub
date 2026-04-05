@@ -125,6 +125,11 @@ export default function LoginPage() {
               {errors.password && (
                 <p className="text-sm text-red-600">{errors.password}</p>
               )}
+              <div className="flex justify-end">
+                <a href="#" className="text-xs text-blue-600 hover:underline">
+                  Forgot password?
+                </a>
+              </div>
             </div>
 
             {/* Error Alert */}
@@ -136,6 +141,18 @@ export default function LoginPage() {
                 </AlertDescription>
               </Alert>
             )}
+
+            {/* Remember Me */}
+            <div className="flex items-center">
+              <input
+                id="remember"
+                type="checkbox"
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded cursor-pointer"
+              />
+              <label htmlFor="remember" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                Remember me
+              </label>
+            </div>
 
             {/* Submit Button */}
             <Button

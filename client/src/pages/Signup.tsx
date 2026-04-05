@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 
 export default function SignupPage() {
   const [, navigate] = useLocation();
@@ -172,6 +173,7 @@ export default function SignupPage() {
               {errors.password && (
                 <p className="text-sm text-red-600">{errors.password}</p>
               )}
+              <PasswordStrengthIndicator password={password} />
               <p className="text-xs text-gray-600 mt-1">
                 At least 8 characters, 1 uppercase, 1 lowercase, 1 number
               </p>

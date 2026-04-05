@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
@@ -62,12 +62,25 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <DashboardLayout>
-            <Router />
-          </DashboardLayout>
+          <AppContent />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
+  );
+}
+
+function AppContent() {
+  const location = useLocation()[0];
+  const isAuthPage = location === '/login' || location === '/signup';
+  
+  if (isAuthPage) {
+    return <Router />;
+  }
+  
+  return (
+    <DashboardLayout>
+      <Router />
+    </DashboardLayout>
   );
 }
 

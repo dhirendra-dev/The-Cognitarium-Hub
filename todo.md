@@ -111,3 +111,33 @@
 - [ ] Build PWA
 - [ ] Create final checkpoint
 - [ ] Deploy to production
+
+
+---
+
+## Phase 7: Authentication & UX Improvements
+
+### Email/Password Authentication
+- [x] Implement email/password login system
+- [x] Create signup page with validation
+- [x] Add password hashing (PBKDF2)
+- [x] Create login page
+- [ ] Add "Forgot Password?" functionality
+- [ ] Add email verification on signup
+- [ ] Add password reset via email
+
+### Login/Signup UI Enhancements
+- [x] Add password strength indicator
+- [x] Add real-time form validation
+- [x] Add "Remember me" checkbox
+- [x] Add password visibility toggle
+- [x] Improve error messages and feedback
+- [x] Add loading states
+- [x] Add success notifications
+
+### Onboarding
+- [ ] Create welcome email template
+- [ ] Add onboarding wizard
+- [ ] Add profile completion step
+- [ ] Add study preferences selection
+- [ ] Create quick start guide
