@@ -1194,26 +1194,3 @@ export async function revokeCertificateType(userId: number, certificateType: str
       )
     );
 }
-
-/**
- * Get user by ID
- */
-export async function getUserById(userId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const result = await db.select().from(users).where(eq(users.id, userId));
-  return result[0] || null;
-}
-
-/**
- * Update user last signed in timestamp
- */
-export async function updateUserLastSignedIn(userId: number, signedInAt: Date) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  return db.update(users)
-    .set({ lastSignedIn: signedInAt })
-    .where(eq(users.id, userId));
-}

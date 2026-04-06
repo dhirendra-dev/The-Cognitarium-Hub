@@ -199,7 +199,7 @@ class SDKServer {
 
   async verifySession(
     cookieValue: string | undefined | null
-  ): Promise<{ openId?: string; userId?: string; appId?: string; name: string } | null> {
+  ): Promise<{ openId: string; appId: string; name: string } | null> {
     if (!cookieValue) {
       console.warn("[Auth] Missing session cookie");
       return null;
@@ -210,18 +210,20 @@ class SDKServer {
       const { payload } = await jwtVerify(cookieValue, secretKey, {
         algorithms: ["HS256"],
       });
-      const { openId, userId, appId, name } = payload as Record<string, unknown>;
+      const { openId, appId, name } = payload as Record<string, unknown>;
 
-      // Support both OAuth (openId) and email/password (userId) auth
-      if (!isNonEmptyString(name) || (!isNonEmptyString(openId) && !isNonEmptyString(userId))) {
+      if (
+        !isNonEmptyString(openId) ||
+        !isNonEmptyString(appId) ||
+        !isNonEmptyString(name)
+      ) {
         console.warn("[Auth] Session payload missing required fields");
         return null;
       }
 
       return {
-        openId: isNonEmptyString(openId) ? openId : undefined,
-        userId: isNonEmptyString(userId) ? userId : undefined,
-        appId: isNonEmptyString(appId) ? appId : undefined,
+        openId,
+        appId,
         name,
       };
     } catch (error) {
@@ -264,58 +266,40 @@ class SDKServer {
       throw ForbiddenError("Invalid session cookie");
     }
 
+    const sessionUserId = session.openId;
     const signedInAt = new Date();
-    let user: User | null = null;
+    let user = await db.getUserByOpenId(sessionUserId);
 
-    // Handle email/password auth (userId in session)
-    if (session.userId) {
-      const userId = parseInt(session.userId, 10);
-      user = await db.getUserById(userId);
-      if (!user) {
-        throw ForbiddenError("User not found");
+    // If user not in DB, sync from OAuth server automatically
+    if (!user) {
+      try {
+        const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
+        await db.upsertUser({
+          openId: userInfo.openId,
+          name: userInfo.name || "User",
+          email: userInfo.email || "unknown@example.com",
+          loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
+          lastSignedIn: signedInAt,
+        });
+        user = await db.getUserByOpenId(userInfo.openId);
+      } catch (error) {
+        console.error("[Auth] Failed to sync user from OAuth:", error);
+        throw ForbiddenError("Failed to sync user info");
       }
-      // Update last signed in
-      await db.updateUserLastSignedIn(userId, signedInAt);
-      return user;
     }
 
-    // Handle OAuth auth (openId in session)
-    if (session.openId) {
-      user = (await db.getUserByOpenId(session.openId)) || null;
-
-      // If user not in DB, sync from OAuth server automatically
-      if (!user) {
-        try {
-          const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
-          await db.upsertUser({
-            openId: userInfo.openId,
-            name: userInfo.name || "User",
-            email: userInfo.email || "unknown@example.com",
-            loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-            lastSignedIn: signedInAt,
-          });
-          user = (await db.getUserByOpenId(userInfo.openId)) || null;
-        } catch (error) {
-          console.error("[Auth] Failed to sync user from OAuth:", error);
-          throw ForbiddenError("Failed to sync user info");
-        }
-      }
-
-      if (!user) {
-        throw ForbiddenError("User not found");
-      }
-
-      await db.upsertUser({
-        openId: user.openId,
-        name: user.name || "User",
-        email: user.email || "unknown@example.com",
-        lastSignedIn: signedInAt,
-      });
-
-      return user;
+    if (!user) {
+      throw ForbiddenError("User not found");
     }
 
-    throw ForbiddenError("Invalid session");
+    await db.upsertUser({
+      openId: user.openId,
+      name: user.name || "User",
+      email: user.email || "unknown@example.com",
+      lastSignedIn: signedInAt,
+    });
+
+    return user;
   }
 }
 
