@@ -182,11 +182,17 @@ class SDKServer {
     userId: string,
     options: { expiresInMs?: number; name?: string } = {}
   ): Promise<string> {
+    // Get user name from database if not provided
+    let userName = options.name;
+    if (!userName) {
+      const user = await db.getUserById(parseInt(userId, 10));
+      userName = user?.name || "User";
+    }
     return this.signSession(
       {
         userId,
         appId: ENV.appId,
-        name: options.name || "",
+        name: userName,
       },
       options
     );
