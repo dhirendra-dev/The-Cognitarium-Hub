@@ -10,44 +10,63 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
-  app.get("/api/oauth/callback", async (req: Request, res: Response) => {
-    const code = getQueryParam(req, "code");
-    const state = getQueryParam(req, "state");
+  // Simple logout route - clear session cookie
+  app.post("/api/logout", (req: Request, res: Response) => {
+    const cookieOptions = getSessionCookieOptions(req);
+    res.cookie(COOKIE_NAME, "", { ...cookieOptions, maxAge: -1 });
+    res.json({ success: true });
+  });
 
-    if (!code || !state) {
-      res.status(400).json({ error: "code and state are required" });
-      return;
-    }
-
+  // Simple login route - verify password and set session
+  app.post("/api/login", async (req: Request, res: Response) => {
     try {
-      const tokenResponse = await sdk.exchangeCodeForToken(code, state);
-      const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
+      const { email, password } = req.body;
 
-      if (!userInfo.openId) {
-        res.status(400).json({ error: "openId missing from user info" });
+      if (!email || !password) {
+        res.status(400).json({ error: "Email and password required" });
         return;
       }
 
-      await db.upsertUser({
-        openId: userInfo.openId,
-        name: userInfo.name || "User",
-        email: userInfo.email || "unknown@example.com",
-        loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-        lastSignedIn: new Date(),
-      });
+      // Get user by email
+      const user = await db.getUserByEmail(email);
 
-      const sessionToken = await sdk.createSessionToken(userInfo.openId, {
-        name: userInfo.name || "",
+      if (!user) {
+        res.status(401).json({ error: "Invalid credentials" });
+        return;
+      }
+
+      // Verify password
+      const isPasswordValid = await sdk.verifyPassword(password, user.password || "");
+
+      if (!isPasswordValid) {
+        res.status(401).json({ error: "Invalid credentials" });
+        return;
+      }
+
+      // Create session token
+      const sessionToken = await sdk.createSessionToken(user.id.toString(), {
+        name: user.name || "",
         expiresInMs: ONE_YEAR_MS,
       });
 
+      // Set session cookie
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      res.redirect(302, "/");
+      // Update last signed in
+      await db.updateUserLastSignedIn(user.id);
+
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+      });
     } catch (error) {
-      console.error("[OAuth] Callback failed", error);
-      res.status(500).json({ error: "OAuth callback failed" });
+      console.error("[Auth] Login failed", error);
+      res.status(500).json({ error: "Login failed" });
     }
   });
 }

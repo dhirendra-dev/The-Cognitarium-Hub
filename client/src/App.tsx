@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
@@ -21,14 +21,11 @@ import PDFUpload from "./pages/PDFUpload";
 import PDFBrowser from "./pages/PDFBrowser";
 import StudyLinks from "./pages/StudyLinks";
 import Certificates from "./pages/Certificates";
-import LoginPage from "./pages/Login";
-import SignupPage from "./pages/Signup";
+import ContactCollection from "./pages/ContactCollection";
 
 function Router() {
   return (
     <Switch>
-      <Route path={"/login"} component={LoginPage} />
-      <Route path={"/signup"} component={SignupPage} />
       <Route path={"/"} component={Dashboard} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/subjects"} component={SubjectsTracker} />
@@ -46,6 +43,7 @@ function Router() {
       <Route path={"/pdf-browser"} component={PDFBrowser} />
       <Route path={"/study-links"} component={StudyLinks} />
       <Route path={"/certificates"} component={Certificates} />
+      <Route path={"/contact"} component={ContactCollection} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -62,25 +60,12 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <AppContent />
+          <DashboardLayout>
+            <Router />
+          </DashboardLayout>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
-  );
-}
-
-function AppContent() {
-  const location = useLocation()[0];
-  const isAuthPage = location === '/login' || location === '/signup';
-  
-  if (isAuthPage) {
-    return <Router />;
-  }
-  
-  return (
-    <DashboardLayout>
-      <Router />
-    </DashboardLayout>
   );
 }
 

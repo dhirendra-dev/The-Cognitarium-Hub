@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "4f46ee72-a77f-4244-8ea7-7ccdc05f475c",
+  "id": "bb7f6496-7731-4d9e-a9a9-099682f02ce0",
   "prevId": "3a07a0e6-811a-4f58-9dfa-34839d4d59c5",
   "tables": {
     "aiChatHistory": {
@@ -604,6 +604,97 @@
       "compositePrimaryKeys": {
         "communityGroups_id": {
           "name": "communityGroups_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "contactSubmissions": {
+      "name": "contactSubmissions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('pending','processed','rejected')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "processedBy": {
+          "name": "processedBy",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "processedAt": {
+          "name": "processedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "contactSubmissions_id": {
+          "name": "contactSubmissions_id",
           "columns": [
             "id"
           ]
@@ -3072,21 +3163,21 @@
           "name": "openId",
           "type": "varchar(64)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "name": {
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "email": {
           "name": "email",
           "type": "varchar(320)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "password": {
@@ -3101,8 +3192,7 @@
           "type": "varchar(64)",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": "'email'"
+          "autoincrement": false
         },
         "profilePhotoUrl": {
           "name": "profilePhotoUrl",
@@ -3180,14 +3270,6 @@
           "notNull": true,
           "autoincrement": false,
           "default": "(now())"
-        },
-        "isEmailVerified": {
-          "name": "isEmailVerified",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
         }
       },
       "indexes": {},
@@ -3205,12 +3287,6 @@
           "name": "users_openId_unique",
           "columns": [
             "openId"
-          ]
-        },
-        "users_email_unique": {
-          "name": "users_email_unique",
-          "columns": [
-            "email"
           ]
         }
       },

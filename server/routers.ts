@@ -1,7 +1,6 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { authRouter } from "./auth-router";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
 import {
@@ -89,6 +88,11 @@ import {
   getCertificateStats,
   deleteCertificate,
   revokeCertificateType,
+  createContactSubmission,
+  getAllContactSubmissions,
+  getPendingContactSubmissions,
+  updateContactSubmissionStatus,
+  getContactSubmissionById,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { sendCertificateEarnedEmail } from "./certificate-email";
@@ -140,7 +144,16 @@ function getContributionMetric(stats: any, certificateType: string): string {
 }
 export const appRouter = router({
   system: systemRouter,
-  auth: authRouter,
+  auth: router({
+    me: publicProcedure.query(opts => opts.ctx.user),
+    logout: publicProcedure.mutation(({ ctx }) => {
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      return {
+        success: true,
+      } as const;
+    }),
+  }),
 
   // Study Sessions
   studySessions: router({
@@ -1107,6 +1120,53 @@ export const appRouter = router({
     getLeaderboard: protectedProcedure.query(async () => {
       return getLeaderboardWithAdminRanks();
     }),
+  }),
+
+  // Contact Submissions
+  contactSubmissions: router({
+    submit: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(2),
+          email: z.string().email().optional(),
+          phone: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return createContactSubmission({
+          name: input.name,
+          email: input.email || null,
+          phone: input.phone || null,
+          status: "pending",
+        });
+      }),
+    getAll: adminProcedure.query(async () => {
+      return getAllContactSubmissions();
+    }),
+    getPending: adminProcedure.query(async () => {
+      return getPendingContactSubmissions();
+    }),
+    updateStatus: adminProcedure
+      .input(
+        z.object({
+          submissionId: z.number(),
+          status: z.enum(["pending", "processed", "rejected"]),
+          notes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        return updateContactSubmissionStatus(
+          input.submissionId,
+          input.status,
+          ctx.user.id,
+          input.notes
+        );
+      }),
+    getById: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return getContactSubmissionById(input.id);
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

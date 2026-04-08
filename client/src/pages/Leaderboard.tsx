@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Trophy, Medal, Flame } from "lucide-react";

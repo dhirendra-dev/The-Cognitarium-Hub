@@ -4,6 +4,7 @@ import axios, { type AxiosInstance } from "axios";
 import { parse as parseCookieHeader } from "cookie";
 import type { Request } from "express";
 import { SignJWT, jwtVerify } from "jose";
+import crypto from "crypto";
 import type { User } from "../../drizzle/schema";
 import * as db from "../db";
 import { ENV } from "./env";
@@ -19,10 +20,23 @@ const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.length > 0;
 
 export type SessionPayload = {
-  openId: string;
+  userId: string;
   appId: string;
   name: string;
 };
+
+// Password hashing utilities
+function hashPassword(password: string, salt: string = crypto.randomBytes(16).toString('hex')): string {
+  const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512');
+  return `${salt}:${hash.toString('hex')}`;
+}
+
+function verifyPasswordHash(password: string, hash: string): boolean {
+  const [salt, originalHash] = hash.split(':');
+  if (!salt || !originalHash) return false;
+  const newHash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+  return newHash === originalHash;
+}
 
 const EXCHANGE_TOKEN_PATH = `/webdev.v1.WebDevAuthPublicService/ExchangeToken`;
 const GET_USER_INFO_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfo`;
@@ -165,12 +179,12 @@ class SDKServer {
    * const sessionToken = await sdk.createSessionToken(userInfo.openId);
    */
   async createSessionToken(
-    openId: string,
+    userId: string,
     options: { expiresInMs?: number; name?: string } = {}
   ): Promise<string> {
     return this.signSession(
       {
-        openId,
+        userId,
         appId: ENV.appId,
         name: options.name || "",
       },
@@ -188,7 +202,7 @@ class SDKServer {
     const secretKey = this.getSessionSecret();
 
     return new SignJWT({
-      openId: payload.openId,
+      userId: payload.userId,
       appId: payload.appId,
       name: payload.name,
     })
@@ -199,7 +213,7 @@ class SDKServer {
 
   async verifySession(
     cookieValue: string | undefined | null
-  ): Promise<{ openId: string; appId: string; name: string } | null> {
+  ): Promise<{ userId: string; appId: string; name: string } | null> {
     if (!cookieValue) {
       console.warn("[Auth] Missing session cookie");
       return null;
@@ -210,10 +224,10 @@ class SDKServer {
       const { payload } = await jwtVerify(cookieValue, secretKey, {
         algorithms: ["HS256"],
       });
-      const { openId, appId, name } = payload as Record<string, unknown>;
+      const { userId, appId, name } = payload as Record<string, unknown>;
 
       if (
-        !isNonEmptyString(openId) ||
+        !isNonEmptyString(userId) ||
         !isNonEmptyString(appId) ||
         !isNonEmptyString(name)
       ) {
@@ -222,7 +236,7 @@ class SDKServer {
       }
 
       return {
-        openId,
+        userId,
         appId,
         name,
       };
@@ -266,40 +280,25 @@ class SDKServer {
       throw ForbiddenError("Invalid session cookie");
     }
 
-    const sessionUserId = session.openId;
+    const sessionUserId = parseInt(session.userId, 10);
     const signedInAt = new Date();
-    let user = await db.getUserByOpenId(sessionUserId);
-
-    // If user not in DB, sync from OAuth server automatically
-    if (!user) {
-      try {
-        const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
-        await db.upsertUser({
-          openId: userInfo.openId,
-          name: userInfo.name || "User",
-          email: userInfo.email || "unknown@example.com",
-          loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-          lastSignedIn: signedInAt,
-        });
-        user = await db.getUserByOpenId(userInfo.openId);
-      } catch (error) {
-        console.error("[Auth] Failed to sync user from OAuth:", error);
-        throw ForbiddenError("Failed to sync user info");
-      }
-    }
+    let user = await db.getUserById(sessionUserId);
 
     if (!user) {
       throw ForbiddenError("User not found");
     }
 
-    await db.upsertUser({
-      openId: user.openId,
-      name: user.name || "User",
-      email: user.email || "unknown@example.com",
-      lastSignedIn: signedInAt,
-    });
+    await db.updateUserLastSignedIn(sessionUserId);
 
     return user;
+  }
+
+  verifyPassword(password: string, hash: string): boolean {
+    return verifyPasswordHash(password, hash);
+  }
+
+  hashPassword(password: string): string {
+    return hashPassword(password);
   }
 }
 

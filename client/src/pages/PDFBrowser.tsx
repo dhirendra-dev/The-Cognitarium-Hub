@@ -2,7 +2,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Download, FileText, Eye } from "lucide-react";
 

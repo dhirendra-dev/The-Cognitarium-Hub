@@ -1,6 +1,6 @@
 import { and, desc, eq, sql, like, gte, lte, count, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, contactSubmissions, InsertContactSubmission } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import {
   InsertStudySession,
@@ -67,9 +67,8 @@ export async function getDb() {
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
-  // openId is now optional for email/password auth
-  if (!user.openId && !user.email) {
-    throw new Error("Either openId or email is required for upsert");
+  if (!user.openId) {
+    throw new Error("User openId is required for upsert");
   }
 
   const db = await getDb();
@@ -79,16 +78,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
-    const values: any = {};
-    if (user.openId) {
-      values.openId = user.openId;
-    }
-    if (user.email) {
-      values.email = user.email;
-    }
-    if (user.name) {
-      values.name = user.name;
-    }
+    const values: InsertUser = {
+      openId: user.openId,
+    };
     const updateSet: Record<string, unknown> = {};
 
     const textFields = ["name", "email", "loginMethod"] as const;
@@ -143,6 +135,44 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateUserLastSignedIn(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update user: database not available");
+    return;
+  }
+
+  try {
+    await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, userId));
+  } catch (error) {
+    console.error("[Database] Failed to update lastSignedIn:", error);
+  }
 }
 
 // Study Sessions
@@ -1193,4 +1223,77 @@ export async function revokeCertificateType(userId: number, certificateType: str
         eq(communityContributionCertificates.certificateType, certificateType as any)
       )
     );
+}
+
+
+/**
+ * Create a new contact submission
+ */
+export async function createContactSubmission(data: InsertContactSubmission) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.insert(contactSubmissions).values(data);
+}
+
+/**
+ * Get all contact submissions (admin only)
+ */
+export async function getAllContactSubmissions() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select()
+    .from(contactSubmissions)
+    .orderBy(desc(contactSubmissions.createdAt));
+}
+
+/**
+ * Get pending contact submissions
+ */
+export async function getPendingContactSubmissions() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select()
+    .from(contactSubmissions)
+    .where(eq(contactSubmissions.status, "pending"))
+    .orderBy(desc(contactSubmissions.createdAt));
+}
+
+/**
+ * Update contact submission status
+ */
+export async function updateContactSubmissionStatus(
+  submissionId: number,
+  status: "pending" | "processed" | "rejected",
+  processedBy?: number,
+  notes?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(contactSubmissions)
+    .set({
+      status,
+      processedBy,
+      notes,
+      processedAt: new Date(),
+    })
+    .where(eq(contactSubmissions.id, submissionId));
+}
+
+/**
+ * Get contact submission by ID
+ */
+export async function getContactSubmissionById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select()
+    .from(contactSubmissions)
+    .where(eq(contactSubmissions.id, id))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : undefined;
 }

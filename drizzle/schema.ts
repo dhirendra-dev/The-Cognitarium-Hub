@@ -13,11 +13,11 @@ export const users = mysqlTable("users", {
    */
   id: int("id").autoincrement().primaryKey(),
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
-  openId: varchar("openId", { length: 64 }).unique(),
-  name: text("name").notNull(),
-  email: varchar("email", { length: 320 }).notNull().unique(),
+  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  name: text("name"),
+  email: varchar("email", { length: 320 }),
   password: varchar("password", { length: 255 }),
-  loginMethod: varchar("loginMethod", { length: 64 }).default("email"),
+  loginMethod: varchar("loginMethod", { length: 64 }),
   profilePhotoUrl: text("profilePhotoUrl"),
   profilePhotoKey: varchar("profilePhotoKey", { length: 500 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
@@ -28,7 +28,6 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
-  isEmailVerified: boolean("isEmailVerified").default(false).notNull(),
 });
 
 export type User = typeof users.$inferSelect;
@@ -606,3 +605,20 @@ export const certificateEligibilityCriteria = mysqlTable("certificateEligibility
 
 export type CertificateEligibilityCriteria = typeof certificateEligibilityCriteria.$inferSelect;
 export type InsertCertificateEligibilityCriteria = typeof certificateEligibilityCriteria.$inferInsert;
+
+// Contact Submissions - Collect contact details from new users
+export const contactSubmissions = mysqlTable("contactSubmissions", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 20 }),
+  status: mysqlEnum("status", ["pending", "processed", "rejected"]).default("pending").notNull(),
+  notes: text("notes"),
+  processedBy: int("processedBy"), // Admin user ID who processed this
+  processedAt: timestamp("processedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ContactSubmission = typeof contactSubmissions.$inferSelect;
+export type InsertContactSubmission = typeof contactSubmissions.$inferInsert;

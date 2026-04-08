@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -117,13 +117,19 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-white shadow-lg mb-8">
+          <TabsList className="grid w-full grid-cols-6 bg-white shadow-lg mb-8">
+            <TabsTrigger value="contact">Contact Submissions</TabsTrigger>
             <TabsTrigger value="users">All Users</TabsTrigger>
             <TabsTrigger value="sessions">Study Sessions</TabsTrigger>
             <TabsTrigger value="leaderboard">Top Performers</TabsTrigger>
             <TabsTrigger value="certificates">Certificates</TabsTrigger>
             <TabsTrigger value="pdfs">PDF Management</TabsTrigger>
           </TabsList>
+
+          {/* Contact Submissions Tab */}
+          <TabsContent value="contact">
+            <ContactSubmissionsTab />
+          </TabsContent>
 
           {/* Users Tab */}
           <TabsContent value="users">
@@ -344,5 +350,91 @@ export default function AdminDashboard() {
         )}
       </div>
     </div>
+  );
+}
+
+
+function ContactSubmissionsTab() {
+  const { data: submissions } = trpc.contactSubmissions.getAll.useQuery();
+  const updateStatusMutation = trpc.contactSubmissions.updateStatus.useMutation({
+    onSuccess: () => {
+      toast.success("Status updated successfully");
+    },
+  });
+
+  if (!submissions || submissions.length === 0) {
+    return (
+      <Card className="bg-white shadow-lg p-8 text-center">
+        <p className="text-gray-600">No contact submissions yet</p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-white shadow-lg overflow-hidden">
+      <div className="p-6 border-b-2 border-gray-100">
+        <h2 className="text-2xl font-bold text-gray-800">Contact Submissions ({submissions.length})</h2>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Phone</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Submitted</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {submissions.map((submission) => (
+              <tr key={submission.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 text-sm text-gray-800 font-semibold">{submission.name}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">{submission.email || "—"}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">{submission.phone || "—"}</td>
+                <td className="px-6 py-4">
+                  <select
+                    value={submission.status}
+                    onChange={(e) =>
+                      updateStatusMutation.mutate({
+                        submissionId: submission.id,
+                        status: e.target.value as "pending" | "processed" | "rejected",
+                      })
+                    }
+                    className={`px-3 py-1 rounded text-sm font-semibold border ${
+                      submission.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                        : submission.status === "processed"
+                        ? "bg-green-100 text-green-800 border-green-300"
+                        : "bg-red-100 text-red-800 border-red-300"
+                    }`}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="processed">Processed</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  {new Date(submission.createdAt).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 text-sm">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const details = `Name: ${submission.name}\nEmail: ${submission.email || "N/A"}\nPhone: ${submission.phone || "N/A"}\nSubmitted: ${new Date(submission.createdAt).toLocaleString()}`;
+                      alert(details);
+                    }}
+                  >
+                    View
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }
