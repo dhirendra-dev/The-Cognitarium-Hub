@@ -23,7 +23,7 @@ import StudyLinks from "./pages/StudyLinks";
 import Certificates from "./pages/Certificates";
 import ContactCollection from "./pages/ContactCollection";
 
-function Router() {
+function DashboardRouter() {
   return (
     <Switch>
       <Route path={"/"} component={Dashboard} />
@@ -43,7 +43,6 @@ function Router() {
       <Route path={"/pdf-browser"} component={PDFBrowser} />
       <Route path={"/study-links"} component={StudyLinks} />
       <Route path={"/certificates"} component={Certificates} />
-      <Route path={"/contact"} component={ContactCollection} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -60,9 +59,16 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <DashboardLayout>
-            <Router />
-          </DashboardLayout>
+          <Switch>
+            {/* Contact page - outside DashboardLayout to avoid auth loop */}
+            <Route path={"/contact"} component={ContactCollection} />
+            {/* All other pages inside DashboardLayout */}
+            <Route>
+              <DashboardLayout>
+                <DashboardRouter />
+              </DashboardLayout>
+            </Route>
+          </Switch>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
