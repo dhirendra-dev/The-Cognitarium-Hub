@@ -43,6 +43,7 @@ function Router() {
       <Route path={"/pdf-browser"} component={PDFBrowser} />
       <Route path={"/study-links"} component={StudyLinks} />
       <Route path={"/certificates"} component={Certificates} />
+      <Route path={"/contact"} component={ContactCollection} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -59,16 +60,9 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <Switch>
-            {/* Contact page outside DashboardLayout */}
-            <Route path={"/contact"} component={ContactCollection} />
-            {/* All other pages inside DashboardLayout */}
-            <Route>
-              <DashboardLayout>
-                <Router />
-              </DashboardLayout>
-            </Route>
-          </Switch>
+          <DashboardLayout>
+            <Router />
+          </DashboardLayout>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
