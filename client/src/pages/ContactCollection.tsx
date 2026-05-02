@@ -42,9 +42,9 @@ export default function ContactCollectionPage() {
       newErrors.name = "Name must be at least 2 characters";
     }
 
-    // Validate email or phone
-    if (!email.trim() && !phone.trim()) {
-      newErrors.contact = "Please provide either email or phone number";
+    // Validate email (required)
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
     }
 
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -65,7 +65,7 @@ export default function ContactCollectionPage() {
     // Submit via tRPC
     await submitMutation.mutateAsync({
       name: name.trim(),
-      email: email.trim() || undefined,
+      email: email.trim(),
       phone: phone.trim() || undefined,
     });
   };
@@ -76,13 +76,16 @@ export default function ContactCollectionPage() {
         <Card className="w-full max-w-md shadow-xl border-2 border-green-200">
           <CardContent className="pt-8 text-center">
             <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-green-700 mb-2">Thank You!</h2>
+            <h2 className="text-2xl font-bold text-green-700 mb-2">Account Created! 🎉</h2>
             <p className="text-gray-600 mb-4">
-              Your contact details have been received. Our team will create your account and send you login credentials shortly.
+              Your account has been created successfully! Check your email for login credentials.
             </p>
             <p className="text-sm text-gray-500">
-              You will be redirected shortly...
+              You can now log in and start learning.
             </p>
+            <Button className="w-full mt-4 bg-green-600 hover:bg-green-700" onClick={() => window.location.href = '/login'}>
+              Go to Login
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -185,7 +188,7 @@ export default function ContactCollectionPage() {
             </div>
 
             <p className="text-xs text-gray-500 text-center">
-              * Required field. Please provide at least email or phone number.
+              * Required field. Email is needed to send your login credentials.
             </p>
 
             {/* Submit Button */}
@@ -198,7 +201,7 @@ export default function ContactCollectionPage() {
             </Button>
 
             <p className="text-xs text-gray-500 text-center">
-              Our team will review your details and send you login credentials within 24 hours.
+              Your account will be created instantly and credentials sent to your email.
             </p>
           </form>
         </CardContent>

@@ -1297,3 +1297,11 @@ export async function getContactSubmissionById(id: number) {
   
   return result.length > 0 ? result[0] : undefined;
 }
+
+export async function createUser(data: InsertUser) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.insert(users).values(data);
+  return result;
+}

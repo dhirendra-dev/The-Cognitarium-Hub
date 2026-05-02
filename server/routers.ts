@@ -95,6 +95,7 @@ import {
   updateContactSubmissionStatus,
   getContactSubmissionById,
   getUserByEmail,
+  createUser,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { sendCertificateEarnedEmail } from "./certificate-email";
@@ -1156,17 +1157,49 @@ export const appRouter = router({
       .input(
         z.object({
           name: z.string().min(2),
-          email: z.string().email().optional(),
+          email: z.string().email(),
           phone: z.string().optional(),
         })
       )
       .mutation(async ({ input }) => {
-        return createContactSubmission({
+        // Generate temporary password
+        const tempPassword = Math.random().toString(36).slice(-12) + "@Abc123";
+        const hashedPassword = sdk.hashPassword(tempPassword);
+        
+        // Create user account
+        const userResult = await createUser({
+          openId: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          email: input.email,
+          password: hashedPassword,
           name: input.name,
-          email: input.email || null,
-          phone: input.phone || null,
-          status: "pending",
+          role: "user",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastSignedIn: new Date(),
         });
+        
+        // Create contact submission record
+        const submission = await createContactSubmission({
+          name: input.name,
+          email: input.email,
+          phone: input.phone || null,
+          status: "processed",
+        });
+        
+        // Send credentials email
+        try {
+          const { sendCredentialsEmail } = await import("./email-service");
+          await sendCredentialsEmail(input.email, input.name, tempPassword);
+        } catch (emailError) {
+          console.error("[Email] Failed to send credentials:", emailError);
+          // Continue even if email fails
+        }
+        
+        return {
+          success: true,
+          message: "Account created successfully! Check your email for login credentials.",
+          submission,
+        };
       }),
     getAll: adminProcedure.query(async () => {
       return getAllContactSubmissions();
