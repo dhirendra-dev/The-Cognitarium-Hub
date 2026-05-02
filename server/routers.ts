@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { sdk } from "./_core/sdk";
 import { z } from "zod";
 import {
   createStudySession,
@@ -93,6 +94,7 @@ import {
   getPendingContactSubmissions,
   updateContactSubmissionStatus,
   getContactSubmissionById,
+  getUserByEmail,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { sendCertificateEarnedEmail } from "./certificate-email";
@@ -146,6 +148,32 @@ export const appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const user = await getUserByEmail(input.email);
+        if (!user || !user.password) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
+        }
+        
+        const isPasswordValid = sdk.verifyPassword(input.password, user.password);
+        if (!isPasswordValid) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
+        }
+        
+        const sessionToken = await sdk.createSessionToken(user.id.toString(), { name: user.name || 'User' });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, cookieOptions);
+        
+        return {
+          success: true,
+          user,
+        };
+      }),
+
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });

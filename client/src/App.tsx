@@ -22,6 +22,7 @@ import PDFBrowser from "./pages/PDFBrowser";
 import StudyLinks from "./pages/StudyLinks";
 import Certificates from "./pages/Certificates";
 import ContactCollection from "./pages/ContactCollection";
+import Login from "./pages/Login";
 
 function DashboardRouter() {
   return (
@@ -60,6 +61,8 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Switch>
+            {/* Login page - outside DashboardLayout */}
+            <Route path={"/login"} component={Login} />
             {/* Contact page - outside DashboardLayout to avoid auth loop */}
             <Route path={"/contact"} component={ContactCollection} />
             {/* All other pages inside DashboardLayout */}
