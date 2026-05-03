@@ -1186,19 +1186,15 @@ export const appRouter = router({
           status: "processed",
         });
         
-        // Send credentials email
-        try {
-          const { sendCredentialsEmail } = await import("./email-service");
-          await sendCredentialsEmail(input.email, input.name, tempPassword);
-        } catch (emailError) {
-          console.error("[Email] Failed to send credentials:", emailError);
-          // Continue even if email fails
-        }
-        
         return {
           success: true,
-          message: "Account created successfully! Check your email for login credentials.",
+          message: "Account created successfully! Your credentials are ready.",
           submission,
+          credentials: {
+            email: input.email,
+            password: tempPassword,
+            name: input.name,
+          },
         };
       }),
     getAll: adminProcedure.query(async () => {

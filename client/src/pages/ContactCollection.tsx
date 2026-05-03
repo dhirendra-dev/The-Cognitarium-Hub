@@ -4,30 +4,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Mail, Phone } from "lucide-react";
+import { AlertCircle, CheckCircle2, Mail, Phone, Copy, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+
+interface CredentialsData {
+  email: string;
+  password: string;
+  name: string;
+}
 
 export default function ContactCollectionPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [credentials, setCredentials] = useState<CredentialsData | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const submitMutation = trpc.contactSubmissions.submit.useMutation({
-    onSuccess: () => {
-      toast.success("Contact details submitted successfully!");
-      setSubmitted(true);
-      setTimeout(() => {
+    onSuccess: (data) => {
+      if (data.credentials) {
+        setCredentials(data.credentials);
         setName("");
         setEmail("");
         setPhone("");
-        setSubmitted(false);
-      }, 3000);
+      }
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to submit contact details");
+      toast.error(error.message || "Failed to create account");
     },
   });
 
@@ -70,21 +75,100 @@ export default function ContactCollectionPage() {
     });
   };
 
-  if (submitted) {
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard!`);
+  };
+
+  if (credentials) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-xl border-2 border-green-200">
-          <CardContent className="pt-8 text-center">
-            <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-green-700 mb-2">Account Created! 🎉</h2>
-            <p className="text-gray-600 mb-4">
-              Your account has been created successfully! Check your email for login credentials.
-            </p>
-            <p className="text-sm text-gray-500">
-              You can now log in and start learning.
-            </p>
-            <Button className="w-full mt-4 bg-green-600 hover:bg-green-700" onClick={() => window.location.href = '/login'}>
+          <CardHeader className="space-y-2 text-center">
+            <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-2" />
+            <CardTitle className="text-2xl text-green-700">Account Created! 🎉</CardTitle>
+            <CardDescription>Your login credentials are ready</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-700">
+                Your account is ready to use immediately!
+              </AlertDescription>
+            </Alert>
+
+            {/* Email Display */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-700">Email</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  value={credentials.email}
+                  readOnly
+                  className="bg-gray-50 text-gray-900 font-mono text-sm"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => copyToClipboard(credentials.email, "Email")}
+                  className="px-3"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Password Display */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-700">Password</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={credentials.password}
+                  readOnly
+                  className="bg-gray-50 text-gray-900 font-mono text-sm"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="px-3"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => copyToClipboard(credentials.password, "Password")}
+                  className="px-3"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            <Alert className="border-blue-200 bg-blue-50">
+              <AlertCircle className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-700 text-sm">
+                Save these credentials securely. You can change your password after logging in.
+              </AlertDescription>
+            </Alert>
+
+            {/* Login Button */}
+            <Button
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-2 rounded-lg transition"
+              onClick={() => window.location.href = '/login'}
+            >
               Go to Login
+            </Button>
+
+            {/* Create Another Account */}
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setCredentials(null)}
+            >
+              Create Another Account
             </Button>
           </CardContent>
         </Card>
@@ -139,7 +223,7 @@ export default function ContactCollectionPage() {
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Email Address
+                Email Address *
               </Label>
               <Input
                 id="email"
@@ -188,7 +272,7 @@ export default function ContactCollectionPage() {
             </div>
 
             <p className="text-xs text-gray-500 text-center">
-              * Required field. Email is needed to send your login credentials.
+              * Required field
             </p>
 
             {/* Submit Button */}
@@ -197,11 +281,11 @@ export default function ContactCollectionPage() {
               disabled={submitMutation.isPending}
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2 rounded-lg transition"
             >
-              {submitMutation.isPending ? "Submitting..." : "Submit"}
+              {submitMutation.isPending ? "Creating Account..." : "Create Account"}
             </Button>
 
             <p className="text-xs text-gray-500 text-center">
-              Your account will be created instantly and credentials sent to your email.
+              Your account will be created instantly. Get your login credentials immediately!
             </p>
           </form>
         </CardContent>
