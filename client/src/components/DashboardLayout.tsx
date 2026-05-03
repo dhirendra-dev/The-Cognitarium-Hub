@@ -35,7 +35,7 @@ const menuItems = [
   { icon: Calculator, label: "JEE Plan", path: "/jee-plan" },
   { icon: Calendar, label: "Daily Tasks", path: "/daily-tasks" },
   { icon: HelpCircle, label: "Board Questions", path: "/board-exam-questions" },
-  { icon: FileText, label: "Study Materials", path: "/pdf-browser" },
+  { icon: FileText, label: "Study Materials", path: "/study-materials" },
   { icon: Trophy, label: "Leaderboard", path: "/leaderboard" },
   { icon: UsersIcon, label: "Community Links", path: "/study-links" },
   { icon: Image, label: "Posts", path: "/posts" },

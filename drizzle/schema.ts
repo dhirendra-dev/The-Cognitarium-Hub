@@ -622,3 +622,24 @@ export const contactSubmissions = mysqlTable("contactSubmissions", {
 
 export type ContactSubmission = typeof contactSubmissions.$inferSelect;
 export type InsertContactSubmission = typeof contactSubmissions.$inferInsert;
+
+// Study Materials - Organized JEE preparation resources
+export const studyMaterials = mysqlTable("studyMaterials", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(), // e.g., "PW Modules", "Cengage", "Coaching Materials"
+  subcategory: varchar("subcategory", { length: 100 }), // e.g., "Physics", "Chemistry", "Mathematics"
+  description: text("description"),
+  resourceType: mysqlEnum("resourceType", ["googleDrive", "telegram", "website", "pdf", "video"]).default("googleDrive").notNull(),
+  url: text("url").notNull(),
+  author: varchar("author", { length: 255 }), // e.g., "PW", "Cengage", "DC Pandey"
+  subject: varchar("subject", { length: 100 }), // e.g., "Physics", "Chemistry", "Mathematics"
+  difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate"),
+  isPopular: boolean("isPopular").default(false),
+  order: int("order").default(0), // For custom ordering
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudyMaterial = typeof studyMaterials.$inferSelect;
+export type InsertStudyMaterial = typeof studyMaterials.$inferInsert;

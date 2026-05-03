@@ -23,6 +23,7 @@ import StudyLinks from "./pages/StudyLinks";
 import Certificates from "./pages/Certificates";
 import ContactCollection from "./pages/ContactCollection";
 import Login from "./pages/Login";
+import StudyMaterials from "./pages/StudyMaterials";
 
 function DashboardRouter() {
   return (
@@ -44,6 +45,7 @@ function DashboardRouter() {
       <Route path={"/pdf-browser"} component={PDFBrowser} />
       <Route path={"/study-links"} component={StudyLinks} />
       <Route path={"/certificates"} component={Certificates} />
+      <Route path={"/study-materials"} component={StudyMaterials} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

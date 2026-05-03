@@ -1,6 +1,6 @@
 import { and, desc, eq, sql, like, gte, lte, count, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contactSubmissions, InsertContactSubmission } from "../drizzle/schema";
+import { InsertUser, users, contactSubmissions, InsertContactSubmission, studyMaterials, InsertStudyMaterial } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import {
   InsertStudySession,
@@ -1304,4 +1304,75 @@ export async function createUser(data: InsertUser) {
   
   const result = await db.insert(users).values(data);
   return result;
+}
+
+// Study Materials Functions
+export async function getAllStudyMaterials() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(studyMaterials)
+    .orderBy(asc(studyMaterials.category), asc(studyMaterials.order));
+}
+
+export async function getStudyMaterialsByCategory(category: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(studyMaterials)
+    .where(eq(studyMaterials.category, category))
+    .orderBy(asc(studyMaterials.order));
+}
+
+export async function getStudyMaterialsBySubject(subject: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(studyMaterials)
+    .where(eq(studyMaterials.subject, subject))
+    .orderBy(asc(studyMaterials.category), asc(studyMaterials.order));
+}
+
+export async function getPopularStudyMaterials() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(studyMaterials)
+    .where(eq(studyMaterials.isPopular, true))
+    .orderBy(asc(studyMaterials.order));
+}
+
+export async function createStudyMaterial(data: InsertStudyMaterial) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.insert(studyMaterials).values(data);
+  return result;
+}
+
+export async function updateStudyMaterial(id: number, data: Partial<InsertStudyMaterial>) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  return await db
+    .update(studyMaterials)
+    .set(data)
+    .where(eq(studyMaterials.id, id));
+}
+
+export async function deleteStudyMaterial(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  return await db
+    .delete(studyMaterials)
+    .where(eq(studyMaterials.id, id));
 }

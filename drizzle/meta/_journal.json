@@ -127,6 +127,13 @@
       "when": 1775450534188,
       "tag": "0017_thin_madame_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1777803543264,
+      "tag": "0018_equal_gauntlet",
+      "breakpoints": true
     }
   ]
 }

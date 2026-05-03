@@ -48,6 +48,13 @@ import {
   getBoardExamQuestionsByDifficulty,
   createMCQOption,
   getMCQOptionsByQuestion,
+  getAllStudyMaterials,
+  getStudyMaterialsByCategory,
+  getStudyMaterialsBySubject,
+  getPopularStudyMaterials,
+  createStudyMaterial,
+  updateStudyMaterial,
+  deleteStudyMaterial,
   createQuestionAnswer,
   createPDFDocument,
   getPDFDocuments,
@@ -1223,6 +1230,69 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         return getContactSubmissionById(input.id);
+      }),
+  }),
+  studyMaterials: router({
+    getAll: publicProcedure.query(async () => {
+      return getAllStudyMaterials();
+    }),
+    getByCategory: publicProcedure
+      .input(z.object({ category: z.string() }))
+      .query(async ({ input }) => {
+        return getStudyMaterialsByCategory(input.category);
+      }),
+    getBySubject: publicProcedure
+      .input(z.object({ subject: z.string() }))
+      .query(async ({ input }) => {
+        return getStudyMaterialsBySubject(input.subject);
+      }),
+    getPopular: publicProcedure.query(async () => {
+      return getPopularStudyMaterials();
+    }),
+    create: adminProcedure
+      .input(
+        z.object({
+          title: z.string(),
+          category: z.string(),
+          subcategory: z.string().optional(),
+          description: z.string().optional(),
+          resourceType: z.enum(["googleDrive", "telegram", "website", "pdf", "video"]),
+          url: z.string(),
+          author: z.string().optional(),
+          subject: z.string().optional(),
+          difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+          isPopular: z.boolean().optional(),
+          order: z.number().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return createStudyMaterial(input);
+      }),
+    update: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          title: z.string().optional(),
+          category: z.string().optional(),
+          subcategory: z.string().optional(),
+          description: z.string().optional(),
+          resourceType: z.enum(["googleDrive", "telegram", "website", "pdf", "video"]).optional(),
+          url: z.string().optional(),
+          author: z.string().optional(),
+          subject: z.string().optional(),
+          difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+          isPopular: z.boolean().optional(),
+          order: z.number().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return updateStudyMaterial(id, data);
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return deleteStudyMaterial(input.id);
       }),
   }),
 });
