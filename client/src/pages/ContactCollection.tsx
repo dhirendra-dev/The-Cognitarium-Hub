@@ -21,6 +21,7 @@ export default function ContactCollectionPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [credentials, setCredentials] = useState<CredentialsData | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoginMode, setIsLoginMode] = useState(false);
 
   const submitMutation = trpc.contactSubmissions.submit.useMutation({
     onSuccess: (data) => {
@@ -176,6 +177,40 @@ export default function ContactCollectionPage() {
     );
   }
 
+  if (isLoginMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-xl border-2 border-blue-200">
+          <CardHeader className="space-y-2 text-center">
+            <div className="text-4xl font-bold text-blue-600 mb-2">🔐</div>
+            <CardTitle className="text-2xl">Login</CardTitle>
+            <CardDescription>Enter your credentials to access the dashboard</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 text-center">
+                Redirecting to login page...
+              </p>
+              <Button
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2 rounded-lg transition"
+                onClick={() => window.location.href = '/login'}
+              >
+                Go to Login
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsLoginMode(false)}
+              >
+                Back to Sign Up
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl border-2 border-blue-200">
@@ -288,6 +323,19 @@ export default function ContactCollectionPage() {
               Your account will be created instantly. Get your login credentials immediately!
             </p>
           </form>
+
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-sm text-gray-600 text-center mb-3">
+              Already have an account?
+            </p>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setIsLoginMode(true)}
+            >
+              Login Here
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
