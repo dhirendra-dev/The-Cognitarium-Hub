@@ -24,11 +24,11 @@ import Certificates from "./pages/Certificates";
 import ContactCollection from "./pages/ContactCollection";
 import Login from "./pages/Login";
 import StudyMaterials from "./pages/StudyMaterials";
+import Home from "./pages/Home";
 
 function DashboardRouter() {
   return (
     <Switch>
-      <Route path={"/"} component={Dashboard} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/subjects"} component={SubjectsTracker} />
       <Route path={"/jee-plan"} component={JEEPlan} />
@@ -67,6 +67,8 @@ function App() {
             <Route path={"/login"} component={Login} />
             {/* Contact page - outside DashboardLayout to avoid auth loop */}
             <Route path={"/contact"} component={ContactCollection} />
+            {/* Home page - handles both authenticated and unauthenticated users */}
+            <Route path={"/"} component={Home} />
             {/* All other pages inside DashboardLayout */}
             <Route>
               <DashboardLayout>

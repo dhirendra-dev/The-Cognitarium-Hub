@@ -17,6 +17,17 @@
 - [x] Create contact-submissions.test.ts with 5 passing tests
 - [x] All 44 tests passing (39 existing + 5 new)
 
+## Phase 0: Homepage Redesign (COMPLETED)
+- [x] Replace dashboard view with Study Materials preview
+- [x] Add Time Trackers section to homepage
+- [x] Add Latest Community Posts section to homepage
+- [x] Create components for each section
+- [x] Add tRPC procedures for fetching community posts
+- [x] Test homepage on dev server
+- [x] Save checkpoint
+
+---
+
 ## Phase 1: Website Branding & Notice Section
 
 ### Branding Updates

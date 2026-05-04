@@ -3,6 +3,10 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, BookOpen, Users, Award, Zap } from "lucide-react";
+import { StudyMaterialsPreview } from "@/components/StudyMaterialsPreview";
+import { TimeTrackersPreview } from "@/components/TimeTrackersPreview";
+import { CommunityPostsPreview } from "@/components/CommunityPostsPreview";
+import DashboardLayout from "@/components/DashboardLayout";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -19,12 +23,71 @@ export default function Home() {
     );
   }
 
-  if (isAuthenticated) {
-    // Redirect authenticated users to dashboard
-    navigate("/dashboard");
-    return null;
+  // If authenticated, show dashboard with preview sections
+  if (isAuthenticated && user) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          {/* Welcome Section */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-6 shadow-lg">
+            <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h1>
+            <p className="text-blue-100">Continue your exam preparation journey</p>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Study Materials - Takes 2 columns on large screens */}
+            <div className="lg:col-span-2">
+              <StudyMaterialsPreview />
+            </div>
+
+            {/* Time Trackers - Takes 1 column */}
+            <div>
+              <TimeTrackersPreview />
+            </div>
+          </div>
+
+          {/* Community Posts - Full width */}
+          <CommunityPostsPreview />
+
+          {/* Quick Actions */}
+          <Card className="border-gray-200">
+            <CardHeader>
+              <CardTitle className="text-lg">Quick Actions</CardTitle>
+              <CardDescription>Get started with these popular features</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-3">
+                <Button
+                  variant="outline"
+                  className="justify-start"
+                  onClick={() => navigate("/daily-tasks")}
+                >
+                  📋 Daily Tasks
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start"
+                  onClick={() => navigate("/board-questions")}
+                >
+                  ❓ Board Questions
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start"
+                  onClick={() => navigate("/leaderboard")}
+                >
+                  🏆 Leaderboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
   }
 
+  // Landing page for unauthenticated users
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Navigation */}
