@@ -5,6 +5,7 @@ import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { sdk } from "./_core/sdk";
 import { z } from "zod";
 import {
+  seedLeaderboardData,
   createStudySession,
   getStudySessionsByUser,
   getTotalStudyHours,
@@ -153,6 +154,11 @@ function getContributionMetric(stats: any, certificateType: string): string {
   }
 }
 export const appRouter = router({
+  seed: router({
+    leaderboard: publicProcedure.mutation(async () => {
+      return await seedLeaderboardData();
+    }),
+  }),
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -507,6 +513,10 @@ export const appRouter = router({
         await deletePost(input.postId);
         return { success: true };
       }),
+
+    seedLeaderboard: adminProcedure.mutation(async () => {
+      return await seedLeaderboardData();
+    }),
   }),
   posts: router({
     uploadPhoto: protectedProcedure

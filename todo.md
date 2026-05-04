@@ -139,3 +139,12 @@
 - [ ] Build PWA
 - [ ] Create final checkpoint
 - [ ] Deploy to production
+
+## Phase 0.1: Dashboard & Leaderboard Updates (COMPLETED)
+- [x] Remove Subject Completion Tracker from Dashboard
+- [x] Remove Daily Subject Tasks section from Dashboard
+- [x] Populate Leaderboard with real user data (top 50)
+- [x] Verify homepage features are visible on dashboard
+- [x] Test all changes on dev server
+- [x] Save checkpoint
+

@@ -30,14 +30,11 @@ import { BookOpen, Calendar, Calculator, Sparkles, Info, Settings as SettingsIco
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: BookOpen, label: "Subjects", path: "/subjects" },
   { icon: BookMarked, label: "Syllabus", path: "/syllabus" },
   { icon: Calculator, label: "JEE Plan", path: "/jee-plan" },
-  { icon: Calendar, label: "Daily Tasks", path: "/daily-tasks" },
   { icon: HelpCircle, label: "Board Questions", path: "/board-exam-questions" },
   { icon: FileText, label: "Study Materials", path: "/study-materials" },
   { icon: Trophy, label: "Leaderboard", path: "/leaderboard" },
-  { icon: UsersIcon, label: "Community Links", path: "/study-links" },
   { icon: Image, label: "Posts", path: "/posts" },
   { icon: Award, label: "Certificates", path: "/certificates" },
   { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },

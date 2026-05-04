@@ -1376,3 +1376,80 @@ export async function deleteStudyMaterial(id: number) {
     .delete(studyMaterials)
     .where(eq(studyMaterials.id, id));
 }
+
+
+export async function seedLeaderboardData() {
+  const db = await getDb();
+  if (!db) return { success: false, message: "Database not available" };
+
+  try {
+    const firstNames = [
+      'Aarav', 'Vivaan', 'Aditya', 'Arjun', 'Rohan', 'Ishaan', 'Nikhil', 'Harsh', 'Siddharth', 'Karan',
+      'Priya', 'Ananya', 'Diya', 'Pooja', 'Neha', 'Isha', 'Shreya', 'Sakshi', 'Divya', 'Anjali',
+      'Rahul', 'Vikram', 'Akshay', 'Varun', 'Aryan', 'Dhruv', 'Pranav', 'Yash', 'Rishabh', 'Abhishek',
+      'Meera', 'Nisha', 'Kavya', 'Riya', 'Sneha', 'Swati', 'Tanvi', 'Aadhya', 'Bhavna', 'Chitra',
+      'Sameer', 'Tarun', 'Umesh', 'Vimal', 'Waqar', 'Xander', 'Yatin', 'Zain', 'Arpit', 'Bhuvan'
+    ];
+
+    const lastNames = [
+      'Sharma', 'Patel', 'Kumar', 'Singh', 'Gupta', 'Verma', 'Rao', 'Nair', 'Reddy', 'Iyer',
+      'Bhat', 'Desai', 'Joshi', 'Kulkarni', 'Mishra', 'Pandey', 'Saxena', 'Trivedi', 'Upadhyay', 'Varma'
+    ];
+
+    // Create 50 users
+    const userIds: number[] = [];
+    for (let i = 0; i < 50; i++) {
+      const firstName = firstNames[i % firstNames.length];
+      const lastName = lastNames[i % lastNames.length];
+      const name = `${firstName} ${lastName} ${Math.floor(i / lastNames.length) + 1}`;
+      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@hslcprep.com`;
+      const openId = `seed_${i}_${Date.now()}`; // Unique openId for each user
+      
+      const result = await db.insert(users).values({
+        openId,
+        name,
+        email,
+        role: 'user',
+        createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000)
+      });
+
+      userIds.push(result[0].insertId as number);
+    }
+
+    // Create leaderboard entries
+    for (let i = 0; i < userIds.length; i++) {
+      const userId = userIds[i];
+      const topicsCompleted = Math.floor(Math.random() * 150) + 20;
+      const totalHoursStudied = Math.floor(Math.random() * 500) + 50;
+      const streakDays = Math.floor(Math.random() * 60) + 1;
+      const chaptersCompleted = Math.floor(Math.random() * 100) + 10;
+      const samplePapersCompleted = Math.floor(Math.random() * 30) + 5;
+      const averageScore = (Math.random() * 40 + 60).toFixed(2);
+      const points = (topicsCompleted * 10) + totalHoursStudied + (streakDays * 5);
+
+      await db.insert(leaderboard).values({
+        userId,
+        topicsCompleted,
+        totalHoursStudied: totalHoursStudied.toString(),
+        chaptersCompleted,
+        samplePapersCompleted,
+        averageScore,
+        streakDays,
+        points,
+        bonusPoints: Math.floor(Math.random() * 100)
+      });
+    }
+
+    return { 
+      success: true, 
+      message: `Successfully seeded 50 users and leaderboard entries`,
+      userCount: userIds.length
+    };
+  } catch (error) {
+    console.error('Error seeding leaderboard:', error);
+    return { 
+      success: false, 
+      message: `Error seeding leaderboard: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
+  }
+}
