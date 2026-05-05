@@ -35,6 +35,7 @@ const menuItems = [
   { icon: HelpCircle, label: "Board Questions", path: "/board-exam-questions" },
   { icon: FileText, label: "Study Materials", path: "/study-materials" },
   { icon: Trophy, label: "Leaderboard", path: "/leaderboard" },
+  { icon: Award, label: "Community Toppers", path: "/community-toppers" },
   { icon: Image, label: "Posts", path: "/posts" },
   { icon: Award, label: "Certificates", path: "/certificates" },
   { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },

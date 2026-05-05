@@ -25,6 +25,7 @@ import ContactCollection from "./pages/ContactCollection";
 import Login from "./pages/Login";
 import StudyMaterials from "./pages/StudyMaterials";
 import Home from "./pages/Home";
+import CommunityToppers from "./pages/CommunityToppers";
 
 function DashboardRouter() {
   return (
@@ -46,6 +47,7 @@ function DashboardRouter() {
       <Route path={"/study-links"} component={StudyLinks} />
       <Route path={"/certificates"} component={Certificates} />
       <Route path={"/study-materials"} component={StudyMaterials} />
+      <Route path={"/community-toppers"} component={CommunityToppers} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -1,13 +1,25 @@
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Trophy, Medal, Flame } from "lucide-react";
-import ToppersSection from "@/components/ToppersSection";
+import { useState } from "react";
+import ComparisonView from "@/components/ComparisonView";
 
 export default function Leaderboard() {
   const { user } = useAuth();
+  const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
   const { data: topUsers } = trpc.leaderboard.getTop.useQuery({ limit: 50 });
   const { data: userRank } = trpc.leaderboard.getUserRank.useQuery();
+  const { data: allToppers = [] } = trpc.toppers.getToppers.useQuery();
+
+  // Filter toppers by selected board
+  const filteredToppers = selectedBoard
+    ? allToppers.filter((t: any) => t.board === selectedBoard)
+    : allToppers;
+
+  // Get unique boards from toppers data
+  const boards = Array.from(new Set(allToppers.map((t: any) => t.board))).sort();
 
   const getMedalIcon = (position: number) => {
     if (position === 1) return <Trophy className="w-6 h-6 text-yellow-500" />;
@@ -42,7 +54,7 @@ export default function Leaderboard() {
               </div>
               <div className="text-right">
                 <p className="text-sm font-semibold opacity-90">Streak</p>
-                      <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2">
                   <Flame className="w-6 h-6" />
                   <p className="text-3xl font-bold">{(userRank as any).currentStreak || 0}</p>
                 </div>
@@ -103,9 +115,72 @@ export default function Leaderboard() {
           )}
         </Card>
 
-        {/* Community Toppers Section */}
+        {/* Community Toppers Section with Board Filter */}
         <div className="mt-12 mb-12">
-          <ToppersSection />
+          <Card className="bg-white shadow-lg p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Community Toppers</h2>
+              <p className="text-gray-600 mb-4">Top performers from Cognitarium Hub Merit List 2026</p>
+              
+              {/* Board Filter Buttons */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Button
+                  variant={selectedBoard === null ? "default" : "outline"}
+                  onClick={() => setSelectedBoard(null)}
+                  size="sm"
+                >
+                  All Boards ({allToppers.length})
+                </Button>
+                {boards.map((board) => {
+                  const count = allToppers.filter((t: any) => t.board === board).length;
+                  return (
+                    <Button
+                      key={board}
+                      variant={selectedBoard === board ? "default" : "outline"}
+                      onClick={() => setSelectedBoard(board)}
+                      size="sm"
+                    >
+                      {board} ({count})
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Toppers Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredToppers.slice(0, 10).map((topper: any) => (
+                <Card key={topper.rank} className="p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl font-bold text-blue-600">#{topper.rank}</span>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">{topper.board}</span>
+                      </div>
+                      <h3 className="font-semibold text-gray-800">{topper.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{topper.marks}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-green-600">{topper.percentage}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            
+            {filteredToppers.length > 10 && (
+              <div className="mt-6 text-center">
+                <Button variant="outline" onClick={() => window.location.href = '/community-toppers'}>
+                  View All {filteredToppers.length} Toppers →
+                </Button>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Comparison View */}
+        <div className="mt-12 mb-12">
+          <ComparisonView />
         </div>
 
         {/* Info Section */}
