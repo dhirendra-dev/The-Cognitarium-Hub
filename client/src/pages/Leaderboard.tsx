@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Trophy, Medal, Flame } from "lucide-react";
+import ToppersSection from "@/components/ToppersSection";
 
 export default function Leaderboard() {
   const { user } = useAuth();
@@ -101,6 +102,11 @@ export default function Leaderboard() {
             </div>
           )}
         </Card>
+
+        {/* Community Toppers Section */}
+        <div className="mt-12 mb-12">
+          <ToppersSection />
+        </div>
 
         {/* Info Section */}
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg p-6 mt-8 border-2 border-blue-200">

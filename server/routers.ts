@@ -5,6 +5,7 @@ import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { sdk } from "./_core/sdk";
 import { z } from "zod";
 import {
+  getToppersList,
   seedLeaderboardData,
   createStudySession,
   getStudySessionsByUser,
@@ -468,6 +469,12 @@ export const appRouter = router({
     updateRanks: protectedProcedure.mutation(async () => {
       await updateLeaderboardRanks();
       return { success: true };
+    }),
+  }),
+
+  toppers: router({
+    getToppers: publicProcedure.query(async () => {
+      return await getToppersList();
     }),
   }),
 

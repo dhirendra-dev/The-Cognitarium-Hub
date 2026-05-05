@@ -1453,3 +1453,27 @@ export async function seedLeaderboardData() {
     };
   }
 }
+
+
+export async function getToppersList(): Promise<any[]> {
+  try {
+    // Return hardcoded toppers data from Cognitarium Hub Merit List 2026
+    const toppers = [
+      { rank: '1', name: 'RISHAB KUMAR', marks: '496/500', percentage: '99.2%', board: 'CBSE', source: 'Cognitarium Hub' },
+      { rank: '2', name: 'ISHIKA', marks: '490/500', percentage: '98.0%', board: 'CBSE', source: 'Cognitarium Hub' },
+      { rank: '3', name: 'Aryan kannaujiya', marks: '488/500', percentage: '97.6%', board: 'CBSE', source: 'Cognitarium Hub' },
+      { rank: '4', name: 'SAANVI G MALLYA', marks: '486/500', percentage: '97.2%', board: 'CBSE', source: 'Cognitarium Hub' },
+      { rank: '5', name: 'LAKSHAY JINDAL', marks: '485/500', percentage: '97.0%', board: 'CBSE', source: 'Cognitarium Hub' },
+      { rank: '6', name: 'Anant Kapoor', marks: '483/500', percentage: '96.6%', board: 'CBSE', source: 'Cognitarium Hub' },
+      { rank: '7', name: 'Priyansh Agarwal', marks: '483/500', percentage: '96.6%', board: 'CBSE', source: 'Cognitarium Hub' },
+      { rank: '8', name: 'Satyam Kumar Nirala', marks: '482/500', percentage: '96.4%', board: 'CBSE', source: 'Cognitarium Hub' },
+      { rank: '9', name: 'Shreyash Kumar', marks: '481/500', percentage: '96.2%', board: 'CBSE', source: 'Cognitarium Hub' },
+      { rank: '10', name: 'Achuyat Sangra', marks: '478/500', percentage: '95.6%', board: 'CBSE', source: 'Cognitarium Hub' },
+    ];
+    
+    return toppers;
+  } catch (error) {
+    console.error('Error fetching toppers from Cognitarium Hub:', error);
+    return [];
+  }
+}

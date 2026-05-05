@@ -6,6 +6,7 @@ import { ArrowRight, BookOpen, Users, Award, Zap } from "lucide-react";
 import { StudyMaterialsPreview } from "@/components/StudyMaterialsPreview";
 import { TimeTrackersPreview } from "@/components/TimeTrackersPreview";
 import { CommunityPostsPreview } from "@/components/CommunityPostsPreview";
+import ToppersSection from "@/components/ToppersSection";
 import DashboardLayout from "@/components/DashboardLayout";
 
 export default function Home() {
@@ -49,6 +50,9 @@ export default function Home() {
 
           {/* Community Posts - Full width */}
           <CommunityPostsPreview />
+
+          {/* Community Toppers Section */}
+          <ToppersSection />
 
           {/* Quick Actions */}
           <Card className="border-gray-200">
