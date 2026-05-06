@@ -26,9 +26,10 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-import { BookOpen, Calendar, Calculator, Sparkles, Info, Settings as SettingsIcon, Trophy, BookMarked, Shield, Image, HelpCircle, FileText, Users as UsersIcon, Award } from "lucide-react";
+import { BookOpen, Calendar, Calculator, Sparkles, Info, Settings as SettingsIcon, Trophy, BookMarked, Shield, Image, HelpCircle, FileText, Users as UsersIcon, Award, Home as HomeIcon } from "lucide-react";
 
 const menuItems = [
+  { icon: HomeIcon, label: "Home", path: "/" },
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: BookMarked, label: "Syllabus", path: "/syllabus" },
   { icon: Calculator, label: "JEE Plan", path: "/jee-plan" },

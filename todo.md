@@ -167,3 +167,11 @@
 - [x] Integrate comparison view into leaderboard
 - [x] Test all features on dev server
 - [x] Save checkpoint
+
+
+## Phase 0.4: Navigation & Sidebar Fixes (COMPLETED)
+- [x] Fix sidebar disappearing after clicking navigation items
+- [x] Add homepage link to sidebar menu
+- [x] Ensure navigation persists across all pages
+- [x] Test navigation flow on dev server
+- [x] Save checkpoint with fixes
