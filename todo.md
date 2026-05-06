@@ -175,3 +175,10 @@
 - [x] Ensure navigation persists across all pages
 - [x] Test navigation flow on dev server
 - [x] Save checkpoint with fixes
+
+
+## Phase 0.5: Homepage Accessibility from Navigation (COMPLETED)
+- [x] Verify Home link in sidebar navigates to redesigned homepage
+- [x] Ensure redesigned homepage is displayed when clicking Home
+- [x] Test homepage accessibility from all pages
+- [x] Save checkpoint with homepage navigation fix
