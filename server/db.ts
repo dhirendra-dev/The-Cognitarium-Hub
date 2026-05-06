@@ -1521,3 +1521,199 @@ export async function getToppersList(): Promise<any[]> {
     return [];
   }
 }
+
+
+// Analytics Functions
+export async function trackHomepageInteraction(userId: number, sectionName: string, interactionType: string) {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    const { homepageAnalytics } = await import("../drizzle/schema");
+    await db.insert(homepageAnalytics).values({
+      userId,
+      sectionName,
+      interactionType: interactionType as any,
+    });
+  } catch (error) {
+    console.error("[Database] Failed to track interaction:", error);
+  }
+}
+
+export async function getHomepageAnalytics(userId: number, days: number = 30) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const { homepageAnalytics } = await import("../drizzle/schema");
+    const { and, eq, gte } = require("drizzle-orm");
+    const thirtyDaysAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    
+    const analytics = await db
+      .select()
+      .from(homepageAnalytics)
+      .where(and(
+        eq(homepageAnalytics.userId, userId),
+        gte(homepageAnalytics.timestamp, thirtyDaysAgo)
+      ));
+    
+    return analytics;
+  } catch (error) {
+    console.error("[Database] Failed to get analytics:", error);
+    return [];
+  }
+}
+
+// Board Preference Functions
+export async function getUserBoardPreference(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const { userBoardPreferences } = await import("../drizzle/schema");
+    const { eq } = require("drizzle-orm");
+    const preference = await db
+      .select()
+      .from(userBoardPreferences)
+      .where(eq(userBoardPreferences.userId, userId))
+      .limit(1);
+    
+    return preference[0] || null;
+  } catch (error) {
+    console.error("[Database] Failed to get board preference:", error);
+    return null;
+  }
+}
+
+export async function setUserBoardPreference(userId: number, selectedBoard: string, selectedClass: string) {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    const { userBoardPreferences } = await import("../drizzle/schema");
+    await db.insert(userBoardPreferences).values({
+      userId,
+      selectedBoard: selectedBoard as any,
+      selectedClass: selectedClass as any,
+    }).onDuplicateKeyUpdate({
+      set: {
+        selectedBoard: selectedBoard as any,
+        selectedClass: selectedClass as any,
+      },
+    });
+  } catch (error) {
+    console.error("[Database] Failed to set board preference:", error);
+  }
+}
+
+// Material View Functions
+export async function trackMaterialView(userId: number, materialId: number, materialType: string) {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    const { materialViews } = await import("../drizzle/schema");
+    await db.insert(materialViews).values({
+      userId,
+      materialId,
+      materialType,
+    });
+  } catch (error) {
+    console.error("[Database] Failed to track material view:", error);
+  }
+}
+
+export async function getRecentlyViewedMaterials(userId: number, limit: number = 5) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const { materialViews } = await import("../drizzle/schema");
+    const { eq, desc } = require("drizzle-orm");
+    const recent = await db
+      .select()
+      .from(materialViews)
+      .where(eq(materialViews.userId, userId))
+      .orderBy(desc(materialViews.viewedAt))
+      .limit(limit);
+    
+    return recent;
+  } catch (error) {
+    console.error("[Database] Failed to get recently viewed materials:", error);
+    return [];
+  }
+}
+
+// Incomplete Study Session Functions
+export async function createIncompleteSession(userId: number, materialId: number, materialType: string, materialTitle: string) {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    const { incompleteStudySessions } = await import("../drizzle/schema");
+    await db.insert(incompleteStudySessions).values({
+      userId,
+      materialId,
+      materialType,
+      materialTitle,
+      progressPercentage: 0,
+    });
+  } catch (error) {
+    console.error("[Database] Failed to create incomplete session:", error);
+  }
+}
+
+export async function updateIncompleteSessionProgress(sessionId: number, progressPercentage: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    const { incompleteStudySessions } = await import("../drizzle/schema");
+    const { eq } = require("drizzle-orm");
+    await db
+      .update(incompleteStudySessions)
+      .set({
+        progressPercentage,
+        lastAccessedAt: new Date(),
+      })
+      .where(eq(incompleteStudySessions.id, sessionId));
+  } catch (error) {
+    console.error("[Database] Failed to update session progress:", error);
+  }
+}
+
+export async function getIncompleteSessions(userId: number, limit: number = 5) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const { incompleteStudySessions } = await import("../drizzle/schema");
+    const { eq, desc } = require("drizzle-orm");
+    const sessions = await db
+      .select()
+      .from(incompleteStudySessions)
+      .where(eq(incompleteStudySessions.userId, userId))
+      .orderBy(desc(incompleteStudySessions.lastAccessedAt))
+      .limit(limit);
+    
+    return sessions;
+  } catch (error) {
+    console.error("[Database] Failed to get incomplete sessions:", error);
+    return [];
+  }
+}
+
+export async function completeSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    const { incompleteStudySessions } = await import("../drizzle/schema");
+    const { eq } = require("drizzle-orm");
+    await db
+      .delete(incompleteStudySessions)
+      .where(eq(incompleteStudySessions.id, sessionId));
+  } catch (error) {
+    console.error("[Database] Failed to complete session:", error);
+  }
+}

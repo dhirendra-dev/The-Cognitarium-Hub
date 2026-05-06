@@ -643,3 +643,59 @@ export const studyMaterials = mysqlTable("studyMaterials", {
 
 export type StudyMaterial = typeof studyMaterials.$inferSelect;
 export type InsertStudyMaterial = typeof studyMaterials.$inferInsert;
+
+
+// Homepage Analytics - Track user interactions with homepage sections
+export const homepageAnalytics = mysqlTable("homepageAnalytics", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  sectionName: varchar("sectionName", { length: 100 }).notNull(), // "studyMaterials", "communityPosts", "communityToppers", "timeTrackers"
+  interactionType: mysqlEnum("interactionType", ["view", "click", "expand", "collapse"]).notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type HomepageAnalytic = typeof homepageAnalytics.$inferSelect;
+export type InsertHomepageAnalytic = typeof homepageAnalytics.$inferInsert;
+
+// User Board Preferences - Store user's selected board (CBSE, HSLC, MP Board)
+export const userBoardPreferences = mysqlTable("userBoardPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  selectedBoard: mysqlEnum("selectedBoard", ["CBSE", "HSLC", "MP_BOARD", "OTHER"]).default("CBSE"),
+  selectedClass: mysqlEnum("selectedClass", ["11", "12"]).default("12"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserBoardPreference = typeof userBoardPreferences.$inferSelect;
+export type InsertUserBoardPreference = typeof userBoardPreferences.$inferInsert;
+
+// Material Views - Track which materials users have viewed
+export const materialViews = mysqlTable("materialViews", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  materialId: int("materialId").notNull(),
+  materialType: varchar("materialType", { length: 50 }).notNull(), // "studyResource", "pdfDocument", etc.
+  viewedAt: timestamp("viewedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MaterialView = typeof materialViews.$inferSelect;
+export type InsertMaterialView = typeof materialViews.$inferInsert;
+
+// Incomplete Study Sessions - Track sessions that are in progress
+export const incompleteStudySessions = mysqlTable("incompleteStudySessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  materialId: int("materialId").notNull(),
+  materialType: varchar("materialType", { length: 50 }).notNull(),
+  materialTitle: varchar("materialTitle", { length: 255 }).notNull(),
+  progressPercentage: int("progressPercentage").default(0),
+  lastAccessedAt: timestamp("lastAccessedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type IncompleteStudySession = typeof incompleteStudySessions.$inferSelect;
+export type InsertIncompleteStudySession = typeof incompleteStudySessions.$inferInsert;

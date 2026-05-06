@@ -182,3 +182,14 @@
 - [x] Ensure redesigned homepage is displayed when clicking Home
 - [x] Test homepage accessibility from all pages
 - [x] Save checkpoint with homepage navigation fix
+
+
+## Phase 0.6: Advanced Homepage Features (COMPLETED)
+- [x] Add database schema for user preferences and analytics
+- [x] Create tRPC procedures for analytics and user preferences
+- [x] Build personalized homepage component with stream/board filtering
+- [x] Create Continue Learning section component
+- [x] Integrate analytics tracking into homepage
+- [x] Update Home.tsx with all new features
+- [x] Test all features on dev server
+- [x] Save checkpoint with new features

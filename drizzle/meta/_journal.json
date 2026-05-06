@@ -134,6 +134,13 @@
       "when": 1777803543264,
       "tag": "0018_equal_gauntlet",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1778033431220,
+      "tag": "0019_spotty_penance",
+      "breakpoints": true
     }
   ]
 }
