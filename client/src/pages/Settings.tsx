@@ -195,8 +195,53 @@ export default function Settings() {
 
         {/* Study Preferences */}
         <Card className="bg-white shadow-lg mb-8 p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Study Preferences</h2>
-          <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Academic Preferences</h2>
+          <div className="space-y-6">
+            {/* Board Selection */}
+            <div>
+              <Label className="text-sm font-semibold text-gray-700 mb-3 block">Select Your Board</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {['CBSE', 'HSLC', 'MP Board'].map((board) => (
+                  <button
+                    key={board}
+                    className="p-3 border-2 border-gray-300 rounded-lg hover:border-indigo-500 transition-all font-medium text-sm"
+                  >
+                    {board}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Stream Selection */}
+            <div>
+              <Label className="text-sm font-semibold text-gray-700 mb-3 block">Select Your Stream</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {['Science', 'Commerce', 'Arts'].map((stream) => (
+                  <button
+                    key={stream}
+                    className="p-3 border-2 border-gray-300 rounded-lg hover:border-indigo-500 transition-all font-medium text-sm"
+                  >
+                    {stream}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Class Selection */}
+            <div>
+              <Label className="text-sm font-semibold text-gray-700 mb-3 block">Select Your Class</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {['11', '12'].map((cls) => (
+                  <button
+                    key={cls}
+                    className="p-3 border-2 border-gray-300 rounded-lg hover:border-indigo-500 transition-all font-medium text-sm"
+                  >
+                    Class {cls}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
               <p className="text-sm text-gray-700">
                 <strong>Tip:</strong> Customize your subjects, study schedule, and goals from the respective pages. 

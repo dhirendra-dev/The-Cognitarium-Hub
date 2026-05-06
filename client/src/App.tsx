@@ -26,6 +26,7 @@ import Login from "./pages/Login";
 import StudyMaterials from "./pages/StudyMaterials";
 import Home from "./pages/Home";
 import CommunityToppers from "./pages/CommunityToppers";
+import Analytics from "./pages/Analytics";
 
 function DashboardRouter() {
   return (
@@ -48,6 +49,7 @@ function DashboardRouter() {
       <Route path={"/certificates"} component={Certificates} />
       <Route path={"/study-materials"} component={StudyMaterials} />
       <Route path={"/community-toppers"} component={CommunityToppers} />
+      <Route path={"/analytics"} component={Analytics} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

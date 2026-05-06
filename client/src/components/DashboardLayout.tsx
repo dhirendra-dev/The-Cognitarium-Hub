@@ -26,7 +26,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-import { BookOpen, Calendar, Calculator, Sparkles, Info, Settings as SettingsIcon, Trophy, BookMarked, Shield, Image, HelpCircle, FileText, Users as UsersIcon, Award, Home as HomeIcon } from "lucide-react";
+import { BookOpen, Calendar, Calculator, Sparkles, Info, Settings as SettingsIcon, Trophy, BookMarked, Shield, Image, HelpCircle, FileText, Users as UsersIcon, Award, Home as HomeIcon, BarChart3 } from "lucide-react";
 
 const menuItems = [
   { icon: HomeIcon, label: "Home", path: "/" },
@@ -40,6 +40,7 @@ const menuItems = [
   { icon: Image, label: "Posts", path: "/posts" },
   { icon: Award, label: "Certificates", path: "/certificates" },
   { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },
+  { icon: BarChart3, label: "Analytics", path: "/analytics" },
   { icon: Shield, label: "Admin Panel", path: "/admin" },
   { icon: Info, label: "About", path: "/about" },
   { icon: SettingsIcon, label: "Settings", path: "/settings" },

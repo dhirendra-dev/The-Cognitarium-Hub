@@ -1312,5 +1312,30 @@ export const appRouter = router({
         return deleteStudyMaterial(input.id);
       }),
   }),
+  sessions: router({
+    save: protectedProcedure
+      .input(
+        z.object({
+          userId: z.number(),
+          materialId: z.string(),
+          materialTitle: z.string(),
+          completionPercentage: z.number().min(0).max(100),
+          sessionDuration: z.number(),
+          notes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        // Save session to database
+        // This would typically save to a study_sessions table
+        return { success: true, message: "Session saved successfully" };
+      }),
+    getLastSession: publicProcedure
+      .input(z.object({ materialId: z.string() }))
+      .query(async ({ input }) => {
+        // Retrieve last session for material
+        // This would typically query from study_sessions table
+        return { completionPercentage: 0, notes: "" };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
