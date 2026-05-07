@@ -256,3 +256,12 @@
 - [ ] Streak counter and motivation badges
 - [ ] Offline mode for downloaded materials
 - [ ] Export study reports and certificates
+
+
+## Phase 2: Certificate Features Bug Fix (COMPLETED)
+- [x] Investigate certificate feature issues and identify root cause
+- [x] Check certificate page and components for errors
+- [x] Fix certificate generation and display logic
+- [x] Verify database schema and tRPC procedures for certificates
+- [x] Test certificate features on dev server
+- [x] Save checkpoint with certificate fixes

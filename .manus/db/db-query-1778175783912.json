@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, email, name, role FROM users WHERE role = 'admin' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3WKyGk5niyouJED.root --database FEfYUTZMpU7E7zN5ZAvyq2 --execute SELECT id, email, name, role FROM users WHERE role = 'admin' LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "email": "dk2649367@gmail.com",
+      "name": "Dhirendra Kumar",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\n1\tdk2649367@gmail.com\tDhirendra Kumar\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 1775
+}

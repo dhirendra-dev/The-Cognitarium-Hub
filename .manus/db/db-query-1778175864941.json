@@ -1,0 +1,20 @@
+{
+  "query": "SELECT u.id, u.name, u.email, \n  (SELECT COUNT(*) FROM posts WHERE userId = u.id) as postCount,\n  (SELECT COALESCE(SUM(likes), 0) FROM posts WHERE userId = u.id) as totalLikes,\n  (SELECT COUNT(*) FROM postReplies WHERE userId = u.id) as replyCount,\n  (SELECT totalHoursStudied FROM leaderboard WHERE userId = u.id) as studyHours,\n  (SELECT streakDays FROM leaderboard WHERE userId = u.id) as streakDays\nFROM users u WHERE u.email = 'johndoe@example.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3WKyGk5niyouJED.root --database FEfYUTZMpU7E7zN5ZAvyq2 --execute SELECT u.id, u.name, u.email, \n  (SELECT COUNT(*) FROM posts WHERE userId = u.id) as postCount,\n  (SELECT COALESCE(SUM(likes), 0) FROM posts WHERE userId = u.id) as totalLikes,\n  (SELECT COUNT(*) FROM postReplies WHERE userId = u.id) as replyCount,\n  (SELECT totalHoursStudied FROM leaderboard WHERE userId = u.id) as studyHours,\n  (SELECT streakDays FROM leaderboard WHERE userId = u.id) as streakDays\nFROM users u WHERE u.email = 'johndoe@example.com';",
+  "rows": [
+    {
+      "id": "4320001",
+      "name": "John Doe",
+      "email": "johndoe@example.com",
+      "postCount": "0",
+      "totalLikes": "0",
+      "replyCount": "0",
+      "studyHours": "NULL",
+      "streakDays": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tpostCount\ttotalLikes\treplyCount\tstudyHours\tstreakDays\n4320001\tJohn Doe\tjohndoe@example.com\t0\t0\t0\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1789
+}

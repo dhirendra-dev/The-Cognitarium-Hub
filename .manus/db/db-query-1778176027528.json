@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, userId, certificateType, title, verificationCode, certificateUrl FROM communityContributionCertificates WHERE userId = 4320001 LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3WKyGk5niyouJED.root --database FEfYUTZMpU7E7zN5ZAvyq2 --execute SELECT id, userId, certificateType, title, verificationCode, certificateUrl FROM communityContributionCertificates WHERE userId = 4320001 LIMIT 1;",
+  "rows": [
+    {
+      "id": "90001",
+      "userId": "4320001",
+      "certificateType": "activeMember",
+      "title": "Active Community Member - 5+ posts with 10+ likes",
+      "verificationCode": "a2080118e89f1ae32ee3fa2340810239",
+      "certificateUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663044718279/FEfYUTZMpU7E7zN5ZAvyq2/certificates/4320001/certificate-a2080118e89f1ae32ee3fa2340810239.pdf"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tcertificateType\ttitle\tverificationCode\tcertificateUrl\n90001\t4320001\tactiveMember\tActive Community Member - 5+ posts with 10+ likes\ta2080118e89f1ae32ee3fa2340810239\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663044718279/FEfYUTZMpU7E7zN5ZAvyq2/certificates/4320001/certificate-a2080118e89f1ae32ee3fa2340810239.pdf\n",
+  "stderr": "",
+  "execution_time_ms": 1747
+}

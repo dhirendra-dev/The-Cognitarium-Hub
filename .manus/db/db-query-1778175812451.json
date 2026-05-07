@@ -1,0 +1,58 @@
+{
+  "query": "SELECT certificateType, minPostCount, minLikesReceived, minRepliesCount FROM certificateEligibilityCriteria ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3WKyGk5niyouJED.root --database FEfYUTZMpU7E7zN5ZAvyq2 --execute SELECT certificateType, minPostCount, minLikesReceived, minRepliesCount FROM certificateEligibilityCriteria ORDER BY id;",
+  "rows": [
+    {
+      "certificateType": "activeMember",
+      "minPostCount": "5",
+      "minLikesReceived": "10",
+      "minRepliesCount": "3"
+    },
+    {
+      "certificateType": "topContributor",
+      "minPostCount": "20",
+      "minLikesReceived": "100",
+      "minRepliesCount": "15"
+    },
+    {
+      "certificateType": "helpfulCommunity",
+      "minPostCount": "NULL",
+      "minLikesReceived": "200",
+      "minRepliesCount": "50"
+    },
+    {
+      "certificateType": "consistentLearner",
+      "minPostCount": "NULL",
+      "minLikesReceived": "NULL",
+      "minRepliesCount": "NULL"
+    },
+    {
+      "certificateType": "leaderboardTop10",
+      "minPostCount": "NULL",
+      "minLikesReceived": "NULL",
+      "minRepliesCount": "NULL"
+    },
+    {
+      "certificateType": "courseCompletion",
+      "minPostCount": "NULL",
+      "minLikesReceived": "NULL",
+      "minRepliesCount": "NULL"
+    },
+    {
+      "certificateType": "quizMastery",
+      "minPostCount": "NULL",
+      "minLikesReceived": "NULL",
+      "minRepliesCount": "NULL"
+    },
+    {
+      "certificateType": "studyStreak",
+      "minPostCount": "NULL",
+      "minLikesReceived": "NULL",
+      "minRepliesCount": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "certificateType\tminPostCount\tminLikesReceived\tminRepliesCount\nactiveMember\t5\t10\t3\ntopContributor\t20\t100\t15\nhelpfulCommunity\tNULL\t200\t50\nconsistentLearner\tNULL\tNULL\tNULL\nleaderboardTop10\tNULL\tNULL\tNULL\ncourseCompletion\tNULL\tNULL\tNULL\nquizMastery\tNULL\tNULL\tNULL\nstudyStreak\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1851
+}

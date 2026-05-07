@@ -1,0 +1,9 @@
+{
+  "query": "-- Add replies for the user\nINSERT INTO postReplies (userId, postId, replyText, likes, createdAt, updatedAt) VALUES\n(4320001, 1, 'This is very helpful', 5, NOW(), NOW()),\n(4320001, 2, 'I agree with this approach', 3, NOW(), NOW()),\n(4320001, 3, 'Great explanation', 8, NOW(), NOW()),\n(4320001, 4, 'Thanks for sharing', 2, NOW(), NOW()),\n(4320001, 5, 'Very useful tips', 6, NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3WKyGk5niyouJED.root --database FEfYUTZMpU7E7zN5ZAvyq2 --execute -- Add replies for the user\nINSERT INTO postReplies (userId, postId, replyText, likes, createdAt, updatedAt) VALUES\n(4320001, 1, 'This is very helpful', 5, NOW(), NOW()),\n(4320001, 2, 'I agree with this approach', 3, NOW(), NOW()),\n(4320001, 3, 'Great explanation', 8, NOW(), NOW()),\n(4320001, 4, 'Thanks for sharing', 2, NOW(), NOW()),\n(4320001, 5, 'Very useful tips', 6, NOW(), NOW());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1812
+}

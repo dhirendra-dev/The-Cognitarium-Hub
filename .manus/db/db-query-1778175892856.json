@@ -1,0 +1,9 @@
+{
+  "query": "-- Add posts for the user\nINSERT INTO posts (userId, title, description, likes, createdAt, updatedAt) VALUES\n(4320001, 'Great study tips', 'Here are some effective study techniques...', 15, NOW(), NOW()),\n(4320001, 'Physics help needed', 'Can someone explain quantum mechanics?', 8, NOW(), NOW()),\n(4320001, 'Chemistry notes', 'I compiled comprehensive chemistry notes', 25, NOW(), NOW()),\n(4320001, 'Math problem solving', 'Here is how to solve complex equations', 12, NOW(), NOW()),\n(4320001, 'Board exam preparation', 'Tips for board exam success', 20, NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3WKyGk5niyouJED.root --database FEfYUTZMpU7E7zN5ZAvyq2 --execute -- Add posts for the user\nINSERT INTO posts (userId, title, description, likes, createdAt, updatedAt) VALUES\n(4320001, 'Great study tips', 'Here are some effective study techniques...', 15, NOW(), NOW()),\n(4320001, 'Physics help needed', 'Can someone explain quantum mechanics?', 8, NOW(), NOW()),\n(4320001, 'Chemistry notes', 'I compiled comprehensive chemistry notes', 25, NOW(), NOW()),\n(4320001, 'Math problem solving', 'Here is how to solve complex equations', 12, NOW(), NOW()),\n(4320001, 'Board exam preparation', 'Tips for board exam success', 20, NOW(), NOW());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1822
+}

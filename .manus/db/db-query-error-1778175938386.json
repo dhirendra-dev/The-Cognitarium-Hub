@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO leaderboard (userId, rank, totalHoursStudied, streakDays, points, createdAt, lastUpdated) VALUES\n(4320001, 25, 150, 45, 500, NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3WKyGk5niyouJED.root --database FEfYUTZMpU7E7zN5ZAvyq2 --execute INSERT INTO leaderboard (userId, rank, totalHoursStudied, streakDays, points, createdAt, lastUpdated) VALUES\n(4320001, 25, 150, 45, 500, NOW(), NOW());",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 37 near \"rank, totalHoursStudied, streakDays, points, createdAt, lastUpdated) VALUES",
+    "(4320001, 25, 150, 45, 500, NOW(), NOW())\""
+  ]
+}

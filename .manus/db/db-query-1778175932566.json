@@ -1,0 +1,9 @@
+{
+  "query": "SELECT * FROM leaderboard WHERE userId = 4320001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3WKyGk5niyouJED.root --database FEfYUTZMpU7E7zN5ZAvyq2 --execute SELECT * FROM leaderboard WHERE userId = 4320001;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1855
+}
