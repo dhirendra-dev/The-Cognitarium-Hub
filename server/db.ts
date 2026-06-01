@@ -1,5 +1,6 @@
 import { and, desc, eq, sql, like, gte, lte, count, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import { randomBytes } from "crypto";
 import { InsertUser, users, contactSubmissions, InsertContactSubmission, studyMaterials, InsertStudyMaterial } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import {
@@ -1134,7 +1135,7 @@ export async function awardCertificateManually(
     throw new Error("User already has this certificate");
   }
   
-  const verificationCode = sql`UUID()`;
+  const verificationCode = randomBytes(16).toString("hex");
   
   return db.insert(communityContributionCertificates).values({
     userId,
@@ -1144,7 +1145,7 @@ export async function awardCertificateManually(
     contributionMetric: `Manually awarded: ${reason}`,
     certificateUrl: "",
     certificateKey: "",
-    verificationCode: verificationCode.toString(),
+    verificationCode,
   });
 }
 
