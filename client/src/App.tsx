@@ -27,6 +27,10 @@ import StudyMaterials from "./pages/StudyMaterials";
 import Home from "./pages/Home";
 import CommunityToppers from "./pages/CommunityToppers";
 import Analytics from "./pages/Analytics";
+import ConceptVault from "./pages/ConceptVault";
+import ChatCoach from "./pages/ChatCoach";
+import DPPGenerator from "./pages/DPPGenerator";
+import ImageGenerator from "./pages/ImageGenerator";
 
 function DashboardRouter() {
   return (
@@ -50,6 +54,10 @@ function DashboardRouter() {
       <Route path={"/study-materials"} component={StudyMaterials} />
       <Route path={"/community-toppers"} component={CommunityToppers} />
       <Route path={"/analytics"} component={Analytics} />
+      <Route path={"/concept-vault"} component={ConceptVault} />
+      <Route path={"/chat-coach"} component={ChatCoach} />
+      <Route path={"/dpp-generator"} component={DPPGenerator} />
+      <Route path={"/image-generator"} component={ImageGenerator} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

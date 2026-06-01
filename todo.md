@@ -276,3 +276,15 @@
 - [x] Create 12 comprehensive vitest tests for simplified system
 - [x] All 12 new tests passing + 12 original certificate tests passing
 - [x] Save checkpoint with simplified certificate system
+
+
+## Phase 4: New Advanced Features Integration (COMPLETED)
+- [x] Create Concept Vault feature with core concepts and traps for Physics, Chemistry, Math
+- [x] Create Chat Coach (Anya) AI coaching interface with Gemini API
+- [x] Create DPP Generator for daily practice problems
+- [x] Create Image Generator for technical visualizations with Imagen API
+- [x] Integrate all features into navigation and dashboard
+- [x] Add routes to App.tsx
+- [x] Add menu items to DashboardLayout
+- [ ] Test all new features on dev server
+- [ ] Save checkpoint with new features
