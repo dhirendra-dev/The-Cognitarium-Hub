@@ -5,6 +5,15 @@ import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { sdk } from "./_core/sdk";
 import { z } from "zod";
 import {
+  createAdminMessage,
+  getAllAdminMessages,
+  updateAdminMessage,
+  deleteAdminMessage,
+  toggleAdminMessage,
+  markMessageAsRead,
+  getAdminMessagesWithStats,
+} from "./adminMessaging";
+import {
   getToppersList,
   seedLeaderboardData,
   createStudySession,
@@ -524,6 +533,64 @@ export const appRouter = router({
     seedLeaderboard: adminProcedure.mutation(async () => {
       return await seedLeaderboardData();
     }),
+
+    sendMessage: adminProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        content: z.string().min(1),
+        type: z.enum(["notice", "announcement", "warning", "info"]),
+        expiresAt: z.date().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await createAdminMessage({
+          ...input,
+          createdBy: ctx.user.id,
+        });
+      }),
+
+    getAllMessages: adminProcedure.query(async () => {
+      return await getAdminMessagesWithStats();
+    }),
+
+    updateMessage: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        content: z.string().optional(),
+        type: z.enum(["notice", "announcement", "warning", "info"]).optional(),
+        isActive: z.boolean().optional(),
+        expiresAt: z.date().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await updateAdminMessage(id, data);
+      }),
+
+    deleteMessage: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await deleteAdminMessage(input.id);
+        return { success: true };
+      }),
+
+    toggleMessage: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await toggleAdminMessage(input.id);
+      }),
+  }),
+
+  messages: router({
+    getAll: protectedProcedure.query(async () => {
+      return await getAllAdminMessages();
+    }),
+
+    markAsRead: protectedProcedure
+      .input(z.object({ messageId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await markMessageAsRead(input.messageId, ctx.user.id);
+        return { success: true };
+      }),
   }),
   posts: router({
     uploadPhoto: protectedProcedure

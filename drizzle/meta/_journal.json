@@ -141,6 +141,13 @@
       "when": 1778033431220,
       "tag": "0019_spotty_penance",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1780368918627,
+      "tag": "0020_eager_scorpion",
+      "breakpoints": true
     }
   ]
 }

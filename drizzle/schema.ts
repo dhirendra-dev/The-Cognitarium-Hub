@@ -699,3 +699,30 @@ export const incompleteStudySessions = mysqlTable("incompleteStudySessions", {
 
 export type IncompleteStudySession = typeof incompleteStudySessions.$inferSelect;
 export type InsertIncompleteStudySession = typeof incompleteStudySessions.$inferInsert;
+
+// Admin Messages - Notices and announcements from admins to all members
+export const adminMessages = mysqlTable("adminMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  type: mysqlEnum("type", ["notice", "announcement", "warning", "info"]).default("notice").notNull(),
+  createdBy: int("createdBy").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  expiresAt: timestamp("expiresAt"),
+});
+
+export type AdminMessage = typeof adminMessages.$inferSelect;
+export type InsertAdminMessage = typeof adminMessages.$inferInsert;
+
+// Admin Message Reads - Track which users have read which messages
+export const adminMessageReads = mysqlTable("adminMessageReads", {
+  id: int("id").autoincrement().primaryKey(),
+  messageId: int("messageId").notNull(),
+  userId: int("userId").notNull(),
+  readAt: timestamp("readAt").defaultNow().notNull(),
+});
+
+export type AdminMessageRead = typeof adminMessageReads.$inferSelect;
+export type InsertAdminMessageRead = typeof adminMessageReads.$inferInsert;
