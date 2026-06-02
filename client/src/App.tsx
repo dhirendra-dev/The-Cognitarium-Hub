@@ -32,6 +32,7 @@ import ChatCoach from "./pages/ChatCoach";
 import DPPGenerator from "./pages/DPPGenerator";
 import ImageGenerator from "./pages/ImageGenerator";
 import AdminUploadedMaterials from "./pages/AdminUploadedMaterials";
+import AdminMessaging from "./pages/AdminMessaging";
 
 function DashboardRouter() {
   return (
@@ -60,6 +61,7 @@ function DashboardRouter() {
       <Route path={"/dpp-generator"} component={DPPGenerator} />
       <Route path={"/image-generator"} component={ImageGenerator} />
       <Route path={"/admin-materials"} component={AdminUploadedMaterials} />
+      <Route path={"/admin-messaging"} component={AdminMessaging} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
