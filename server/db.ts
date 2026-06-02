@@ -1718,3 +1718,50 @@ export async function completeSession(sessionId: number) {
     console.error("[Database] Failed to complete session:", error);
   }
 }
+
+
+/**
+ * Reset user password by admin
+ * Admin can set a new password for a user who forgot theirs
+ */
+export async function resetUserPassword(userId: number, newPassword: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+
+  try {
+    // Hash the new password (simple hash for demo, use bcrypt in production)
+    const hashedPassword = Buffer.from(newPassword).toString('base64');
+    
+    await db
+      .update(users)
+      .set({
+        password: hashedPassword,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+  } catch (error) {
+    console.error("[Database] Failed to reset password:", error);
+    throw new Error("Failed to reset password");
+  }
+}
+
+/**
+ * Get all users for admin panel (for password reset selection)
+ */
+export async function getAllUsersForAdmin() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db.select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      createdAt: users.createdAt,
+    }).from(users);
+  } catch (error) {
+    console.error("[Database] Failed to get users:", error);
+    return [];
+  }
+}

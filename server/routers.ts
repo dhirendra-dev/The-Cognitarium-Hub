@@ -46,6 +46,8 @@ import {
   getUserDetailedStats,
   updateUserRole,
   deleteUser,
+  resetUserPassword,
+  getAllUsersForAdmin,
   createPost,
   getAllPosts,
   getPostsByUser,
@@ -577,6 +579,27 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         return await toggleAdminMessage(input.id);
+      }),
+
+    getAllUsersForPasswordReset: adminProcedure.query(async () => {
+      return await getAllUsersForAdmin();
+    }),
+
+    resetUserPassword: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        newPassword: z.string().min(6),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          await resetUserPassword(input.userId, input.newPassword);
+          return { success: true, message: "Password reset successfully" };
+        } catch (error) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: error instanceof Error ? error.message : 'Failed to reset password',
+          });
+        }
       }),
   }),
 

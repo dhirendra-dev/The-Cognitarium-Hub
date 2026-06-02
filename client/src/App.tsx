@@ -33,6 +33,7 @@ import DPPGenerator from "./pages/DPPGenerator";
 import ImageGenerator from "./pages/ImageGenerator";
 import AdminUploadedMaterials from "./pages/AdminUploadedMaterials";
 import AdminMessaging from "./pages/AdminMessaging";
+import AdminPasswordReset from "./pages/AdminPasswordReset";
 import CertificateGallery from "./pages/CertificateGallery";
 import CertificateGenerator from "./pages/CertificateGenerator";
 import MyCertificates from "./pages/MyCertificates";
@@ -66,6 +67,7 @@ function DashboardRouter() {
       <Route path={"/image-generator"} component={ImageGenerator} />
       <Route path={"/admin-materials"} component={AdminUploadedMaterials} />
       <Route path={"/admin-messaging"} component={AdminMessaging} />
+      <Route path={"/admin-password-reset"} component={AdminPasswordReset} />
       <Route path={"/certificate-gallery"} component={CertificateGallery} />
       <Route path={"/certificate-generator"} component={CertificateGenerator} />
       <Route path={"/my-certificates"} component={MyCertificates} />

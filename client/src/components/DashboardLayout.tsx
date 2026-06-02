@@ -46,6 +46,7 @@ const menuItems = [
   { icon: Image, label: "Image Generator", path: "/image-generator" },
   { icon: Package, label: "Admin Materials", path: "/admin-materials" },
   { icon: Bell, label: "Admin Messaging", path: "/admin-messaging" },
+  { icon: Shield, label: "Password Reset", path: "/admin-password-reset" },
   { icon: Award, label: "Certificate Gallery", path: "/certificate-gallery" },
   { icon: Award, label: "My Certificates", path: "/my-certificates" },
   { icon: Trophy, label: "Certificate Leaderboard", path: "/certificate-leaderboard" },
