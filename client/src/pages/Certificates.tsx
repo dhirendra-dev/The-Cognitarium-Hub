@@ -21,27 +21,12 @@ interface Certificate {
 
 export default function CertificatesPage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [selectedCertType, setSelectedCertType] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
 
   // Fetch user certificates
   const { data: userCerts, isLoading: isCertsLoading, refetch: refetchCerts } = trpc.certificates.getUserCertificates.useQuery();
 
   // Fetch contribution stats
   const { data: stats, isLoading: isStatsLoading } = trpc.certificates.getContributionStats.useQuery();
-
-  // Generate certificate mutation
-  const generateCertMutation = trpc.certificates.generateCertificate.useMutation({
-    onSuccess: (data) => {
-      setIsGenerating(false);
-      setSelectedCertType(null);
-      refetchCerts();
-    },
-    onError: (error) => {
-      setIsGenerating(false);
-      console.error("Certificate generation failed:", error);
-    },
-  });
 
   // Mark as downloaded mutation
   const markDownloadedMutation = trpc.certificates.markAsDownloaded.useMutation({
@@ -56,77 +41,6 @@ export default function CertificatesPage() {
     }
   }, [userCerts]);
 
-  const certificateTypes = [
-    {
-      id: "activeMember",
-      name: "Active Community Member",
-      description: "5+ posts with 10+ likes",
-      icon: "👥",
-      color: "bg-blue-100 text-blue-800",
-    },
-    {
-      id: "topContributor",
-      name: "Top Community Contributor",
-      description: "20+ posts with 100+ likes",
-      icon: "⭐",
-      color: "bg-yellow-100 text-yellow-800",
-    },
-    {
-      id: "helpfulCommunity",
-      name: "Helpful Community Member",
-      description: "50+ helpful replies",
-      icon: "🤝",
-      color: "bg-green-100 text-green-800",
-    },
-    {
-      id: "consistentLearner",
-      name: "Consistent Learner",
-      description: "100+ study hours, 30-day streak",
-      icon: "📚",
-      color: "bg-purple-100 text-purple-800",
-    },
-    {
-      id: "leaderboardTop10",
-      name: "Leaderboard Top 10",
-      description: "Ranked in top 10 students",
-      icon: "🏆",
-      color: "bg-orange-100 text-orange-800",
-    },
-    {
-      id: "courseCompletion",
-      name: "Course Completion",
-      description: "Completed a full course",
-      icon: "🎓",
-      color: "bg-indigo-100 text-indigo-800",
-    },
-    {
-      id: "quizMastery",
-      name: "Quiz Mastery",
-      description: "90%+ score on quizzes",
-      icon: "💯",
-      color: "bg-pink-100 text-pink-800",
-    },
-    {
-      id: "studyStreak",
-      name: "Study Streak Champion",
-      description: "60-day streak with 200+ hours",
-      icon: "🔥",
-      color: "bg-red-100 text-red-800",
-    },
-  ];
-
-  const handleGenerateCertificate = async (certType: string) => {
-    setIsGenerating(true);
-    setSelectedCertType(certType);
-    try {
-      await generateCertMutation.mutateAsync({
-        certificateType: certType as any,
-      });
-    } catch (error) {
-      console.error("Error generating certificate:", error);
-    }
-  };
-
   const handleDownloadCertificate = (cert: Certificate) => {
     // Mark as downloaded
     markDownloadedMutation.mutate({ certificateId: cert.id });
@@ -137,10 +51,6 @@ export default function CertificatesPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const hasCertificate = (certType: string) => {
-    return certificates.some((c) => c.certificateType === certType);
   };
 
   if (isCertsLoading || isStatsLoading) {
@@ -161,7 +71,7 @@ export default function CertificatesPage() {
             Your Certificates
           </h1>
           <p className="text-gray-600">
-            Earn certificates by contributing to the community and maintaining consistent study habits.
+            Download your earned certificates and share them with others.
           </p>
         </div>
 
@@ -195,8 +105,8 @@ export default function CertificatesPage() {
         )}
 
         {/* Earned Certificates */}
-        {certificates.length > 0 && (
-          <div className="mb-8">
+        {certificates.length > 0 ? (
+          <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <CheckCircle className="w-6 h-6 text-green-600" />
               Earned Certificates ({certificates.length})
@@ -241,65 +151,20 @@ export default function CertificatesPage() {
               ))}
             </div>
           </div>
-        )}
-
-        {/* Available Certificates */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Available Certificates</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {certificateTypes.map((certType) => {
-              const earned = hasCertificate(certType.id);
-              return (
-                <Card
-                  key={certType.id}
-                  className={`transition-all ${
-                    earned
-                      ? "border-green-300 bg-green-50 opacity-60"
-                      : "border-gray-200 hover:border-blue-400 hover:shadow-lg"
-                  }`}
-                >
-                  <CardHeader>
-                    <div className="text-4xl mb-2">{certType.icon}</div>
-                    <CardTitle className="text-base">{certType.name}</CardTitle>
-                    <CardDescription className="text-xs">{certType.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {earned ? (
-                      <Badge className="w-full justify-center bg-green-600 text-white">
-                        ✓ Earned
-                      </Badge>
-                    ) : (
-                      <Button
-                        onClick={() => handleGenerateCertificate(certType.id)}
-                        disabled={isGenerating && selectedCertType === certType.id}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                        size="sm"
-                      >
-                        {isGenerating && selectedCertType === certType.id ? (
-                          <>
-                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                            Generating...
-                          </>
-                        ) : (
-                          "Earn Now"
-                        )}
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Error Alert */}
-        {generateCertMutation.isError && (
-          <Alert className="mt-6 border-red-300 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
-              {generateCertMutation.error?.message || "Failed to generate certificate. Please try again."}
-            </AlertDescription>
-          </Alert>
+        ) : (
+          <Card className="border-2 border-yellow-200 bg-yellow-50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Award className="w-5 h-5 text-yellow-600" />
+                No Certificates Yet
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700">
+                You haven't earned any certificates yet. Participate in the community, complete study sessions, and maintain your streak to earn certificates!
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

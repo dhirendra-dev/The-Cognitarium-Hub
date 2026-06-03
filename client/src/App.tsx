@@ -34,10 +34,7 @@ import ImageGenerator from "./pages/ImageGenerator";
 import AdminUploadedMaterials from "./pages/AdminUploadedMaterials";
 import AdminMessaging from "./pages/AdminMessaging";
 import AdminPasswordReset from "./pages/AdminPasswordReset";
-import CertificateGallery from "./pages/CertificateGallery";
-import CertificateGenerator from "./pages/CertificateGenerator";
 import MyCertificates from "./pages/MyCertificates";
-import CertificateLeaderboard from "./pages/CertificateLeaderboard";
 
 function DashboardRouter() {
   return (
@@ -68,10 +65,7 @@ function DashboardRouter() {
       <Route path={"/admin-materials"} component={AdminUploadedMaterials} />
       <Route path={"/admin-messaging"} component={AdminMessaging} />
       <Route path={"/admin-password-reset"} component={AdminPasswordReset} />
-      <Route path={"/certificate-gallery"} component={CertificateGallery} />
-      <Route path={"/certificate-generator"} component={CertificateGenerator} />
       <Route path={"/my-certificates"} component={MyCertificates} />
-      <Route path={"/certificate-leaderboard"} component={CertificateLeaderboard} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
