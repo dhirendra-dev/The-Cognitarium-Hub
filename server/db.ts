@@ -512,7 +512,19 @@ export async function deleteUser(userId: number) {
 export async function createPost(userId: number, data: Omit<InsertPost, 'userId'>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.insert(posts).values({ ...data, userId });
+  
+  // Insert the post
+  const result = await db.insert(posts).values({ ...data, userId });
+  
+  // Award XP for creating a post
+  try {
+    const { awardXPForPost } = await import('./xp-system');
+    await awardXPForPost(userId);
+  } catch (error) {
+    console.warn('[XP System] Could not award XP for post:', error);
+  }
+  
+  return result;
 }
 
 export async function getAllPosts(limit: number = 50) {
@@ -541,10 +553,27 @@ export async function deletePost(postId: number) {
   return db.delete(posts).where(eq(posts.id, postId));
 }
 
-export async function updatePostLikes(postId: number, likes: number) {
+export async function updatePostLikes(postId: number, likes: number, previousLikes: number = 0) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.update(posts).set({ likes }).where(eq(posts.id, postId));
+  
+  // Update likes
+  const result = await db.update(posts).set({ likes }).where(eq(posts.id, postId));
+  
+  // Award XP if this is a new like
+  if (likes > previousLikes) {
+    try {
+      const post = await db.select().from(posts).where(eq(posts.id, postId)).limit(1);
+      if (post.length > 0) {
+        const { awardXPForLike } = await import('./xp-system');
+        await awardXPForLike(post[0].userId, false);
+      }
+    } catch (error) {
+      console.warn('[XP System] Could not award XP for like:', error);
+    }
+  }
+  
+  return result;
 }
 
 // Leaderboard - Initialize or update user leaderboard entry
@@ -764,7 +793,19 @@ export async function searchPDFDocuments(query: string, limit: number = 50) {
 export async function createPostReply(data: InsertPostReply) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.insert(postReplies).values(data);
+  
+  // Insert the reply
+  const result = await db.insert(postReplies).values(data);
+  
+  // Award XP for creating a reply
+  try {
+    const { awardXPForReply } = await import('./xp-system');
+    await awardXPForReply(data.userId);
+  } catch (error) {
+    console.warn('[XP System] Could not award XP for reply:', error);
+  }
+  
+  return result;
 }
 
 export async function getPostReplies(postId: number) {

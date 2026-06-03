@@ -14,6 +14,13 @@ import {
   getAdminMessagesWithStats,
 } from "./adminMessaging";
 import {
+  awardXP,
+  getTopUsersByXP,
+  getUserXPInfo,
+  updateLeaderboardRankings,
+  XP_REWARDS,
+} from "./xp-system";
+import {
   getToppersList,
   seedLeaderboardData,
   createStudySession,
@@ -480,6 +487,21 @@ export const appRouter = router({
     updateRanks: protectedProcedure.mutation(async () => {
       await updateLeaderboardRanks();
       return { success: true };
+    }),
+
+    getTopByXP: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(100).default(10) }))
+      .query(async ({ input }) => {
+        return await getTopUsersByXP(input.limit);
+      }),
+
+    getUserXP: protectedProcedure.query(async ({ ctx }) => {
+      return await getUserXPInfo(ctx.user.id);
+    }),
+
+    updateLeaderboardRankings: adminProcedure.mutation(async () => {
+      const result = await updateLeaderboardRankings();
+      return result;
     }),
   }),
 

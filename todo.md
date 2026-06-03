@@ -298,3 +298,19 @@
 - [x] Add route to App.tsx
 - [x] Add menu item to DashboardLayout
 - [ ] Test and save checkpoint
+
+
+## Phase 6: Fix & Improve Existing Certificate System (IN PROGRESS)
+- [ ] Diagnose XP points system - check why XP not being awarded
+- [ ] Fix XP award triggers for user activities (posts, replies, study sessions)
+- [ ] Diagnose leaderboard update issue - check why rankings not refreshing
+- [ ] Fix leaderboard calculation and ranking logic
+- [ ] Expand certificate types from 3-4 to 10+ types
+- [ ] Improve certificate eligibility criteria
+- [ ] Improve certificate PDF design and quality
+- [ ] Create automated job to update leaderboard
+- [ ] Create automated job to check and award certificates
+- [ ] Test full certificate earning flow
+- [ ] Verify XP points are working
+- [ ] Verify leaderboard is updating
+- [ ] Save checkpoint with fixed system
