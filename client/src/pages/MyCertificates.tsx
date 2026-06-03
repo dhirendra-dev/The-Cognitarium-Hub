@@ -1,42 +1,32 @@
 import React, { useState } from 'react';
 import { Download, Share2, Award, TrendingUp } from 'lucide-react';
-import { CERTIFICATES } from '@/data/certificates';
 
 interface EarnedCertificate {
   id: string;
   certificateId: string;
   earnedDate: string;
   xpEarned: number;
+  title: string;
+  description: string;
+  icon: string;
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  category: string;
+  xpReward: number;
 }
 
 export default function MyCertificates() {
   // Mock earned certificates - in production, fetch from backend
-  const [earnedCerts] = useState<EarnedCertificate[]>([
-    {
-      id: 'cert_001',
-      certificateId: 'MA-2024-0001',
-      earnedDate: '2024-01-15',
-      xpEarned: 50
-    },
-    {
-      id: 'cert_002',
-      certificateId: 'MA-2024-0002',
-      earnedDate: '2024-02-20',
-      xpEarned: 100
-    }
-  ]);
+  const [earnedCerts] = useState<EarnedCertificate[]>([]);
 
   const totalXP = earnedCerts.reduce((sum, cert) => {
-    const certData = CERTIFICATES.find(c => c.id === cert.id);
-    return sum + (certData?.xpReward || 0);
+    return sum + (cert.xpReward || 0);
   }, 0);
 
   const nextMilestone = 500; // XP needed for next achievement
   const progressPercent = (totalXP / nextMilestone) * 100;
 
   const handleShare = (cert: EarnedCertificate) => {
-    const certData = CERTIFICATES.find(c => c.id === cert.id);
-    const message = `🎉 I just earned the "${certData?.name}" certificate on Cognitrium Hub! Check it out and join me on this learning journey. 📚`;
+    const message = `🎉 I just earned the "${cert.title}" certificate on Cognitrium Hub! Check it out and join me on this learning journey. 📚`;
     
     // Share to WhatsApp
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
@@ -129,32 +119,26 @@ export default function MyCertificates() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {earnedCerts.map((earnedCert) => {
-                const certData = CERTIFICATES.find(c => c.id === earnedCert.id);
-                if (!certData) return null;
-
                 return (
                   <div key={earnedCert.certificateId} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-start gap-4">
-                        <div className="text-4xl">{certData.icon}</div>
+                        <div className="text-4xl">{earnedCert.icon}</div>
                         <div>
-                          <h3 className="text-lg font-bold text-slate-900">{certData.name}</h3>
-                          <p className="text-sm text-slate-600">{certData.title}</p>
+                          <h3 className="text-lg font-bold text-slate-900">{earnedCert.title}</h3>
+                          <p className="text-sm text-slate-600">{earnedCert.description}</p>
                         </div>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        certData.tier === 'bronze' ? 'bg-orange-100 text-orange-800' :
-                        certData.tier === 'silver' ? 'bg-gray-100 text-gray-800' :
-                        certData.tier === 'gold' ? 'bg-yellow-100 text-yellow-800' :
+                        earnedCert.tier === 'bronze' ? 'bg-orange-100 text-orange-800' :
+                        earnedCert.tier === 'silver' ? 'bg-gray-100 text-gray-800' :
+                        earnedCert.tier === 'gold' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-purple-100 text-purple-800'
                       }`}>
-                        {certData.tier.charAt(0).toUpperCase() + certData.tier.slice(1)}
+                        {earnedCert.tier.charAt(0).toUpperCase() + earnedCert.tier.slice(1)}
                       </span>
                     </div>
-
-                    {/* Description */}
-                    <p className="text-sm text-slate-600 mb-4">{certData.description}</p>
 
                     {/* Certificate Details */}
                     <div className="grid grid-cols-2 gap-4 mb-4 p-4 bg-slate-50 rounded-lg">
@@ -168,11 +152,11 @@ export default function MyCertificates() {
                       </div>
                       <div>
                         <p className="text-xs text-slate-600 font-semibold">XP Reward</p>
-                        <p className="text-sm font-bold text-blue-600">{certData.xpReward} XP</p>
+                        <p className="text-sm font-bold text-blue-600">{earnedCert.xpReward} XP</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-600 font-semibold">Category</p>
-                        <p className="text-sm text-slate-900">{certData.category}</p>
+                        <p className="text-sm text-slate-900">{earnedCert.category}</p>
                       </div>
                     </div>
 
