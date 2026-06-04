@@ -41,16 +41,27 @@ export default function CertificatesPage() {
     }
   }, [userCerts]);
 
-  const handleDownloadCertificate = (cert: Certificate) => {
-    // Mark as downloaded
-    markDownloadedMutation.mutate({ certificateId: cert.id });
-    // Trigger download
-    const link = document.createElement("a");
-    link.href = cert.certificateUrl;
-    link.download = `certificate-${cert.verificationCode}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadCertificate = async (cert: Certificate) => {
+    try {
+      // Get download URL from backend
+      const response = await fetch(`/api/trpc/certificates.downloadCertificate?input=${JSON.stringify({ certificateId: cert.id })}`);
+      const result = await response.json();
+
+      if (result.result?.data?.downloadUrl) {
+        // Mark as downloaded
+        markDownloadedMutation.mutate({ certificateId: cert.id });
+
+        // Trigger download
+        const link = document.createElement("a");
+        link.href = result.result.data.downloadUrl;
+        link.download = result.result.data.fileName || `certificate-${cert.verificationCode}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error("Failed to download certificate:", error);
+    }
   };
 
   if (isCertsLoading || isStatsLoading) {

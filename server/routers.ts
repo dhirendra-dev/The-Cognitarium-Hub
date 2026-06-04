@@ -1248,6 +1248,30 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         return revokeCertificateType(input.userId, input.certificateType);
       }),
+
+    downloadCertificate: protectedProcedure
+      .input(z.object({ certificateId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const cert = await getCertificateById(input.certificateId);
+        if (!cert || cert.userId !== ctx.user.id) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Certificate not found or unauthorized",
+          });
+        }
+
+        if (cert.certificateUrl) {
+          return {
+            downloadUrl: cert.certificateUrl,
+            fileName: `certificate-${cert.verificationCode}.pdf`,
+          };
+        }
+
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Certificate PDF not available",
+        });
+      }),
   }),
   // Admin Leaderboard Ranking
   adminLeaderboard: router({

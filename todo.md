@@ -314,3 +314,15 @@
 - [ ] Verify XP points are working
 - [ ] Verify leaderboard is updating
 - [ ] Save checkpoint with fixed system
+
+
+## Phase 7: Certificate Download Feature (COMPLETED)
+- [x] Create backend PDF generation utility for professional certificates
+- [x] Add tRPC procedure `downloadCertificate` for fetching download URLs
+- [x] Update Certificates.tsx frontend to use download functionality
+- [x] Create comprehensive test suite for certificate download (5 tests)
+- [x] Verify all 84 tests passing (including 5 new certificate download tests)
+- [x] Ensure certificate download works end-to-end
+- [x] Remove manual certificate generation tools (Certificate Generator removed)
+- [x] Keep only "Earned Certificates" view for users
+- [x] Save checkpoint with certificate download feature
