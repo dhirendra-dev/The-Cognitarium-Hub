@@ -8,6 +8,7 @@ import { Users, BookOpen, BarChart3, Trash2, Shield, User, Award } from "lucide-
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { AdminCertificateManager } from "@/components/AdminCertificateManager";
+import { AdminNoticesTab } from "@/components/AdminNoticesTab";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -117,12 +118,13 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-white shadow-lg mb-8">
+          <TabsList className="grid w-full grid-cols-7 bg-white shadow-lg mb-8">
             <TabsTrigger value="contact">Contact Submissions</TabsTrigger>
             <TabsTrigger value="users">All Users</TabsTrigger>
             <TabsTrigger value="sessions">Study Sessions</TabsTrigger>
             <TabsTrigger value="leaderboard">Top Performers</TabsTrigger>
             <TabsTrigger value="certificates">Certificates</TabsTrigger>
+            <TabsTrigger value="notices">Notices</TabsTrigger>
             <TabsTrigger value="pdfs">PDF Management</TabsTrigger>
           </TabsList>
 
@@ -294,6 +296,11 @@ export default function AdminDashboard() {
           {/* Certificates Management Tab */}
           <TabsContent value="certificates">
             <AdminCertificateManager />
+          </TabsContent>
+
+          {/* Notices Management Tab */}
+          <TabsContent value="notices">
+            <AdminNoticesTab />
           </TabsContent>
 
           {/* PDF Management Tab */}

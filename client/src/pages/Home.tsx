@@ -10,6 +10,7 @@ import ToppersSection from "@/components/ToppersSection";
 import { PersonalizedHomepage } from "@/components/PersonalizedHomepage";
 import { ContinueLearning } from "@/components/ContinueLearning";
 import DashboardLayout from "@/components/DashboardLayout";
+import { NoticesDisplay } from "@/components/NoticesDisplay";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -36,6 +37,9 @@ export default function Home() {
             <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h1>
             <p className="text-blue-100">Continue your exam preparation journey</p>
           </div>
+
+          {/* Notices Section */}
+          <NoticesDisplay />
 
           {/* Main Content Grid */}
           <div className="grid lg:grid-cols-3 gap-6">
