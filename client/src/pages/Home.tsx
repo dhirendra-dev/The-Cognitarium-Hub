@@ -11,6 +11,7 @@ import { PersonalizedHomepage } from "@/components/PersonalizedHomepage";
 import { ContinueLearning } from "@/components/ContinueLearning";
 import DashboardLayout from "@/components/DashboardLayout";
 import { NoticesDisplay } from "@/components/NoticesDisplay";
+import { UserStatsWidget } from "@/components/UserStatsWidget";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -40,6 +41,9 @@ export default function Home() {
 
           {/* Notices Section */}
           <NoticesDisplay />
+
+          {/* User Stats Widget */}
+          <UserStatsWidget />
 
           {/* Main Content Grid */}
           <div className="grid lg:grid-cols-3 gap-6">
