@@ -1473,5 +1473,71 @@ export const appRouter = router({
         return { completionPercentage: 0, notes: "" };
       }),
   }),
+  // Notice Management
+  notices: router({
+    create: adminProcedure
+      .input(
+        z.object({
+          title: z.string().min(1).max(255),
+          content: z.string().min(1),
+          type: z.enum(["announcement", "important", "update", "event"]),
+          priority: z.number().default(0),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { createNotice } = await import("./db");
+        const noticeId = await createNotice(
+          input.title,
+          input.content,
+          input.type,
+          ctx.user.id,
+          input.priority
+        );
+        return { id: noticeId, message: "Notice created successfully" };
+      }),
+    getAll: publicProcedure.query(async () => {
+      const { getAllNotices } = await import("./db");
+      return await getAllNotices();
+    }),
+    getActive: publicProcedure.query(async () => {
+      const { getActiveNotices } = await import("./db");
+      return await getActiveNotices();
+    }),
+    update: adminProcedure
+      .input(
+        z.object({
+          noticeId: z.number(),
+          title: z.string().optional(),
+          content: z.string().optional(),
+          type: z.enum(["announcement", "important", "update", "event"]).optional(),
+          priority: z.number().optional(),
+          isActive: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { updateNotice } = await import("./db");
+        await updateNotice(input.noticeId, {
+          title: input.title,
+          content: input.content,
+          type: input.type,
+          priority: input.priority,
+          isActive: input.isActive,
+        });
+        return { message: "Notice updated successfully" };
+      }),
+    delete: adminProcedure
+      .input(z.object({ noticeId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteNotice } = await import("./db");
+        await deleteNotice(input.noticeId);
+        return { message: "Notice deleted successfully" };
+      }),
+    getById: publicProcedure
+      .input(z.object({ noticeId: z.number() }))
+      .query(async ({ input }) => {
+        const { getNoticeById } = await import("./db");
+        return await getNoticeById(input.noticeId);
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

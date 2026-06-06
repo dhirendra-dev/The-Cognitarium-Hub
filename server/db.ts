@@ -1806,3 +1806,135 @@ export async function getAllUsersForAdmin() {
     return [];
   }
 }
+
+
+/**
+ * Create a new notice
+ */
+export async function createNotice(
+  title: string,
+  content: string,
+  type: "announcement" | "important" | "update" | "event",
+  createdBy: number,
+  priority: number = 0
+): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+
+  try {
+    const result = await db.insert(notices).values({
+      title,
+      content,
+      type,
+      createdBy,
+      priority,
+      isActive: true,
+    });
+    return result[0]?.insertId || 0;
+  } catch (error) {
+    console.error("[Database] Failed to create notice:", error);
+    throw new Error("Failed to create notice");
+  }
+}
+
+/**
+ * Get all active notices
+ */
+export async function getActiveNotices() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db
+      .select()
+      .from(notices)
+      .where(eq(notices.isActive, true))
+      .orderBy(desc(notices.priority), desc(notices.createdAt));
+  } catch (error) {
+    console.error("[Database] Failed to get notices:", error);
+    return [];
+  }
+}
+
+/**
+ * Get all notices (including inactive)
+ */
+export async function getAllNotices() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db
+      .select()
+      .from(notices)
+      .orderBy(desc(notices.priority), desc(notices.createdAt));
+  } catch (error) {
+    console.error("[Database] Failed to get all notices:", error);
+    return [];
+  }
+}
+
+/**
+ * Update a notice
+ */
+export async function updateNotice(
+  noticeId: number,
+  updates: {
+    title?: string;
+    content?: string;
+    type?: "announcement" | "important" | "update" | "event";
+    priority?: number;
+    isActive?: boolean;
+  }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+
+  try {
+    await db
+      .update(notices)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(notices.id, noticeId));
+  } catch (error) {
+    console.error("[Database] Failed to update notice:", error);
+    throw new Error("Failed to update notice");
+  }
+}
+
+/**
+ * Delete a notice
+ */
+export async function deleteNotice(noticeId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+
+  try {
+    await db.delete(notices).where(eq(notices.id, noticeId));
+  } catch (error) {
+    console.error("[Database] Failed to delete notice:", error);
+    throw new Error("Failed to delete notice");
+  }
+}
+
+/**
+ * Get notice by ID
+ */
+export async function getNoticeById(noticeId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db
+      .select()
+      .from(notices)
+      .where(eq(notices.id, noticeId))
+      .limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Failed to get notice:", error);
+    return null;
+  }
+}
