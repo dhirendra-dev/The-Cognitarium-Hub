@@ -1566,5 +1566,30 @@ export const appRouter = router({
       return result;
     }),
   }),
+  imageGeneration: router({
+    generateImage: protectedProcedure
+      .input(z.object({ prompt: z.string().min(10).max(1000) }))
+      .mutation(async ({ input }) => {
+        const { generateImage } = await import("./image-generation");
+        return await generateImage(input.prompt);
+      }),
+    generateBatch: protectedProcedure
+      .input(z.object({ prompts: z.array(z.string().min(10).max(1000)) }))
+      .mutation(async ({ input }) => {
+        const { generateImageBatch } = await import("./image-generation");
+        return await generateImageBatch(input.prompts);
+      }),
+    enhanceImage: protectedProcedure
+      .input(
+        z.object({
+          imageUrl: z.string().url(),
+          enhancementPrompt: z.string().min(10).max(1000),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { enhanceImage } = await import("./image-generation");
+        return await enhanceImage(input.imageUrl, input.enhancementPrompt);
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

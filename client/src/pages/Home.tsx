@@ -1,4 +1,3 @@
-import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { NoticesDisplay } from "@/components/NoticesDisplay";
 import { UserStatsWidget } from "@/components/UserStatsWidget";
 import { StreaksWidget } from "@/components/StreaksWidget";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();

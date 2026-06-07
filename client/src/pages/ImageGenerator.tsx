@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Image as ImageIcon, Loader, Download, Trash2, Maximize2, X } from 'lucide-react';
+import DashboardLayout from '@/components/DashboardLayout';
+import { trpc } from '@/lib/trpc';
 
 interface GeneratedImage {
   id: string;
@@ -36,26 +38,40 @@ export default function ImageGenerator() {
   const [fullscreenImage, setFullscreenImage] = useState<GeneratedImage | null>(null);
   const [imageNotes, setImageNotes] = useState('');
 
+
+  const generateImageMutation = trpc.imageGeneration.generateImage.useMutation({
+    onSuccess: (result) => {
+      if (result.success && result.imageUrl) {
+        const newImage: GeneratedImage = {
+          id: `img-${Date.now()}`,
+          prompt: customPrompt,
+          url: result.imageUrl,
+          subject,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          notes: imageNotes
+        };
+        setGeneratedImages(prev => [newImage, ...prev]);
+        setCustomPrompt('');
+        setImageNotes('');
+        console.log('Image generated successfully');
+      } else {
+        console.error('Failed to generate image:', result.error);
+      }
+    },
+    onError: (error) => {
+      console.error('Error:', error.message);
+    },
+  });
+
   const handleGenerateImage = async (prompt: string) => {
+    if (!prompt.trim()) {
+      console.error('Please enter a prompt');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Simulate image generation - in production, call Imagen API
-      const mockImageUrl = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%231e293b' width='400' height='300'/%3E%3Ctext x='200' y='150' text-anchor='middle' fill='%2394a3b8' font-size='20' font-family='monospace'%3EGenerated: ${prompt.substring(0, 40)}...%3C/text%3E%3C/svg%3E`;
-
-      const newImage: GeneratedImage = {
-        id: `img-${Date.now()}`,
-        prompt,
-        url: mockImageUrl,
-        subject,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        notes: imageNotes
-      };
-
-      setGeneratedImages(prev => [newImage, ...prev]);
-      setCustomPrompt('');
-      setImageNotes('');
-    } catch (error) {
-      console.error('Error generating image:', error);
+      await generateImageMutation.mutateAsync({ prompt });
     } finally {
       setLoading(false);
     }
@@ -65,25 +81,34 @@ export default function ImageGenerator() {
     setGeneratedImages(prev => prev.filter(img => img.id !== id));
   };
 
+  const handleDownloadImage = (image: GeneratedImage) => {
+    const link = document.createElement('a');
+    link.href = image.url;
+    link.download = `concept-${image.id}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="max-w-6xl mx-auto">
+    <DashboardLayout>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="mb-8">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-6 shadow-lg">
           <div className="flex items-center gap-3 mb-2">
-            <ImageIcon className="w-8 h-8 text-cyan-400" />
-            <h1 className="text-4xl font-bold text-white">Image Generator</h1>
+            <ImageIcon className="w-8 h-8" />
+            <h1 className="text-3xl font-bold">Image Generator</h1>
           </div>
-          <p className="text-slate-300">Generate technical visualizations for complex concepts</p>
+          <p className="text-blue-100">Generate technical visualizations for complex concepts using Manus AI</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Panel - Configuration */}
           <div className="lg:col-span-1">
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6 sticky top-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6 sticky top-6 shadow-sm">
               {/* Subject Selection */}
               <div>
-                <label className="block text-white font-semibold mb-3">Subject</label>
+                <label className="block text-gray-900 font-semibold mb-3">Subject</label>
                 <div className="space-y-2">
                   {(['physics', 'chemistry', 'math'] as const).map((s) => (
                     <button
@@ -91,8 +116,8 @@ export default function ImageGenerator() {
                       onClick={() => setSubject(s)}
                       className={`w-full text-left px-4 py-2 rounded-lg font-semibold transition-all ${
                         subject === s
-                          ? 'bg-cyan-600 text-white shadow-lg'
-                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
                       {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -103,14 +128,14 @@ export default function ImageGenerator() {
 
               {/* Preset Prompts */}
               <div>
-                <label className="block text-white font-semibold mb-3">Preset Concepts</label>
-                <div className="space-y-2">
+                <label className="block text-gray-900 font-semibold mb-3">Preset Concepts</label>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
                   {PRESET_PROMPTS[subject].map((preset, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleGenerateImage(preset.prompt)}
                       disabled={loading}
-                      className="w-full text-left px-3 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-600 text-slate-300 rounded-lg text-sm transition-colors"
+                      className="w-full text-left px-3 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 text-gray-700 rounded-lg text-sm transition-colors"
                     >
                       {preset.label}
                     </button>
@@ -120,12 +145,12 @@ export default function ImageGenerator() {
 
               {/* Custom Prompt */}
               <div>
-                <label className="block text-white font-semibold mb-3">Custom Prompt</label>
+                <label className="block text-gray-900 font-semibold mb-3">Custom Prompt</label>
                 <textarea
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
                   placeholder="Describe the concept visualization you want..."
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 resize-none h-24"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none h-24"
                 />
               </div>
 
@@ -133,7 +158,7 @@ export default function ImageGenerator() {
               <button
                 onClick={() => handleGenerateImage(customPrompt)}
                 disabled={loading || !customPrompt.trim()}
-                className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-600 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
               >
                 {loading ? (
                   <>
@@ -153,17 +178,17 @@ export default function ImageGenerator() {
           {/* Right Panel - Gallery */}
           <div className="lg:col-span-2">
             {generatedImages.length === 0 ? (
-              <div className="bg-slate-800 border border-slate-700 rounded-lg p-12 text-center">
-                <ImageIcon className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400 text-lg">No images generated yet</p>
-                <p className="text-slate-500 text-sm mt-2">Select a preset or enter a custom prompt to get started</p>
+              <div className="bg-white border border-gray-200 rounded-lg p-12 text-center shadow-sm">
+                <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600 text-lg">No images generated yet</p>
+                <p className="text-gray-500 text-sm mt-2">Select a preset or enter a custom prompt to get started</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-6">
                 {generatedImages.map((image) => (
-                  <div key={image.id} className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+                  <div key={image.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                     {/* Image */}
-                    <div className="relative bg-slate-900 aspect-video flex items-center justify-center group">
+                    <div className="relative bg-gray-100 aspect-video flex items-center justify-center group">
                       <img src={image.url} alt={image.prompt} className="w-full h-full object-cover" />
                       <button
                         onClick={() => setFullscreenImage(image)}
@@ -176,26 +201,29 @@ export default function ImageGenerator() {
                     {/* Info */}
                     <div className="p-4 space-y-3">
                       <div>
-                        <p className="text-slate-400 text-sm">Prompt</p>
-                        <p className="text-white text-sm line-clamp-2">{image.prompt}</p>
+                        <p className="text-gray-500 text-sm">Prompt</p>
+                        <p className="text-gray-900 text-sm line-clamp-2">{image.prompt}</p>
                       </div>
 
                       {image.notes && (
                         <div>
-                          <p className="text-slate-400 text-sm">Notes</p>
-                          <p className="text-slate-300 text-sm">{image.notes}</p>
+                          <p className="text-gray-500 text-sm">Notes</p>
+                          <p className="text-gray-700 text-sm">{image.notes}</p>
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-700">
-                        <p className="text-slate-500 text-xs">{image.timestamp}</p>
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                        <p className="text-gray-500 text-xs">{image.timestamp}</p>
                         <div className="flex gap-2">
-                          <button className="text-slate-400 hover:text-cyan-400 transition-colors">
+                          <button 
+                            onClick={() => handleDownloadImage(image)}
+                            className="text-gray-500 hover:text-blue-600 transition-colors"
+                          >
                             <Download className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteImage(image.id)}
-                            className="text-slate-400 hover:text-red-400 transition-colors"
+                            className="text-gray-500 hover:text-red-600 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -215,13 +243,13 @@ export default function ImageGenerator() {
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
           <button
             onClick={() => setFullscreenImage(null)}
-            className="absolute top-4 right-4 text-white hover:text-slate-300 transition-colors"
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
           >
             <X className="w-8 h-8" />
           </button>
           <img src={fullscreenImage.url} alt={fullscreenImage.prompt} className="max-w-4xl max-h-[90vh] object-contain" />
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }
