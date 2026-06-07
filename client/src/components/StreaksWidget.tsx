@@ -4,22 +4,66 @@ import { Card } from "@/components/ui/card";
 import { Flame, Zap } from "lucide-react";
 
 export function StreaksWidget() {
-  const { data: streakData, isLoading: streakLoading } = trpc.streaks.getStreak.useQuery();
-  const { data: levelData, isLoading: levelLoading } = trpc.streaks.getLevel.useQuery();
-  const { data: xpData, isLoading: xpLoading } = trpc.streaks.getTotalXP.useQuery();
-  const { data: progressData, isLoading: progressLoading } = trpc.streaks.getXPProgress.useQuery();
+  const utils = trpc.useUtils();
   
-  const awardLoginXP = trpc.streaks.awardLoginXP.useMutation();
+  // Queries
+  const streakQuery = trpc.streaks.getStreak.useQuery(undefined, {
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+  
+  const levelQuery = trpc.streaks.getLevel.useQuery(undefined, {
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+  });
+  
+  const xpQuery = trpc.streaks.getTotalXP.useQuery(undefined, {
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+  });
+  
+  const progressQuery = trpc.streaks.getXPProgress.useQuery(undefined, {
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+  });
+  
+  // Mutation
+  const awardLoginXP = trpc.streaks.awardLoginXP.useMutation({
+    onSuccess: () => {
+      // Refetch data after awarding XP
+      utils.streaks.getTotalXP.invalidate();
+      utils.streaks.getLevel.invalidate();
+      utils.streaks.getXPProgress.invalidate();
+    },
+  });
 
   // Award login XP on component mount
   useEffect(() => {
-    awardLoginXP.mutate();
+    if (!awardLoginXP.isPending) {
+      awardLoginXP.mutate();
+    }
   }, []);
 
-  const streak = streakData?.streak || 0;
-  const level = levelData?.level || 1;
-  const totalXP = xpData?.totalXP || 0;
-  const progress = progressData || { current: 0, needed: 500, percentage: 0 };
+  // Extract data with fallbacks
+  const streak = streakQuery.data?.streak ?? 0;
+  const level = levelQuery.data?.level ?? 1;
+  const totalXP = xpQuery.data?.totalXP ?? 0;
+  const progress = progressQuery.data ?? { current: 0, needed: 500, percentage: 0 };
+
+  // Show loading state
+  if (streakQuery.isLoading || levelQuery.isLoading || xpQuery.isLoading) {
+    return (
+      <Card className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200 p-6">
+        <div className="flex items-center gap-4">
+          <div className="text-6xl">🔥</div>
+          <div>
+            <p className="text-sm text-gray-600">Loading streak...</p>
+            <p className="text-2xl font-bold text-orange-600">--</p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -115,6 +159,19 @@ export function StreaksWidget() {
           <p className="text-sm text-purple-800">
             🏆 Incredible! {streak}-day streak! You're a true champion!
           </p>
+        </Card>
+      )}
+
+      {/* Show award status */}
+      {awardLoginXP.isPending && (
+        <Card className="bg-blue-50 border-blue-200 p-3">
+          <p className="text-xs text-blue-700">Awarding login XP...</p>
+        </Card>
+      )}
+
+      {awardLoginXP.isError && (
+        <Card className="bg-red-50 border-red-200 p-3">
+          <p className="text-xs text-red-700">Error awarding XP. Try refreshing the page.</p>
         </Card>
       )}
     </div>

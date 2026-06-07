@@ -107,29 +107,46 @@ export async function getUserTotalXP(userId: number) {
 // Get user's login streak (simplified - based on lastSignedIn)
 export async function getUserStreak(userId: number) {
   const db = await getDb();
-  if (!db) return 0;
-  const user = await (db as any).query.users.findFirst({
-    where: eq(users.id, userId),
-  });
+  if (!db) return 1; // Default to 1 if DB not available
+  
+  try {
+    const user = await (db as any).query.users.findFirst({
+      where: eq(users.id, userId),
+    });
 
-  if (!user || !user.lastSignedIn) {
+    if (!user) {
+      return 1; // New user gets 1 day streak
+    }
+
+    // If no last signed in, they're new - give them 1 day
+    if (!user.lastSignedIn) {
+      return 1;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const lastLogin = new Date(user.lastSignedIn);
+    lastLogin.setHours(0, 0, 0, 0);
+
+    const daysDiff = Math.floor((today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
+
+    // If last login was today, they have at least 1 day streak
+    if (daysDiff === 0) {
+      return 1;
+    }
+    
+    // If last login was yesterday, they have 2 day streak
+    if (daysDiff === 1) {
+      return 2;
+    }
+
+    // If more than 1 day since last login, streak is broken
     return 0;
+  } catch (error) {
+    console.error("Error getting user streak:", error);
+    return 1; // Default to 1 on error
   }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const lastLogin = new Date(user.lastSignedIn);
-  lastLogin.setHours(0, 0, 0, 0);
-
-  const daysDiff = Math.floor((today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
-
-  // If last login was today or yesterday, they have a streak
-  if (daysDiff <= 1) {
-    return daysDiff === 0 ? 1 : 2;
-  }
-
-  return 0;
 }
 
 // Get user level based on XP
