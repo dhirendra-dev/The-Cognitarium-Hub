@@ -726,3 +726,44 @@ export const adminMessageReads = mysqlTable("adminMessageReads", {
 
 export type AdminMessageRead = typeof adminMessageReads.$inferSelect;
 export type InsertAdminMessageRead = typeof adminMessageReads.$inferInsert;
+
+
+// User Streaks - Track daily login and engagement streaks
+export const userStreaks = mysqlTable("userStreaks", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  currentStreak: int("currentStreak").default(0).notNull(),
+  longestStreak: int("longestStreak").default(0).notNull(),
+  lastLoginDate: timestamp("lastLoginDate"),
+  totalDaysEngaged: int("totalDaysEngaged").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// Streak Milestones - Track milestone achievements
+export const streakMilestoneAchievements = mysqlTable("streakMilestoneAchievements", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  milestone: int("milestone").notNull(), // 7, 14, 30, 60, 100 days
+  achievedAt: timestamp("achievedAt").defaultNow().notNull(),
+});
+
+export type StreakMilestoneAchievement = typeof streakMilestoneAchievements.$inferSelect;
+export type InsertStreakMilestoneAchievement = typeof streakMilestoneAchievements.$inferInsert;
+
+export type UserStreak = typeof userStreaks.$inferSelect;
+export type InsertUserStreak = typeof userStreaks.$inferInsert;
+
+// XP Awards Log - Track XP awards to prevent duplicates
+export const xpAwardsLog = mysqlTable("xpAwardsLog", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  awardType: varchar("awardType", { length: 50 }).notNull(), // "login", "material_view", "session_complete", "topic_complete"
+  awardAmount: int("awardAmount").notNull(),
+  referenceId: int("referenceId"), // ID of the material, session, or topic
+  awardedAt: timestamp("awardedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type XPAwardLog = typeof xpAwardsLog.$inferSelect;
+export type InsertXPAwardLog = typeof xpAwardsLog.$inferInsert;

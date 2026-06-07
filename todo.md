@@ -325,3 +325,38 @@
 - [x] Remove manual certificate generation tools (Certificate Generator removed)
 - [x] Keep only "Earned Certificates" view for users
 - [x] Save checkpoint with certificate download feature
+
+
+---
+
+## Phase 8: Streaks & XP Engagement System (COMPLETED)
+
+### Streaks Tracking (COMPLETED)
+- [x] Create streaks-xp.ts helper module
+- [x] Add getUserStreak function
+- [x] Track consecutive days of engagement
+- [x] Implement streak calculation
+- [x] Award bonus XP for milestones
+
+### XP Rewards System (COMPLETED)
+- [x] Award 10 XP for daily login
+- [x] Award 5 XP for material view
+- [x] Award 15 XP for study session
+- [x] Award 20 XP for topic complete
+- [x] Update leaderboard with XP
+
+### Streaks Display Widget (COMPLETED)
+- [x] Create StreaksWidget with fire emoji
+- [x] Display streak count on dashboard
+- [x] Show level and total XP
+- [x] Add XP progress bar
+- [x] Add motivational messages
+- [x] Display on Home.tsx
+
+### tRPC Procedures (COMPLETED)
+- [x] streaks.getStreak procedure
+- [x] streaks.getLevel procedure
+- [x] streaks.getXPProgress procedure
+- [x] streaks.getTotalXP procedure
+- [x] streaks.awardLoginXP mutation
+- [x] All 93 tests passing

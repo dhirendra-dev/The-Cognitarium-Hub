@@ -1539,5 +1539,32 @@ export const appRouter = router({
         return await getNoticeById(input.noticeId);
       }),
   }),
+  streaks: router({
+    getStreak: protectedProcedure.query(async ({ ctx }) => {
+      const { getUserStreak } = await import("./streaks-xp");
+      const streak = await getUserStreak(ctx.user.id);
+      return { streak };
+    }),
+    getLevel: protectedProcedure.query(async ({ ctx }) => {
+      const { getUserLevel } = await import("./streaks-xp");
+      const level = await getUserLevel(ctx.user.id);
+      return { level };
+    }),
+    getXPProgress: protectedProcedure.query(async ({ ctx }) => {
+      const { getUserXPProgress } = await import("./streaks-xp");
+      const progress = await getUserXPProgress(ctx.user.id);
+      return progress;
+    }),
+    getTotalXP: protectedProcedure.query(async ({ ctx }) => {
+      const { getUserTotalXP } = await import("./streaks-xp");
+      const totalXP = await getUserTotalXP(ctx.user.id);
+      return { totalXP };
+    }),
+    awardLoginXP: protectedProcedure.mutation(async ({ ctx }) => {
+      const { awardDailyLoginXP } = await import("./streaks-xp");
+      const result = await awardDailyLoginXP(ctx.user.id);
+      return result;
+    }),
+  }),
 });
 export type AppRouter = typeof appRouter;
