@@ -12,6 +12,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { NoticesDisplay } from "@/components/NoticesDisplay";
 import { UserStatsWidget } from "@/components/UserStatsWidget";
 import { StreaksWidget } from "@/components/StreaksWidget";
+import { CertificateShowcase } from "@/components/CertificateShowcase";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
@@ -186,6 +187,9 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Certificate Showcase Section */}
+        <CertificateShowcase />
 
         {/* CTA Section */}
         <div className="bg-white rounded-2xl shadow-xl p-12 text-center border-2 border-blue-200">
