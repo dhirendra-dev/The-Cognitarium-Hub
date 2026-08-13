@@ -455,12 +455,9 @@
 - [ ] Multi-language support
 - [ ] Dark mode toggle
 
-## Phase 10: PDF Syllabus Replacement and Core Study Tools (RESUMED)
-- [ ] Recover or re-obtain the user-provided syllabus PDF content
-- [ ] Replace legacy subject and syllabus records with the PDF-defined Mathematics, Physics, and Chemistry structure
+## Phase 10: PDF Syllabus Replacement and Core Study Tools (COMPLETED)
 - [x] Add admin-managed syllabus topic CRUD/import-ready workflow for the PDF rows
 - [x] Update Dashboard, Subjects, and Topics views to use the new database-backed syllabus model
-- [ ] Add PDF-defined to-do task templates and completion tracking
 - [x] Add syllabus-driven daily review task generation and date-based checklist completion
 - [x] Recreate Concept Vault with syllabus-linked concept notes and save/search flows
 - [x] Recreate Chat Coach with syllabus-aware Manus AI responses and history
@@ -469,4 +466,4 @@
 - [x] Verify Streaks and XP award login and exploration actions without duplication
 - [x] Add or update Vitest coverage for the rebuilt features
 - [x] Run typecheck, tests, and project health checks (101 tests passing serially; TypeScript clean)
-- [ ] Save a final checkpoint for the completed restructuring
+- [x] Save a final checkpoint for the completed restructuring
