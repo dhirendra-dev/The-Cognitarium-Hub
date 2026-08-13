@@ -353,6 +353,32 @@ export const appRouter = router({
         return getDailyTasksByUserAndDate(ctx.user.id, input.date);
       }),
 
+    generateFromSyllabus: protectedProcedure
+      .input(z.object({ date: z.date(), subject: z.string().optional(), count: z.number().int().min(1).max(20).default(5) }))
+      .mutation(async ({ ctx, input }) => {
+        const { getDb } = await import("./db");
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const existing = await getDailyTasksByUserAndDate(ctx.user.id, input.date);
+        const existingDescriptions = new Set(existing.map((task) => task.taskDescription));
+        const topics = await db
+          .select()
+          .from(jeeSyllabusTopics)
+          .where(input.subject ? eq(jeeSyllabusTopics.subject, input.subject) : undefined)
+          .orderBy(asc(jeeSyllabusTopics.subject), asc(jeeSyllabusTopics.unit), asc(jeeSyllabusTopics.topic))
+          .limit(input.count);
+        const candidates = topics
+          .map((topic) => ({
+            date: input.date,
+            subject: topic.subject,
+            taskDescription: `Review ${topic.topic}`,
+            notes: `${topic.unit}${topic.subtopic ? ` · ${topic.subtopic}` : ""} · ${topic.class === "jeeMain" ? "JEE Main" : topic.class === "jeeAdvanced" ? "JEE Advanced" : `Class ${topic.class}`}`,
+          }))
+          .filter((task) => !existingDescriptions.has(task.taskDescription));
+        for (const task of candidates) await createDailyTask(ctx.user.id, task);
+        return { created: candidates.length };
+      }),
+
     toggleCompletion: protectedProcedure
       .input(z.object({ taskId: z.number(), isCompleted: z.boolean() }))
       .mutation(async ({ input }) => {

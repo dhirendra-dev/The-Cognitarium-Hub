@@ -1,273 +1,96 @@
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle, Circle, Plus, Calendar } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Calendar, CheckCircle, Circle, Loader, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-
-const TASK_SUBJECTS = ["SST", "Science"];
+import { trpc } from "@/lib/trpc";
 
 export default function DailyTasks() {
-  const { user } = useAuth();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newTaskSubject, setNewTaskSubject] = useState("SST");
+  const [newTaskSubject, setNewTaskSubject] = useState("Mathematics");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskNotes, setNewTaskNotes] = useState("");
-
-  // tRPC queries and mutations
-  const { data: dailyTasks, refetch: refetchTasks } = trpc.dailyTasks.getByDate.useQuery({
-    date: new Date(selectedDate),
-  });
+  const dateInput = useMemo(() => ({ date: new Date(`${selectedDate}T00:00:00`) }), [selectedDate]);
+  const { data: dailyTasks, refetch: refetchTasks, isLoading } = trpc.dailyTasks.getByDate.useQuery(dateInput);
+  const { data: syllabusTopics } = trpc.syllabus.list.useQuery(undefined);
+  const subjects = useMemo(() => {
+    const values = new Set((syllabusTopics ?? []).map((topic) => topic.subject));
+    (dailyTasks ?? []).forEach((task) => values.add(task.subject));
+    return Array.from(values).sort();
+  }, [dailyTasks, syllabusTopics]);
 
   const createTaskMutation = trpc.dailyTasks.create.useMutation({
-    onSuccess: () => {
-      toast.success("Task added successfully!");
-      setNewTaskSubject("SST");
+    onSuccess: async () => {
+      toast.success("Task added.");
       setNewTaskDescription("");
       setNewTaskNotes("");
       setShowAddForm(false);
-      refetchTasks();
+      await refetchTasks();
     },
-    onError: (error) => {
-      toast.error(error.message || "Failed to add task");
-    },
+    onError: (error) => toast.error(error.message || "Could not add task."),
   });
-
+  const generateMutation = trpc.dailyTasks.generateFromSyllabus.useMutation({
+    onSuccess: async (result) => {
+      toast.success(result.created ? `${result.created} syllabus review task${result.created === 1 ? "" : "s"} created.` : "No new tasks were needed for this date.");
+      await refetchTasks();
+    },
+    onError: (error) => toast.error(error.message || "Could not generate syllabus tasks."),
+  });
   const toggleTaskMutation = trpc.dailyTasks.toggleCompletion.useMutation({
-    onSuccess: () => {
-      refetchTasks();
-    },
+    onSuccess: () => refetchTasks(),
+    onError: (error) => toast.error(error.message || "Could not update task."),
   });
 
-  const handleAddTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskDescription) {
-      toast.error("Please enter a task description");
+  const tasks = dailyTasks ?? [];
+  const completedCount = tasks.filter((task) => task.isCompleted).length;
+  const progress = tasks.length ? Math.round((completedCount / tasks.length) * 100) : 0;
+  const groupedTasks = useMemo(() => {
+    const groups = new Map<string, typeof tasks>();
+    tasks.forEach((task) => {
+      if (!groups.has(task.subject)) groups.set(task.subject, []);
+      groups.get(task.subject)!.push(task);
+    });
+    return groups;
+  }, [tasks]);
+
+  const handleAddTask = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!newTaskDescription.trim()) {
+      toast.error("Enter a task description first.");
       return;
     }
-
     createTaskMutation.mutate({
-      date: new Date(selectedDate),
-      subject: newTaskSubject,
-      taskDescription: newTaskDescription,
-      notes: newTaskNotes || undefined,
+      date: dateInput.date,
+      subject: newTaskSubject.trim() || "General",
+      taskDescription: newTaskDescription.trim(),
+      notes: newTaskNotes.trim() || undefined,
     });
   };
 
-  const completedCount = (dailyTasks || []).filter((t) => t.isCompleted).length;
-  const totalCount = dailyTasks?.length || 0;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Calendar className="w-8 h-8 text-indigo-600" />
-            <h1 className="text-4xl font-bold text-gray-800">Daily Subject Tasks</h1>
-          </div>
-          <p className="text-gray-600">Track your daily SST and Science revision tasks</p>
-        </div>
-
-        {/* Date Selector */}
-        <Card className="bg-white shadow-lg mb-8 p-6">
-          <Label htmlFor="date-picker" className="text-sm font-semibold text-gray-700 block mb-3">
-            Select Date
-          </Label>
-          <Input
-            id="date-picker"
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="max-w-xs"
-          />
-        </Card>
-
-        {/* Daily Progress */}
-        <Card className="bg-white shadow-lg mb-8 p-6">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-6 rounded-2xl bg-gradient-to-r from-indigo-700 to-violet-800 p-6 text-white shadow-xl md:p-8">
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">
-                {new Date(selectedDate).toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </h2>
-              <p className="text-gray-600 mt-2">
-                {completedCount} of {totalCount} tasks completed
-              </p>
+              <div className="mb-2 flex items-center gap-3"><Calendar className="h-8 w-8 text-indigo-200" /><h1 className="text-3xl font-bold">Daily Study Tasks</h1></div>
+              <p className="max-w-2xl text-indigo-100">Generate a focused checklist from the published PCM syllabus, then add personal tasks when needed.</p>
             </div>
-            <div className="text-4xl font-bold text-indigo-600">
-              {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
-            </div>
+            <div className="rounded-xl bg-white/10 px-5 py-4 text-center"><p className="text-sm text-indigo-100">{completedCount} of {tasks.length} complete</p><p className="text-3xl font-bold">{progress}%</p></div>
           </div>
-        </Card>
+          <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/20"><div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${progress}%` }} /></div>
+        </header>
 
-        {/* Tasks by Subject */}
-        {TASK_SUBJECTS.map((subject) => {
-          const subjectTasks = (dailyTasks || []).filter((t) => t.subject === subject);
-          const subjectCompleted = subjectTasks.filter((t) => t.isCompleted).length;
+        <section className="mb-6 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+          <div><label htmlFor="task-date" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Study date</label><input id="task-date" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700" /></div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => generateMutation.mutate({ date: dateInput.date, count: 5 })} disabled={generateMutation.isPending} className="inline-flex items-center gap-2 rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800 disabled:bg-slate-400"><Sparkles className="h-4 w-4" />{generateMutation.isPending ? "Generating…" : "Generate from syllabus"}</button>
+            <button type="button" onClick={() => setShowAddForm((value) => !value)} className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200"><Plus className="h-4 w-4" /> Add task</button>
+          </div>
+        </section>
 
-          return (
-            <Card key={subject} className="bg-white shadow-lg mb-6 overflow-hidden">
-              <div
-                className={`h-1 ${
-                  subject === "SST" ? "bg-amber-500" : "bg-green-500"
-                }`}
-              />
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-gray-800">{subject} Revision</h3>
-                  <span className="text-sm font-semibold text-gray-600">
-                    {subjectCompleted} of {subjectTasks.length} completed
-                  </span>
-                </div>
+        {showAddForm && <form onSubmit={handleAddTask} className="mb-6 grid gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-5 md:grid-cols-2"><select value={newTaskSubject} onChange={(event) => setNewTaskSubject(event.target.value)} className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm"><option value="General">General</option>{subjects.map((subject) => <option key={subject} value={subject}>{subject}</option>)}</select><input value={newTaskDescription} onChange={(event) => setNewTaskDescription(event.target.value)} placeholder="Task description" className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm" /><textarea value={newTaskNotes} onChange={(event) => setNewTaskNotes(event.target.value)} placeholder="Notes (optional)" className="min-h-20 rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm md:col-span-2" /><button type="submit" disabled={createTaskMutation.isPending} className="rounded-lg bg-indigo-700 px-4 py-2.5 font-semibold text-white hover:bg-indigo-800 disabled:bg-slate-400 md:col-span-2">{createTaskMutation.isPending ? "Adding…" : "Save personal task"}</button></form>}
 
-                {subjectTasks.length > 0 ? (
-                  <div className="space-y-3">
-                    {subjectTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className={`flex items-start gap-4 p-4 rounded-lg border-2 transition-all ${
-                          task.isCompleted
-                            ? "bg-green-50 border-green-300"
-                            : "bg-gray-50 border-gray-200"
-                        }`}
-                      >
-                        <Checkbox
-                          checked={task.isCompleted || false}
-                          onCheckedChange={(checked) => {
-                            toggleTaskMutation.mutate({
-                              taskId: task.id,
-                              isCompleted: checked === true,
-                            });
-                          }}
-                          disabled={toggleTaskMutation.isPending}
-                          className="mt-1"
-                        />
-                        <div className="flex-1">
-                          <p
-                            className={`font-semibold ${
-                              task.isCompleted ? "line-through text-gray-500" : "text-gray-800"
-                            }`}
-                          >
-                            {task.taskDescription}
-                          </p>
-                          {task.notes && (
-                            <p className="text-sm text-gray-700 mt-2 p-2 bg-yellow-50 rounded">
-                              {task.notes}
-                            </p>
-                          )}
-                          {task.completedTime && (
-                            <p className="text-xs text-green-600 mt-2">
-                              ✓ Completed at {new Date(task.completedTime).toLocaleTimeString()}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex-shrink-0">
-                          {task.isCompleted ? (
-                            <CheckCircle className="w-6 h-6 text-green-500" />
-                          ) : (
-                            <Circle className="w-6 h-6 text-gray-400" />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">No tasks for {subject} today</p>
-                )}
-              </div>
-            </Card>
-          );
-        })}
-
-        {/* Add Task Form */}
-        {showAddForm ? (
-          <Card className="bg-white shadow-lg p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-6">Add New Task</h3>
-            <form onSubmit={handleAddTask} className="space-y-4">
-              <div>
-                <Label htmlFor="subject" className="text-sm font-semibold text-gray-700">
-                  Subject
-                </Label>
-                <select
-                  id="subject"
-                  value={newTaskSubject}
-                  onChange={(e) => setNewTaskSubject(e.target.value)}
-                  className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {TASK_SUBJECTS.map((subject) => (
-                    <option key={subject} value={subject}>
-                      {subject}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <Label htmlFor="task-desc" className="text-sm font-semibold text-gray-700">
-                  Task Description
-                </Label>
-                <Input
-                  id="task-desc"
-                  value={newTaskDescription}
-                  onChange={(e) => setNewTaskDescription(e.target.value)}
-                  placeholder="e.g., Review Chapter 3: Nationalism in India"
-                  className="mt-2"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="task-notes" className="text-sm font-semibold text-gray-700">
-                  Notes (Optional)
-                </Label>
-                <Textarea
-                  id="task-notes"
-                  value={newTaskNotes}
-                  onChange={(e) => setNewTaskNotes(e.target.value)}
-                  placeholder="Add any additional notes..."
-                  className="mt-2 resize-none"
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  disabled={createTaskMutation.isPending}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-                >
-                  {createTaskMutation.isPending ? "Adding..." : "Add Task"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowAddForm(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </Card>
-        ) : (
-          <Button
-            onClick={() => setShowAddForm(true)}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-6 text-lg"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Add Task for {new Date(selectedDate).toLocaleDateString()}
-          </Button>
-        )}
+        {isLoading ? <div className="flex items-center justify-center rounded-xl bg-white p-16 text-slate-500"><Loader className="mr-2 h-5 w-5 animate-spin" /> Loading tasks…</div> : tasks.length === 0 ? <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm"><Sparkles className="mx-auto mb-4 h-10 w-10 text-indigo-400" /><h2 className="text-xl font-semibold text-slate-800">No tasks for this date</h2><p className="mt-2 text-sm text-slate-500">Generate a checklist from the active syllabus or add a personal study task.</p></div> : <div className="space-y-5">{Array.from(groupedTasks.entries()).map(([subject, subjectTasks]) => <section key={subject} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-bold text-slate-900">{subject}</h2><span className="text-sm text-slate-500">{subjectTasks.filter((task) => task.isCompleted).length}/{subjectTasks.length}</span></div><div className="space-y-3">{subjectTasks.map((task) => <div key={task.id} className={`flex items-start gap-3 rounded-lg border p-4 ${task.isCompleted ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"}`}><button type="button" aria-label={task.isCompleted ? "Mark task incomplete" : "Mark task complete"} onClick={() => toggleTaskMutation.mutate({ taskId: task.id, isCompleted: !task.isCompleted })} disabled={toggleTaskMutation.isPending} className="mt-0.5 shrink-0 text-emerald-600">{task.isCompleted ? <CheckCircle className="h-5 w-5" /> : <Circle className="h-5 w-5 text-slate-400" />}</button><div className="min-w-0 flex-1"><p className={`font-semibold ${task.isCompleted ? "text-emerald-800 line-through" : "text-slate-800"}`}>{task.taskDescription}</p>{task.notes && <p className="mt-2 rounded bg-white/70 p-2 text-sm text-slate-600">{task.notes}</p>}</div></div>)}</div></section>)}</div>}
       </div>
     </div>
   );

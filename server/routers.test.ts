@@ -230,6 +230,15 @@ describe("Daily Tasks Router", () => {
   });
 });
 
+describe("Daily Syllabus Tasks Router", () => {
+  it("rejects task generation counts above the safe limit", async () => {
+    const caller = appRouter.createCaller(createMockContext());
+    await expect(
+      caller.dailyTasks.generateFromSyllabus({ date: new Date(), count: 21 })
+    ).rejects.toThrow();
+  });
+});
+
 describe("User Preferences Router", () => {
   it("should get user preferences", async () => {
     const ctx = createMockContext();
