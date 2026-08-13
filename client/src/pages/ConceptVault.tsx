@@ -1,148 +1,122 @@
-import React, { useState } from 'react';
-import { BookOpen, AlertCircle, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useMemo, useState } from "react";
+import { Bookmark, BookmarkCheck, ChevronDown, ChevronUp, Lightbulb, Loader, Search, Sparkles } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
-interface Concept {
-  chapter: string;
-  core: string;
-  traps: string;
-}
-
-const CONCEPT_VAULT: Record<string, Concept[]> = {
-  physics: [
-    {
-      chapter: 'Rotational Dynamics',
-      core: 'Rigid Body rotation involves pure rotational kinetics and dynamics. The Torque is defined as τ = r × F, and the fundamental governing equation is τ = Iα. For Rolling without Slipping on a rough horizontal surface, the condition is v_cm = ωR and a_cm = αR. Conservation of Angular Momentum (L = Iω = const) applies if the external torque τ_ext = 0.',
-      traps: 'Students frequently forget to check if the point of rotation is accelerating when writing τ = Iα. If applying rotational mechanics about a moving/accelerating center of mass, you must include pseudo-forces or calculate torque strictly about the accelerating axis (which is usually tricky). Always prefer the instantaneous center of zero velocity (ICOR) for simpler calculations.'
-    },
-    {
-      chapter: 'Thermodynamics',
-      core: 'First Law of Thermodynamics is the conservation of energy: ΔQ = ΔU + W. Note the sign conventions: ΔQ > 0 if heat is supplied to the system, W > 0 if work is done by the system. For an ideal gas, ΔU = n C_v ΔT always. For Adiabatic Processes, PV^γ = constant where γ = C_p/C_v.',
-      traps: 'In Chemistry, the sign convention of work is opposite (W = -PΔV is work done on the system). Always confirm which convention is being requested. Also, for adiabatic processes, do not use T_1 V_1^(γ-1) = T_2 V_2^(γ-1) with Celsius degrees; always convert to Kelvin first.'
-    }
-  ],
-  chemistry: [
-    {
-      chapter: 'Chemical Bonding',
-      core: 'Hybridisation state dictates geometry. Steric Number (SN) = (number of σ bonds) + (number of lone pairs on central atom). For SN=2 (sp, linear), SN=3 (sp², trigonal planar), SN=4 (sp³, tetrahedral), SN=5 (sp³d, trigonal bipyramidal), SN=6 (sp³d², octahedral). Molecular Orbital Theory (MOT) explains bond order, magnetic behavior, and fractional bond orders.',
-      traps: 'In sp³d hybridization (e.g., PCl₅), axial bonds are longer and weaker than equatorial bonds due to high steric repulsion (90-degree interactions with three equatorial bonds). In SF₄, the lone pair goes to the equatorial position to minimize repulsion, forming a see-saw shape.'
-    },
-    {
-      chapter: 'Ionic Equilibrium',
-      core: 'For a weak acid HA ⇌ H⁺ + A⁻, the dissociation constant is K_a = [H⁺][A⁻]/[HA]. For weak acid-weak base buffers, pH is governed by the Henderson-Hasselbalch equation: pH = pK_a + log([Conjugate Base]/[Acid]). Solubility Product K_sp defines saturation limits for sparingly soluble salts.',
-      traps: 'When calculating the pH of highly dilute strong acids (e.g., 10⁻⁸ M HCl), do not simply write pH = 8. You must include the auto-ionization contribution of water ([H⁺]_H2O ≈ 10⁻⁷), which yields a total [H⁺] = 1.1 × 10⁻⁷, so pH ≈ 6.96.'
-    }
-  ],
-  math: [
-    {
-      chapter: 'Conic Sections - Ellipse',
-      core: 'Standard equation: x²/a² + y²/b² = 1 (a > b). Eccentricity e = √(1 - b²/a²). Foci are at (±ae, 0). Directrices are x = ±a/e. Equation of tangent in slope form is y = mx ± √(a²m² + b²). Standard parameterization is (a cos θ, b sin θ).',
-      traps: 'Be extremely careful of the "Auxiliary Circle" properties. The normal to an ellipse at point P(a cos θ, b sin θ) is given by ax/cos θ - by/sin θ = a² - b². Students frequently mix up the denominator terms with the tangent equation.'
-    },
-    {
-      chapter: 'Permutations & Combinations',
-      core: 'Fundamental Principles of Counting: Product Rule (AND) and Addition Rule (OR). Permutations of n distinct objects taken r at a time: ⁿP_r = n!/(n-r)!. Combinations (selection): ⁿC_r = n!/(r!(n-r)!). Circular Permutations of n distinct objects: (n-1)!. Multinomial theorem is highly effective for distributing identical/distinct elements into groups.',
-      traps: 'In circular arrangement problems, check if clockwise and anti-clockwise arrangements are identical (like keyrings, necklaces). If so, divide the arrangements by 2. When applying constraints (e.g., "no two girls sit together"), place the non-restricted items first, then arrange inside the gaps.'
-    }
-  ]
-};
+const SAVED_KEY = "hslc-concept-vault-saved";
 
 export default function ConceptVault() {
-  const [selectedSubject, setSelectedSubject] = useState<'physics' | 'chemistry' | 'math'>('physics');
-  const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
+  const [subject, setSubject] = useState("all");
+  const [search, setSearch] = useState("");
+  const [savedOnly, setSavedOnly] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [savedIds, setSavedIds] = useState<number[]>([]);
+  const syllabusQuery = trpc.syllabus.list.useQuery(undefined);
 
-  const concepts = CONCEPT_VAULT[selectedSubject];
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(SAVED_KEY) || "[]");
+      if (Array.isArray(stored)) setSavedIds(stored.filter((value): value is number => typeof value === "number"));
+    } catch {
+      setSavedIds([]);
+    }
+  }, []);
 
-  const toggleChapter = (chapter: string) => {
-    setExpandedChapter(expandedChapter === chapter ? null : chapter);
+  const topics = syllabusQuery.data ?? [];
+  const subjects = useMemo(() => Array.from(new Set(topics.map((topic) => topic.subject))).sort(), [topics]);
+  const filteredTopics = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return topics.filter((topic) => {
+      const matchesSubject = subject === "all" || topic.subject === subject;
+      const matchesSaved = !savedOnly || savedIds.includes(topic.id);
+      const haystack = [topic.subject, topic.unit, topic.topic, topic.subtopic, topic.conceptsRequired].filter(Boolean).join(" ").toLowerCase();
+      return matchesSubject && matchesSaved && (!term || haystack.includes(term));
+    });
+  }, [savedIds, savedOnly, search, subject, topics]);
+
+  const toggleSaved = (id: number) => {
+    setSavedIds((previous) => {
+      const next = previous.includes(id) ? previous.filter((value) => value !== id) : [...previous, id];
+      localStorage.setItem(SAVED_KEY, JSON.stringify(next));
+      return next;
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Lightbulb className="w-8 h-8 text-amber-400" />
-            <h1 className="text-4xl font-bold text-white">Concept Vault</h1>
-          </div>
-          <p className="text-slate-300">Master core concepts and avoid common traps</p>
-        </div>
-
-        {/* Subject Tabs */}
-        <div className="flex gap-4 mb-8">
-          {(['physics', 'chemistry', 'math'] as const).map((subject) => (
-            <button
-              key={subject}
-              onClick={() => {
-                setSelectedSubject(subject);
-                setExpandedChapter(null);
-              }}
-              className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                selectedSubject === subject
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              {subject.charAt(0).toUpperCase() + subject.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        {/* Concepts List */}
-        <div className="space-y-4">
-          {concepts.map((concept, idx) => (
-            <div
-              key={idx}
-              className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden hover:border-slate-600 transition-colors"
-            >
-              {/* Header */}
-              <button
-                onClick={() => toggleChapter(concept.chapter)}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors"
-              >
-                <div className="flex items-center gap-3 text-left">
-                  <BookOpen className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                  <h3 className="text-lg font-semibold text-white">{concept.chapter}</h3>
-                </div>
-                {expandedChapter === concept.chapter ? (
-                  <ChevronUp className="w-5 h-5 text-slate-400" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-slate-400" />
-                )}
-              </button>
-
-              {/* Content */}
-              {expandedChapter === concept.chapter && (
-                <div className="px-6 py-4 bg-slate-700/30 border-t border-slate-700 space-y-4">
-                  {/* Core Concepts */}
-                  <div>
-                    <h4 className="font-semibold text-blue-300 mb-2 flex items-center gap-2">
-                      <Lightbulb className="w-4 h-4" />
-                      Core Concept
-                    </h4>
-                    <p className="text-slate-200 leading-relaxed">{concept.core}</p>
-                  </div>
-
-                  {/* Common Traps */}
-                  <div>
-                    <h4 className="font-semibold text-amber-300 mb-2 flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4" />
-                      Common Traps & Mistakes
-                    </h4>
-                    <p className="text-slate-200 leading-relaxed">{concept.traps}</p>
-                  </div>
-                </div>
-              )}
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 p-6 text-white shadow-xl md:p-8">
+          <div className="flex items-center gap-3">
+            <Lightbulb className="h-9 w-9 text-yellow-100" aria-hidden="true" />
+            <div>
+              <h1 className="text-3xl font-bold">Concept Vault</h1>
+              <p className="mt-1 text-orange-50">Search the active PCM syllabus and save the ideas you need to revisit.</p>
             </div>
-          ))}
-        </div>
+          </div>
+        </header>
 
-        {/* Footer Info */}
-        <div className="mt-12 p-6 bg-slate-800 border border-slate-700 rounded-lg">
-          <p className="text-slate-300 text-sm">
-            💡 <strong>Pro Tip:</strong> Review one concept daily. Understanding the "traps" section is crucial for avoiding silly mistakes in exams.
-          </p>
-        </div>
+        <section className="mb-6 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_auto_auto]">
+          <label className="relative block">
+            <span className="sr-only">Search concepts</span>
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search subjects, units, topics, or prerequisites" className="w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-200" />
+          </label>
+          <select value={subject} onChange={(event) => setSubject(event.target.value)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+            <option value="all">All subjects</option>
+            {subjects.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+          <button type="button" onClick={() => setSavedOnly((value) => !value)} className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold ${savedOnly ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            {savedOnly ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />} Saved only
+          </button>
+        </section>
+
+        {syllabusQuery.isLoading ? (
+          <div className="flex items-center justify-center rounded-xl bg-white p-16 text-slate-500"><Loader className="mr-2 h-5 w-5 animate-spin" /> Loading concepts…</div>
+        ) : syllabusQuery.isError ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-800">Could not load the Concept Vault. Please refresh and try again.</div>
+        ) : filteredTopics.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm">
+            <Sparkles className="mx-auto mb-4 h-10 w-10 text-orange-400" />
+            <h2 className="text-xl font-semibold text-slate-800">No matching concepts</h2>
+            <p className="mt-2 text-sm text-slate-500">Try another search or ask an admin to publish the PDF-defined syllabus topics.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {filteredTopics.map((topic) => {
+              const expanded = expandedId === topic.id;
+              const saved = savedIds.includes(topic.id);
+              return (
+                <article key={topic.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
+                  <div className="flex items-start justify-between gap-4 p-5">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">{topic.subject} · {topic.unit}</p>
+                      <h2 className="mt-1 text-lg font-bold text-slate-900">{topic.topic}</h2>
+                      <p className="mt-1 text-xs text-slate-500">{topic.class === "jeeMain" ? "JEE Main" : topic.class === "jeeAdvanced" ? "JEE Advanced" : `Class ${topic.class}`}{topic.subtopic ? ` · ${topic.subtopic}` : ""}</p>
+                    </div>
+                    <button type="button" onClick={() => toggleSaved(topic.id)} aria-label={saved ? "Remove from saved concepts" : "Save concept"} className={`rounded-lg p-2 ${saved ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-500 hover:bg-orange-50 hover:text-orange-600"}`}>
+                      {saved ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  <button type="button" onClick={() => setExpandedId(expanded ? null : topic.id)} className="flex w-full items-center justify-between border-t border-slate-100 bg-slate-50 px-5 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-orange-50">
+                    <span>{expanded ? "Hide concept snapshot" : "Open concept snapshot"}</span>
+                    {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                  {expanded && (
+                    <div className="space-y-4 border-t border-slate-100 p-5 text-sm text-slate-700">
+                      <div>
+                        <h3 className="mb-1 flex items-center gap-2 font-semibold text-orange-700"><Lightbulb className="h-4 w-4" /> Core concept / prerequisites</h3>
+                        <p className="leading-relaxed">{topic.conceptsRequired || "Review the definitions, laws, and prerequisite ideas for this topic before attempting advanced problems."}</p>
+                      </div>
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
+                        <p className="font-semibold">Common trap check</p>
+                        <p className="mt-1">State the governing condition, units, and limiting case before finalising your answer. Add a personal mistake note while revising.</p>
+                      </div>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

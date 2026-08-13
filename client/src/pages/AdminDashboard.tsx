@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { AdminCertificateManager } from "@/components/AdminCertificateManager";
 import { AdminNoticesTab } from "@/components/AdminNoticesTab";
+import { AdminSyllabusTab } from "@/components/AdminSyllabusTab";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -118,7 +119,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 bg-white shadow-lg mb-8">
+          <TabsList className="grid w-full grid-cols-8 bg-white shadow-lg mb-8">
             <TabsTrigger value="contact">Contact Submissions</TabsTrigger>
             <TabsTrigger value="users">All Users</TabsTrigger>
             <TabsTrigger value="sessions">Study Sessions</TabsTrigger>
@@ -126,6 +127,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="certificates">Certificates</TabsTrigger>
             <TabsTrigger value="notices">Notices</TabsTrigger>
             <TabsTrigger value="pdfs">PDF Management</TabsTrigger>
+            <TabsTrigger value="syllabus">Syllabus</TabsTrigger>
           </TabsList>
 
           {/* Contact Submissions Tab */}
@@ -301,6 +303,11 @@ export default function AdminDashboard() {
           {/* Notices Management Tab */}
           <TabsContent value="notices">
             <AdminNoticesTab />
+          </TabsContent>
+
+          {/* Syllabus Management Tab */}
+          <TabsContent value="syllabus">
+            <AdminSyllabusTab />
           </TabsContent>
 
           {/* PDF Management Tab */}

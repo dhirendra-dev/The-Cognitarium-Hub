@@ -1,13 +1,73 @@
+import { and, eq, gte, lt } from "drizzle-orm";
 import { getDb } from "./db";
-import { users, leaderboard } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { leaderboard, userStreaks, users, xpAwardsLog } from "../drizzle/schema";
 
 const DAILY_LOGIN_XP = 10;
 const MATERIAL_VIEW_XP = 5;
 const SESSION_COMPLETE_XP = 15;
 const TOPIC_COMPLETE_XP = 20;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-// Award XP to user
+function utcDayStart(value: Date | string | number) {
+  const date = new Date(value);
+  date.setUTCHours(0, 0, 0, 0);
+  return date;
+}
+
+function nextUtcDay(value: Date) {
+  return new Date(value.getTime() + DAY_MS);
+}
+
+async function getUserStreakRecord(db: any, userId: number) {
+  const rows = await db
+    .select()
+    .from(userStreaks)
+    .where(eq(userStreaks.userId, userId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+async function recordEngagementDay(db: any, userId: number, now = new Date()) {
+  const today = utcDayStart(now);
+  const existing = await getUserStreakRecord(db, userId);
+
+  if (!existing) {
+    await db.insert(userStreaks).values({
+      userId,
+      currentStreak: 1,
+      longestStreak: 1,
+      lastLoginDate: today,
+      totalDaysEngaged: 1,
+    });
+    return { currentStreak: 1, longestStreak: 1, totalDaysEngaged: 1 };
+  }
+
+  const lastDay = existing.lastLoginDate ? utcDayStart(existing.lastLoginDate) : null;
+  const daysSinceLastEngagement = lastDay
+    ? Math.floor((today.getTime() - lastDay.getTime()) / DAY_MS)
+    : null;
+
+  if (daysSinceLastEngagement === 0) {
+    return {
+      currentStreak: existing.currentStreak,
+      longestStreak: existing.longestStreak,
+      totalDaysEngaged: existing.totalDaysEngaged,
+    };
+  }
+
+  const currentStreak = daysSinceLastEngagement === 1 ? existing.currentStreak + 1 : 1;
+  const longestStreak = Math.max(existing.longestStreak, currentStreak);
+  const totalDaysEngaged = existing.totalDaysEngaged + 1;
+
+  await db
+    .update(userStreaks)
+    .set({ currentStreak, longestStreak, totalDaysEngaged, lastLoginDate: today })
+    .where(eq(userStreaks.userId, userId));
+
+  return { currentStreak, longestStreak, totalDaysEngaged };
+}
+
+/** Award XP and record the award for auditability and future duplicate guards. */
 export async function awardXP(
   userId: number,
   awardType: string,
@@ -18,28 +78,27 @@ export async function awardXP(
     const db = await getDb();
     if (!db) return { awarded: false, reason: "Database not available" };
 
-    // Update leaderboard
-    const leaderboardEntry = await (db as any).query.leaderboard.findFirst({
-      where: eq(leaderboard.userId, userId),
-    });
+    const leaderboardEntry = await db
+      .select()
+      .from(leaderboard)
+      .where(eq(leaderboard.userId, userId))
+      .limit(1);
 
-    if (leaderboardEntry) {
+    if (leaderboardEntry[0]) {
       await db
         .update(leaderboard)
-        .set({
-          points: (leaderboardEntry.points || 0) + amount,
-        })
+        .set({ points: (leaderboardEntry[0].points || 0) + amount })
         .where(eq(leaderboard.userId, userId));
     } else {
-      // Create new leaderboard entry
-      const newEntry: any = {
-        userId,
-        points: amount,
-        userName: "",
-        userEmail: "",
-      };
-      await db.insert(leaderboard).values([newEntry]);
+      await db.insert(leaderboard).values({ userId, points: amount });
     }
+
+    await db.insert(xpAwardsLog).values({
+      userId,
+      awardType,
+      awardAmount: amount,
+      referenceId,
+    });
 
     return { awarded: true, amount };
   } catch (error) {
@@ -48,114 +107,91 @@ export async function awardXP(
   }
 }
 
-// Check if user already got login XP today
+/** Check the immutable daily award log instead of users.lastSignedIn, which is refreshed by ordinary requests. */
 export async function hasReceivedDailyLoginXP(userId: number): Promise<boolean> {
   const db = await getDb();
   if (!db) return false;
 
-  const user = await (db as any).query.users.findFirst({
-    where: eq(users.id, userId),
-  });
+  const today = utcDayStart(new Date());
+  const tomorrow = nextUtcDay(today);
+  const rows = await db
+    .select({ id: xpAwardsLog.id })
+    .from(xpAwardsLog)
+    .where(
+      and(
+        eq(xpAwardsLog.userId, userId),
+        eq(xpAwardsLog.awardType, "daily_login"),
+        gte(xpAwardsLog.awardedAt, today),
+        lt(xpAwardsLog.awardedAt, tomorrow)
+      )
+    )
+    .limit(1);
 
-  if (!user || !user.lastSignedIn) return false;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const lastLogin = new Date(user.lastSignedIn);
-  lastLogin.setHours(0, 0, 0, 0);
-
-  // If lastSignedIn is today, they already got daily XP
-  return lastLogin.getTime() === today.getTime();
+  return rows.length > 0;
 }
 
-// Award daily login XP (only once per day)
+/** Award login XP once per UTC calendar day and update the persisted streak atomically in normal application flow. */
 export async function awardDailyLoginXP(userId: number) {
   const alreadyAwarded = await hasReceivedDailyLoginXP(userId);
   if (alreadyAwarded) {
-    return { awarded: false, reason: "Already awarded today" };
+    return { awarded: false, reason: "Already awarded today", streak: await getUserStreak(userId) };
   }
-  return awardXP(userId, "daily_login", DAILY_LOGIN_XP);
+
+  const result = await awardXP(userId, "daily_login", DAILY_LOGIN_XP);
+  if (!result.awarded) return result;
+
+  const db = await getDb();
+  const streak = db ? await recordEngagementDay(db, userId) : { currentStreak: 0 };
+  return { ...result, streak: streak.currentStreak };
 }
 
-// Award material view XP
 export async function awardMaterialViewXP(userId: number, materialId: number) {
   return awardXP(userId, "material_view", MATERIAL_VIEW_XP, materialId);
 }
 
-// Award session complete XP
 export async function awardSessionCompleteXP(userId: number, sessionId: number) {
   return awardXP(userId, "session_complete", SESSION_COMPLETE_XP, sessionId);
 }
 
-// Award topic complete XP
 export async function awardTopicCompleteXP(userId: number, topicId: number) {
   return awardXP(userId, "topic_complete", TOPIC_COMPLETE_XP, topicId);
 }
 
-// Get user's total XP
 export async function getUserTotalXP(userId: number) {
   const db = await getDb();
   if (!db) return 0;
-  const leaderboardEntry = await (db as any).query.leaderboard.findFirst({
-    where: eq(leaderboard.userId, userId),
-  });
-
-  return leaderboardEntry?.points || 0;
+  const rows = await db
+    .select({ points: leaderboard.points })
+    .from(leaderboard)
+    .where(eq(leaderboard.userId, userId))
+    .limit(1);
+  return rows[0]?.points || 0;
 }
 
-// Get user's login streak (simplified - based on lastSignedIn)
+/** Return the persisted streak, treating a gap of two or more days as broken until the next engagement. */
 export async function getUserStreak(userId: number) {
   const db = await getDb();
-  if (!db) return 1; // Default to 1 if DB not available
-  
+  if (!db) return 0;
+
   try {
-    const user = await (db as any).query.users.findFirst({
-      where: eq(users.id, userId),
-    });
+    const record = await getUserStreakRecord(db, userId);
+    if (!record || !record.lastLoginDate) return 0;
 
-    if (!user) {
-      return 1; // New user gets 1 day streak
-    }
-
-    // If no last signed in, they're new - give them 1 day
-    if (!user.lastSignedIn) {
-      return 1;
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const lastLogin = new Date(user.lastSignedIn);
-    lastLogin.setHours(0, 0, 0, 0);
-
-    const daysDiff = Math.floor((today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
-
-    // If last login was today, they have at least 1 day streak
-    if (daysDiff === 0) {
-      return 1;
-    }
-    
-    // If last login was yesterday, they have 2 day streak
-    if (daysDiff === 1) {
-      return 2;
-    }
-
-    // If more than 1 day since last login, streak is broken
-    return 0;
+    const today = utcDayStart(new Date());
+    const lastDay = utcDayStart(record.lastLoginDate);
+    const daysSinceLastEngagement = Math.floor((today.getTime() - lastDay.getTime()) / DAY_MS);
+    return daysSinceLastEngagement <= 1 ? record.currentStreak : 0;
   } catch (error) {
     console.error("Error getting user streak:", error);
-    return 1; // Default to 1 on error
+    return 0;
   }
 }
 
-// Get user level based on XP
 export async function getUserLevel(userId: number) {
   const totalXP = await getUserTotalXP(userId);
   return Math.floor(totalXP / 500) + 1;
 }
 
-// Get user's XP progress to next level
 export async function getUserXPProgress(userId: number) {
   const totalXP = await getUserTotalXP(userId);
   const currentLevelXP = Math.floor(totalXP / 500) * 500;

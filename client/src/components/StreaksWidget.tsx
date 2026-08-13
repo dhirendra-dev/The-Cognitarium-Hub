@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Flame, Zap } from "lucide-react";
@@ -27,22 +27,24 @@ export function StreaksWidget() {
     staleTime: 1000 * 60 * 5,
   });
   
+  const loginAwardAttempted = useRef(false);
+
   // Mutation
   const awardLoginXP = trpc.streaks.awardLoginXP.useMutation({
     onSuccess: () => {
-      // Refetch data after awarding XP
+      utils.streaks.getStreak.invalidate();
       utils.streaks.getTotalXP.invalidate();
       utils.streaks.getLevel.invalidate();
       utils.streaks.getXPProgress.invalidate();
     },
   });
 
-  // Award login XP on component mount
+  // Award login XP once per mounted session; the server also deduplicates by UTC day.
   useEffect(() => {
-    if (!awardLoginXP.isPending) {
-      awardLoginXP.mutate();
-    }
-  }, []);
+    if (loginAwardAttempted.current) return;
+    loginAwardAttempted.current = true;
+    awardLoginXP.mutate();
+  }, [awardLoginXP]);
 
   // Extract data with fallbacks
   const streak = streakQuery.data?.streak ?? 0;

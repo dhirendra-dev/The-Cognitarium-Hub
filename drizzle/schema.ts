@@ -275,7 +275,7 @@ export const jeeSyllabusTopics = mysqlTable("jeeSyllabusTopics", {
   unit: varchar("unit", { length: 255 }).notNull(),
   topic: varchar("topic", { length: 255 }).notNull(),
   subtopic: varchar("subtopic", { length: 255 }),
-  class: mysqlEnum("class", ["11", "12"]).notNull(),
+  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced"]).notNull(),
   weightage: decimal("weightage", { precision: 5, scale: 2 }),
   difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium"),
   conceptsRequired: text("conceptsRequired"),

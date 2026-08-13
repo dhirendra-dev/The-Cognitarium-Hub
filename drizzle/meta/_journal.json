@@ -176,6 +176,13 @@
       "when": 1780711806523,
       "tag": "0024_yielding_dazzler",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1786637677022,
+      "tag": "0025_aspiring_hemingway",
+      "breakpoints": true
     }
   ]
 }

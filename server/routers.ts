@@ -4,6 +4,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { sdk } from "./_core/sdk";
 import { z } from "zod";
+import { and, asc, eq } from "drizzle-orm";
+import { jeeSyllabusTopics, userTopicProgress } from "../drizzle/schema";
 import {
   createAdminMessage,
   getAllAdminMessages,
@@ -1537,6 +1539,248 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const { getNoticeById } = await import("./db");
         return await getNoticeById(input.noticeId);
+      }),
+  }),
+  syllabus: router({
+    list: protectedProcedure
+      .input(
+        z.object({
+          subject: z.string().optional(),
+          exam: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]).optional(),
+        }).optional()
+      )
+      .query(async ({ ctx, input }) => {
+        const { getDb } = await import("./db");
+        const db = await getDb();
+        if (!db) return [];
+
+        const conditions = [
+          input?.subject ? eq(jeeSyllabusTopics.subject, input.subject) : undefined,
+          input?.exam ? eq(jeeSyllabusTopics.class, input.exam) : undefined,
+        ].filter(Boolean) as any[];
+        const topics = await db
+          .select()
+          .from(jeeSyllabusTopics)
+          .where(conditions.length ? and(...conditions) : undefined)
+          .orderBy(asc(jeeSyllabusTopics.subject), asc(jeeSyllabusTopics.unit), asc(jeeSyllabusTopics.topic));
+        const progress = await db
+          .select()
+          .from(userTopicProgress)
+          .where(eq(userTopicProgress.userId, ctx.user.id));
+        const progressByTopic = new Map(progress.map((entry) => [entry.topicId, entry]));
+
+        return topics.map((topic) => ({
+          ...topic,
+          progress: progressByTopic.get(topic.id) ?? {
+            status: "notStarted" as const,
+            completionPercentage: 0,
+            questionsAttempted: 0,
+            questionsCorrect: 0,
+          },
+        }));
+      }),
+    updateProgress: protectedProcedure
+      .input(
+        z.object({
+          topicId: z.number(),
+          status: z.enum(["notStarted", "inProgress", "completed", "revised"]),
+          completionPercentage: z.number().int().min(0).max(100),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { getDb } = await import("./db");
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+        const topic = await db
+          .select({ id: jeeSyllabusTopics.id })
+          .from(jeeSyllabusTopics)
+          .where(eq(jeeSyllabusTopics.id, input.topicId))
+          .limit(1);
+        if (!topic[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Syllabus topic not found" });
+
+        const existing = await db
+          .select()
+          .from(userTopicProgress)
+          .where(and(eq(userTopicProgress.userId, ctx.user.id), eq(userTopicProgress.topicId, input.topicId)))
+          .limit(1);
+        if (existing[0]) {
+          await db
+            .update(userTopicProgress)
+            .set({ status: input.status, completionPercentage: input.completionPercentage, lastRevisedAt: input.status === "revised" ? new Date() : existing[0].lastRevisedAt })
+            .where(eq(userTopicProgress.id, existing[0].id));
+        } else {
+          await db.insert(userTopicProgress).values({
+            userId: ctx.user.id,
+            topicId: input.topicId,
+            topicType: "jeeSyllabus",
+            status: input.status,
+            completionPercentage: input.completionPercentage,
+            lastRevisedAt: input.status === "revised" ? new Date() : undefined,
+          });
+        }
+
+        if (input.status === "completed" && existing[0]?.status !== "completed") {
+          const { awardTopicCompleteXP } = await import("./streaks-xp");
+          await awardTopicCompleteXP(ctx.user.id, input.topicId);
+        }
+
+        return { success: true };
+      }),
+    create: adminProcedure
+      .input(
+        z.object({
+          subject: z.string().min(1).max(100),
+          unit: z.string().min(1).max(255),
+          topic: z.string().min(1).max(255),
+          subtopic: z.string().max(255).optional(),
+          class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]),
+          weightage: z.number().min(0).max(100).optional(),
+          difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+          conceptsRequired: z.string().max(5000).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const result = await db.insert(jeeSyllabusTopics).values({
+          ...input,
+          weightage: input.weightage === undefined ? undefined : String(input.weightage),
+        });
+        return { id: result[0].insertId };
+      }),
+    update: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          subject: z.string().min(1).max(100).optional(),
+          unit: z.string().min(1).max(255).optional(),
+          topic: z.string().min(1).max(255).optional(),
+          subtopic: z.string().max(255).optional(),
+          class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]).optional(),
+          weightage: z.number().min(0).max(100).optional(),
+          difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+          conceptsRequired: z.string().max(5000).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const { id, weightage, ...changes } = input;
+        await db.update(jeeSyllabusTopics).set({
+          ...changes,
+          weightage: weightage === undefined ? undefined : String(weightage),
+        }).where(eq(jeeSyllabusTopics.id, id));
+        return { success: true };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        await db.delete(jeeSyllabusTopics).where(eq(jeeSyllabusTopics.id, input.id));
+        return { success: true };
+      }),
+  }),
+  dpp: router({
+    generate: protectedProcedure
+      .input(
+        z.object({
+          subject: z.enum(["Physics", "Chemistry", "Mathematics"]),
+          chapter: z.string().min(1).max(255),
+          difficulty: z.enum(["JEE Main", "JEE Advanced"]),
+          count: z.number().int().min(3).max(10).default(5),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a careful JEE PCM question setter. Return only valid JSON matching the requested schema. Questions must be self-contained, have exactly four options, exactly one correct option, and include a concise explanation suitable for a student.",
+            },
+            {
+              role: "user",
+              content: `Create ${input.count} original multiple-choice Daily Practice Problems for ${input.subject}, chapter ${input.chapter}, at ${input.difficulty} level. Mix conceptual and numerical questions. Do not invent syllabus claims outside the named chapter.`,
+            },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "daily_practice_set",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  questions: {
+                    type: "array",
+                    minItems: 3,
+                    maxItems: 10,
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string" },
+                        question: { type: "string" },
+                        options: {
+                          type: "array",
+                          minItems: 4,
+                          maxItems: 4,
+                          items: { type: "string" },
+                        },
+                        correctAnswer: { type: "integer", minimum: 0, maximum: 3 },
+                        explanation: { type: "string" },
+                      },
+                      required: ["id", "question", "options", "correctAnswer", "explanation"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ["questions"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        const content = response.choices[0]?.message.content;
+        if (typeof content !== "string") {
+          throw new Error("DPP generation returned an invalid response.");
+        }
+
+        const parsed = JSON.parse(content) as {
+          questions?: Array<{
+            id: string;
+            question: string;
+            options: string[];
+            correctAnswer: number;
+            explanation: string;
+          }>;
+        };
+        const questions = parsed.questions ?? [];
+        if (
+          questions.length < 3 ||
+          questions.some(
+            (question) =>
+              question.options.length !== 4 ||
+              question.correctAnswer < 0 ||
+              question.correctAnswer > 3
+          )
+        ) {
+          throw new Error("DPP generation returned incomplete questions. Please try again.");
+        }
+
+        return {
+          id: `dpp-${Date.now()}`,
+          subject: input.subject,
+          chapter: input.chapter,
+          difficulty: input.difficulty,
+          generatedAt: new Date().toISOString(),
+          questions,
+        };
       }),
   }),
   streaks: router({

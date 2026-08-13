@@ -281,6 +281,64 @@ describe("AI Router", () => {
   }, { timeout: 10000 });
 });
 
+describe("Syllabus Router", () => {
+  it("returns the current syllabus list for the authenticated user", async () => {
+    const caller = appRouter.createCaller(createMockContext());
+    const syllabus = await caller.syllabus.list({});
+    expect(Array.isArray(syllabus)).toBe(true);
+  });
+
+  it("rejects syllabus mutations for non-admin users", async () => {
+    const caller = appRouter.createCaller(createMockContext());
+    await expect(
+      caller.syllabus.create({
+        subject: "Physics",
+        unit: "Mechanics",
+        topic: "Kinematics",
+        class: "jeeMain",
+      })
+    ).rejects.toThrow();
+  });
+
+  it("rejects progress updates for a missing syllabus topic", async () => {
+    const caller = appRouter.createCaller(createMockContext());
+    await expect(
+      caller.syllabus.updateProgress({
+        topicId: 999999999,
+        status: "completed",
+        completionPercentage: 100,
+      })
+    ).rejects.toThrow();
+  });
+});
+
+describe("DPP Router", () => {
+  it("rejects an invalid DPP question count before calling the model", async () => {
+    const caller = appRouter.createCaller(createMockContext());
+
+    await expect(
+      caller.dpp.generate({
+        subject: "Physics",
+        chapter: "Mechanics",
+        difficulty: "JEE Main",
+        count: 2,
+      })
+    ).rejects.toThrow();
+  });
+});
+
+describe("Streaks Router", () => {
+  it("returns a numeric streak and prevents repeated daily login awards", async () => {
+    const caller = appRouter.createCaller(createMockContext());
+    const streak = await caller.streaks.getStreak();
+    expect(typeof streak.streak).toBe("number");
+
+    await caller.streaks.awardLoginXP();
+    const secondAward = await caller.streaks.awardLoginXP();
+    expect(secondAward.awarded).toBe(false);
+  }, { timeout: 10000 });
+});
+
 describe("Auth Router", () => {
   it("should get current user", async () => {
     const ctx = createMockContext();

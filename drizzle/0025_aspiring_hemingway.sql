@@ -1,0 +1,1 @@
+ALTER TABLE `jeeSyllabusTopics` MODIFY COLUMN `class` enum('11','12','jeeMain','jeeAdvanced') NOT NULL;

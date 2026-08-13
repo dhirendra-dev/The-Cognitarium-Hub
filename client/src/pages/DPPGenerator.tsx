@@ -1,325 +1,207 @@
-import React, { useState } from 'react';
-import { BookOpen, Loader, CheckCircle2, AlertCircle, Download } from 'lucide-react';
+import { useMemo, useState } from "react";
+import { AlertCircle, BookOpen, CheckCircle2, Download, Loader, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
-interface DPPQuestion {
+const CHAPTERS = {
+  Physics: ["Mechanics", "Thermodynamics", "Waves and Oscillations", "Electrostatics", "Current Electricity", "Optics", "Modern Physics"],
+  Chemistry: ["Some Basic Concepts of Chemistry", "Chemical Bonding", "Thermodynamics", "Equilibrium", "Organic Chemistry", "Coordination Chemistry", "Electrochemistry"],
+  Mathematics: ["Sets, Relations and Functions", "Algebra", "Coordinate Geometry", "Calculus", "Vectors and Three-Dimensional Geometry", "Probability", "Trigonometry"],
+} as const;
+
+type Subject = keyof typeof CHAPTERS;
+type Question = {
   id: string;
   question: string;
   options: string[];
   correctAnswer: number;
   explanation: string;
-}
-
-interface DPP {
+};
+type DPP = {
   id: string;
-  subject: string;
+  subject: Subject;
   chapter: string;
-  difficulty: string;
-  questions: DPPQuestion[];
+  difficulty: "JEE Main" | "JEE Advanced";
   generatedAt: string;
-}
-
-const CHAPTERS = {
-  physics: [
-    'Rotational Dynamics',
-    'Thermodynamics',
-    'Waves & Acoustics',
-    'Gravitation',
-    'SHM'
-  ],
-  chemistry: [
-    'Chemical Bonding',
-    'Ionic Equilibrium',
-    'Redox Reactions',
-    'Organic Chemistry',
-    'Thermochemistry'
-  ],
-  math: [
-    'Conic Sections',
-    'Permutations & Combinations',
-    'Limits & Continuity',
-    'Trigonometry',
-    'Coordinate Geometry'
-  ]
+  questions: Question[];
 };
 
 export default function DPPGenerator() {
-  const [config, setConfig] = useState({
-    subject: 'physics',
-    chapter: 'Rotational Dynamics',
-    difficulty: 'Mains' as 'Mains' | 'Advanced'
-  });
-  const [loading, setLoading] = useState(false);
-  const [generatedDpp, setGeneratedDpp] = useState<DPP | null>(null);
-  const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
+  const [subject, setSubject] = useState<Subject>("Physics");
+  const [chapter, setChapter] = useState<string>(CHAPTERS.Physics[0]);
+  const [difficulty, setDifficulty] = useState<"JEE Main" | "JEE Advanced">("JEE Main");
+  const [dpp, setDpp] = useState<DPP | null>(null);
+  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [showSolutions, setShowSolutions] = useState(false);
-
-  const handleGenerateDPP = async () => {
-    setLoading(true);
-    try {
-      // Simulate DPP generation - in production, call API
-      const mockDpp: DPP = {
-        id: `dpp-${Date.now()}`,
-        subject: config.subject,
-        chapter: config.chapter,
-        difficulty: config.difficulty,
-        generatedAt: new Date().toLocaleString(),
-        questions: [
-          {
-            id: 'q1',
-            question: `A solid cylinder of mass M and radius R rolls without slipping on a horizontal surface with velocity v_cm. What is the total kinetic energy?`,
-            options: [
-              '(1/2)Mv_cm²',
-              '(3/4)Mv_cm²',
-              '(1/4)Mv_cm²',
-              '(5/4)Mv_cm²'
-            ],
-            correctAnswer: 1,
-            explanation: 'For rolling without slipping: KE_total = KE_translational + KE_rotational = (1/2)Mv_cm² + (1/2)Iω². For a solid cylinder, I = (1/2)MR² and ω = v_cm/R, so KE_rotational = (1/4)Mv_cm². Total = (3/4)Mv_cm².'
-          },
-          {
-            id: 'q2',
-            question: 'In an adiabatic process for an ideal gas, which relation holds true?',
-            options: [
-              'PV = constant',
-              'PV^γ = constant',
-              'TV^(γ-1) = constant',
-              'Both B and C'
-            ],
-            correctAnswer: 3,
-            explanation: 'For an adiabatic process (Q = 0), we have PV^γ = constant and TV^(γ-1) = constant. Both are equivalent relations derived from the first law of thermodynamics.'
-          },
-          {
-            id: 'q3',
-            question: 'What is the steric number for a carbon atom in sp³ hybridization?',
-            options: [
-              '2',
-              '3',
-              '4',
-              '5'
-            ],
-            correctAnswer: 2,
-            explanation: 'Steric Number = (number of σ bonds) + (number of lone pairs). For sp³ hybridization with 4 σ bonds and 0 lone pairs, SN = 4.'
-          }
-        ]
-      };
-
-      setGeneratedDpp(mockDpp);
-      setUserAnswers({});
+  const generateMutation = trpc.dpp.generate.useMutation({
+    onSuccess: (data) => {
+      setDpp(data as DPP);
+      setAnswers({});
       setShowSolutions(false);
-    } catch (error) {
-      console.error('Error generating DPP:', error);
-    } finally {
-      setLoading(false);
-    }
+      toast.success("Your practice set is ready.");
+    },
+    onError: (error) => toast.error(error.message || "Could not generate the practice set."),
+  });
+
+  const score = useMemo(() => {
+    if (!dpp) return 0;
+    const attempted = dpp.questions.filter((question) => answers[question.id] !== undefined);
+    if (!attempted.length) return 0;
+    const correct = attempted.filter((question) => answers[question.id] === question.correctAnswer).length;
+    return Math.round((correct / dpp.questions.length) * 100);
+  }, [answers, dpp]);
+
+  const selectSubject = (nextSubject: Subject) => {
+    setSubject(nextSubject);
+    setChapter(CHAPTERS[nextSubject][0]);
   };
 
-  const handleAnswerSelect = (questionId: string, optionIndex: number) => {
-    setUserAnswers(prev => ({
-      ...prev,
-      [questionId]: optionIndex
-    }));
+  const generate = () => {
+    generateMutation.mutate({ subject, chapter, difficulty, count: 5 });
   };
 
-  const calculateScore = () => {
-    if (!generatedDpp) return 0;
-    let correct = 0;
-    generatedDpp.questions.forEach(q => {
-      if (userAnswers[q.id] === q.correctAnswer) {
-        correct++;
-      }
-    });
-    return Math.round((correct / generatedDpp.questions.length) * 100);
+  const downloadDpp = () => {
+    if (!dpp) return;
+    const content = [
+      `${dpp.subject} — ${dpp.chapter}`,
+      `${dpp.difficulty} | Generated ${new Date(dpp.generatedAt).toLocaleString()}`,
+      "",
+      ...dpp.questions.flatMap((question, index) => [
+        `${index + 1}. ${question.question}`,
+        ...question.options.map((option, optionIndex) => `   ${String.fromCharCode(65 + optionIndex)}. ${option}`),
+        `   Answer: ${String.fromCharCode(65 + question.correctAnswer)}`,
+        `   Explanation: ${question.explanation}`,
+        "",
+      ]),
+    ].join("\n");
+    const url = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${dpp.subject}-${dpp.chapter.replace(/[^a-z0-9]+/gi, "-")}-dpp.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <BookOpen className="w-8 h-8 text-green-400" />
-            <h1 className="text-4xl font-bold text-white">DPP Generator</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4 md:p-6">
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-8">
+          <div className="mb-2 flex items-center gap-3">
+            <BookOpen className="h-8 w-8 text-emerald-300" aria-hidden="true" />
+            <h1 className="text-3xl font-bold text-white">DPP Generator</h1>
           </div>
-          <p className="text-slate-300">Daily Practice Problems - Customized for Your Level</p>
-        </div>
+          <p className="text-slate-300">Generate a fresh Daily Practice Problem set for a focused chapter.</p>
+        </header>
 
-        {!generatedDpp ? (
-          // Configuration Panel
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 space-y-6">
-            {/* Subject Selection */}
+        {!dpp ? (
+          <section className="space-y-6 rounded-xl border border-slate-700 bg-slate-900/80 p-5 shadow-2xl md:p-8">
             <div>
-              <label className="block text-white font-semibold mb-3">Subject</label>
-              <div className="flex gap-3">
-                {(['physics', 'chemistry', 'math'] as const).map((subject) => (
+              <p className="mb-3 text-sm font-semibold text-slate-200">Subject</p>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(CHAPTERS) as Subject[]).map((item) => (
                   <button
-                    key={subject}
-                    onClick={() => setConfig(prev => ({
-                      ...prev,
-                      subject,
-                      chapter: CHAPTERS[subject][0]
-                    }))}
-                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                      config.subject === subject
-                        ? 'bg-green-600 text-white shadow-lg'
-                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                    }`}
+                    key={item}
+                    type="button"
+                    onClick={() => selectSubject(item)}
+                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${subject === item ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"}`}
                   >
-                    {subject.charAt(0).toUpperCase() + subject.slice(1)}
+                    {item}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Chapter Selection */}
             <div>
-              <label className="block text-white font-semibold mb-3">Chapter</label>
+              <label htmlFor="dpp-chapter" className="mb-2 block text-sm font-semibold text-slate-200">Chapter</label>
               <select
-                value={config.chapter}
-                onChange={(e) => setConfig(prev => ({...prev, chapter: e.target.value}))}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500"
+                id="dpp-chapter"
+                value={chapter}
+                onChange={(event) => setChapter(event.target.value)}
+                className="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-white outline-none focus:border-emerald-400"
               >
-                {CHAPTERS[config.subject as keyof typeof CHAPTERS].map((ch) => (
-                  <option key={ch} value={ch}>{ch}</option>
-                ))}
+                {CHAPTERS[subject].map((item) => <option key={item} value={item}>{item}</option>)}
               </select>
             </div>
 
-            {/* Difficulty Selection */}
             <div>
-              <label className="block text-white font-semibold mb-3">Difficulty Level</label>
-              <div className="flex gap-3">
-                {(['Mains', 'Advanced'] as const).map((diff) => (
+              <p className="mb-3 text-sm font-semibold text-slate-200">Difficulty</p>
+              <div className="flex gap-2">
+                {(["JEE Main", "JEE Advanced"] as const).map((item) => (
                   <button
-                    key={diff}
-                    onClick={() => setConfig(prev => ({...prev, difficulty: diff}))}
-                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                      config.difficulty === diff
-                        ? 'bg-green-600 text-white shadow-lg'
-                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                    }`}
+                    key={item}
+                    type="button"
+                    onClick={() => setDifficulty(item)}
+                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${difficulty === item ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"}`}
                   >
-                    {diff}
+                    {item}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Generate Button */}
             <button
-              onClick={handleGenerateDPP}
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 disabled:bg-slate-600 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
+              type="button"
+              onClick={generate}
+              disabled={generateMutation.isPending}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-slate-700"
             >
-              {loading ? (
-                <>
-                  <Loader className="w-5 h-5 animate-spin" />
-                  Generating DPP...
-                </>
-              ) : (
-                <>
-                  <BookOpen className="w-5 h-5" />
-                  Generate DPP
-                </>
-              )}
+              {generateMutation.isPending ? <><Loader className="h-5 w-5 animate-spin" /> Generating with Manus AI…</> : <><BookOpen className="h-5 w-5" /> Generate DPP</>}
             </button>
-          </div>
+            <p className="text-xs text-slate-400">The questions are generated on demand and validated for four options and one answer key.</p>
+          </section>
         ) : (
-          // DPP Display Panel
-          <div className="space-y-6">
-            {/* Header Info */}
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-slate-400 text-sm">Subject</p>
-                  <p className="text-white font-semibold text-lg capitalize">{generatedDpp.subject}</p>
-                </div>
-                <div>
-                  <p className="text-slate-400 text-sm">Chapter</p>
-                  <p className="text-white font-semibold text-lg">{generatedDpp.chapter}</p>
-                </div>
-                <div>
-                  <p className="text-slate-400 text-sm">Difficulty</p>
-                  <p className="text-white font-semibold text-lg">{generatedDpp.difficulty}</p>
-                </div>
+          <section className="space-y-5">
+            <div className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm text-slate-400">{dpp.difficulty} · {new Date(dpp.generatedAt).toLocaleString()}</p>
+                <h2 className="mt-1 text-2xl font-bold text-white">{dpp.subject}: {dpp.chapter}</h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={downloadDpp} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"><Download className="h-4 w-4" /> Download</button>
+                <button type="button" onClick={() => setDpp(null)} className="inline-flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-700"><RotateCcw className="h-4 w-4" /> New DPP</button>
               </div>
             </div>
 
-            {/* Questions */}
-            <div className="space-y-6">
-              {generatedDpp.questions.map((question, idx) => (
-                <div key={question.id} className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-                  <h3 className="text-white font-semibold mb-4">Q{idx + 1}: {question.question}</h3>
-                  
-                  <div className="space-y-2 mb-4">
-                    {question.options.map((option, optIdx) => (
+            {dpp.questions.map((question, index) => (
+              <article key={question.id} className="rounded-xl border border-slate-700 bg-slate-900/80 p-5 shadow-xl">
+                <h3 className="font-semibold leading-relaxed text-white">Q{index + 1}. {question.question}</h3>
+                <div className="mt-4 grid gap-2 md:grid-cols-2">
+                  {question.options.map((option, optionIndex) => {
+                    const selected = answers[question.id] === optionIndex;
+                    const correct = showSolutions && optionIndex === question.correctAnswer;
+                    const incorrect = showSolutions && selected && !correct;
+                    return (
                       <button
-                        key={optIdx}
-                        onClick={() => handleAnswerSelect(question.id, optIdx)}
-                        className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
-                          userAnswers[question.id] === optIdx
-                            ? 'bg-blue-600/20 border-blue-500 text-blue-300'
-                            : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:border-slate-500'
-                        }`}
+                        key={optionIndex}
+                        type="button"
+                        onClick={() => !showSolutions && setAnswers((previous) => ({ ...previous, [question.id]: optionIndex }))}
+                        className={`rounded-lg border px-4 py-3 text-left text-sm transition ${correct ? "border-emerald-400 bg-emerald-900/50 text-emerald-100" : incorrect ? "border-red-400 bg-red-950/50 text-red-100" : selected ? "border-blue-400 bg-blue-950/50 text-blue-100" : "border-slate-600 bg-slate-800/70 text-slate-300 hover:border-slate-400"}`}
                       >
-                        <span className="font-semibold">{String.fromCharCode(65 + optIdx)}.</span> {option}
+                        <span className="mr-2 font-semibold">{String.fromCharCode(65 + optionIndex)}.</span>{option}
                       </button>
-                    ))}
-                  </div>
-
-                  {showSolutions && (
-                    <div className={`p-4 rounded-lg ${
-                      userAnswers[question.id] === question.correctAnswer
-                        ? 'bg-green-600/20 border border-green-600'
-                        : 'bg-red-600/20 border border-red-600'
-                    }`}>
-                      <p className="text-sm font-semibold mb-2">
-                        {userAnswers[question.id] === question.correctAnswer ? (
-                          <span className="text-green-300 flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4" /> Correct!
-                          </span>
-                        ) : (
-                          <span className="text-red-300 flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4" /> Incorrect
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-slate-200 text-sm">{question.explanation}</p>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+                {showSolutions && (
+                  <div className="mt-4 rounded-lg border border-slate-700 bg-slate-800/60 p-4 text-sm text-slate-200">
+                    <p className="mb-2 inline-flex items-center gap-2 font-semibold text-emerald-300"><CheckCircle2 className="h-4 w-4" /> Explanation</p>
+                    <p>{question.explanation}</p>
+                  </div>
+                )}
+              </article>
+            ))}
 
-            {/* Action Buttons */}
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowSolutions(!showSolutions)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-colors"
-              >
-                {showSolutions ? 'Hide Solutions' : 'Show Solutions'}
-              </button>
-              <button
-                onClick={() => setGeneratedDpp(null)}
-                className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg font-semibold transition-colors"
-              >
-                Generate New DPP
-              </button>
-              <button
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                Download
-              </button>
-            </div>
-
-            {/* Score Display */}
-            {showSolutions && (
-              <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 text-center">
-                <p className="text-slate-400 mb-2">Your Score</p>
-                <p className="text-4xl font-bold text-green-400">{calculateScore()}%</p>
+            <div className="flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/80 p-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm text-slate-400">Score</p>
+                <p className="text-3xl font-bold text-emerald-300">{score}%</p>
+                {!showSolutions && <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-400"><AlertCircle className="h-3.5 w-3.5" /> Submit your choices by revealing solutions.</p>}
               </div>
-            )}
-          </div>
+              <button type="button" onClick={() => setShowSolutions((value) => !value)} className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-500">
+                {showSolutions ? "Hide Solutions" : "Reveal Solutions"}
+              </button>
+            </div>
+          </section>
         )}
       </div>
     </div>
