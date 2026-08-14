@@ -23,6 +23,7 @@ import {
   Sparkles,
   Swords,
   Target,
+  Zap,
   Trophy,
   Users,
   X,
@@ -45,6 +46,9 @@ const navGroups = [
     label: "Practice",
     items: [
       { label: "Practice lab", path: "/dpp-generator", icon: Swords },
+      { label: "Speed drills", path: "/speed-drills", icon: Zap },
+      { label: "Formula sheets", path: "/formula-sheets", icon: BookMarked },
+      { label: "PYQ archive", path: "/pyq-archive", icon: BookOpen },
       { label: "CBT review", path: "/cbt-review", icon: Gauge },
       { label: "Concept vault", path: "/concept-vault", icon: Lightbulb },
       { label: "Chat coach", path: "/chat-coach", icon: MessageCircle },

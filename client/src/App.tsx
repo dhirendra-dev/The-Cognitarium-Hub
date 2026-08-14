@@ -24,6 +24,9 @@ import Certificates from "./pages/Certificates";
 import ContactCollection from "./pages/ContactCollection";
 import Login from "./pages/Login";
 import StudyMaterials from "./pages/StudyMaterials";
+import FormulaSheetsPage from "./pages/FormulaSheetsPage";
+import PyqArchivePage from "./pages/PyqArchivePage";
+import SpeedDrillsPage from "./pages/SpeedDrillsPage";
 import Home from "./pages/Home";
 import CommunityToppers from "./pages/CommunityToppers";
 import Analytics from "./pages/Analytics";
@@ -61,6 +64,9 @@ function DashboardRouter() {
       <Route path={"/study-links"} component={StudyLinks} />
       <Route path={"/certificates"} component={Certificates} />
       <Route path={"/study-materials"} component={StudyMaterials} />
+      <Route path={"/formula-sheets"} component={FormulaSheetsPage} />
+      <Route path={"/pyq-archive"} component={PyqArchivePage} />
+      <Route path={"/speed-drills"} component={SpeedDrillsPage} />
       <Route path={"/community-toppers"} component={CommunityToppers} />
       <Route path={"/analytics"} component={Analytics} />
       <Route path={"/concept-vault"} component={ConceptVault} />

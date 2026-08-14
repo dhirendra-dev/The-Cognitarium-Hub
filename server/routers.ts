@@ -5,7 +5,7 @@ import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { sdk } from "./_core/sdk";
 import { getConfiguredAdminUser } from "./auth";
 import { z } from "zod";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { jeeSyllabusTopics, syllabusChapters, userTopicProgress } from "../drizzle/schema";
 import {
   createAdminMessage,
@@ -1919,6 +1919,71 @@ export const appRouter = router({
       level: z.enum(["foundation", "developing", "examReady", "advanced"]),
       questionCount: z.number().int().min(1).max(100),
     })).mutation(({ ctx, input }) => saveDiagnosticPlacement({ userId: ctx.user.id, ...input })),
+  }),
+  formulaSheets: router({
+    list: publicProcedure.input(z.object({ subject: z.string().optional() }).optional()).query(async ({ input }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) return [];
+      const { formulaSheets, formulaBookmarks } = await import("../drizzle/schema");
+      return db.select().from(formulaSheets).orderBy(asc(formulaSheets.subject), asc(formulaSheets.title));
+    }),
+    bookmarks: protectedProcedure.query(async ({ ctx }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) return [];
+      const { formulaBookmarks, formulaSheets } = await import("../drizzle/schema");
+      const rows = await db.select().from(formulaBookmarks).where(eq(formulaBookmarks.userId, ctx.user.id));
+      return rows;
+    }),
+    toggleBookmark: protectedProcedure.input(z.object({ formulaSheetId: z.number() })).mutation(async ({ ctx, input }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const { formulaBookmarks } = await import("../drizzle/schema");
+      const existing = await db.select().from(formulaBookmarks).where(and(eq(formulaBookmarks.userId, ctx.user.id), eq(formulaBookmarks.formulaSheetId, input.formulaSheetId)));
+      if (existing.length > 0) {
+        await db.delete(formulaBookmarks).where(eq(formulaBookmarks.id, existing[0].id));
+        return { bookmarked: false };
+      } else {
+        await db.insert(formulaBookmarks).values({ userId: ctx.user.id, formulaSheetId: input.formulaSheetId });
+        return { bookmarked: true };
+      }
+    }),
+    adminCreate: adminProcedure.input(z.object({ subject: z.string(), title: z.string(), contentMarkdown: z.string(), keyFormulas: z.string().optional(), shortcuts: z.string().optional(), difficulty: z.enum(["easy", "medium", "hard"]).optional() })).mutation(async ({ input }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const { formulaSheets } = await import("../drizzle/schema");
+      const res = await db.insert(formulaSheets).values(input);
+      return { id: res[0].insertId };
+    }),
+  }),
+  pyqArchive: router({
+    list: publicProcedure.input(z.object({ subject: z.string().optional(), examYear: z.number().optional() }).optional()).query(async ({ input }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) return [];
+      const { pyqArchive } = await import("../drizzle/schema");
+      return db.select().from(pyqArchive).orderBy(desc(pyqArchive.examYear), asc(pyqArchive.subject), asc(pyqArchive.questionNumber));
+    }),
+  }),
+  speedDrills: router({
+    history: protectedProcedure.query(async ({ ctx }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) return [];
+      const { speedDrills } = await import("../drizzle/schema");
+      return db.select().from(speedDrills).where(eq(speedDrills.userId, ctx.user.id)).orderBy(desc(speedDrills.completedAt)).limit(20);
+    }),
+    record: protectedProcedure.input(z.object({ subject: z.string(), mode: z.enum(["lightning15", "sprint30", "marathon60"]), questionsAttempted: z.number(), correctCount: z.number(), timeTakenSeconds: z.number(), accuracyPercent: z.number() })).mutation(async ({ ctx, input }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const { speedDrills } = await import("../drizzle/schema");
+      const res = await db.insert(speedDrills).values({ userId: ctx.user.id, ...input, accuracyPercent: String(input.accuracyPercent) });
+      return { id: res[0].insertId };
+    }),
   }),
   doubts: router({
     list: protectedProcedure.query(({ ctx }) => getDoubtsByUser(ctx.user.id)),

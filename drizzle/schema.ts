@@ -892,3 +892,68 @@ export const doubts = mysqlTable("doubts", {
 
 export type Doubt = typeof doubts.$inferSelect;
 export type InsertDoubt = typeof doubts.$inferInsert;
+
+// JEE Formula Sheets & Quick Revision Cards
+export const formulaSheets = mysqlTable("formulaSheets", {
+  id: int("id").autoincrement().primaryKey(),
+  subject: varchar("subject", { length: 100 }).notNull(), // Physics, Chemistry, Mathematics
+  chapterId: int("chapterId"),
+  title: varchar("title", { length: 255 }).notNull(),
+  contentMarkdown: text("contentMarkdown").notNull(),
+  keyFormulas: text("keyFormulas"), // JSON list or formatted text
+  shortcuts: text("shortcuts"), // Exam shortcuts and tips
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FormulaSheet = typeof formulaSheets.$inferSelect;
+export type InsertFormulaSheet = typeof formulaSheets.$inferInsert;
+
+// User Formula Bookmarks
+export const formulaBookmarks = mysqlTable("formulaBookmarks", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  formulaSheetId: int("formulaSheetId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FormulaBookmark = typeof formulaBookmarks.$inferSelect;
+export type InsertFormulaBookmark = typeof formulaBookmarks.$inferInsert;
+
+// PYQ (Previous Year Questions) Archives
+export const pyqArchive = mysqlTable("pyqArchive", {
+  id: int("id").autoincrement().primaryKey(),
+  examYear: int("examYear").notNull(), // e.g., 2025, 2024, 2023
+  examSession: varchar("examSession", { length: 100 }).notNull(), // e.g., "Jan Shift 1", "April Shift 2"
+  subject: varchar("subject", { length: 100 }).notNull(),
+  questionNumber: int("questionNumber").notNull(),
+  questionText: text("questionText").notNull(),
+  optionA: text("optionA").notNull(),
+  optionB: text("optionB").notNull(),
+  optionC: text("optionC").notNull(),
+  optionD: text("optionD").notNull(),
+  correctOption: mysqlEnum("correctOption", ["A", "B", "C", "D"]).notNull(),
+  solutionMarkdown: text("solutionMarkdown").notNull(),
+  weightageTags: varchar("weightageTags", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PyqArchive = typeof pyqArchive.$inferSelect;
+export type InsertPyqArchive = typeof pyqArchive.$inferInsert;
+
+// Speed Drills / Topic Sprint Records
+export const speedDrills = mysqlTable("speedDrills", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  mode: mysqlEnum("mode", ["lightning15", "sprint30", "marathon60"]).notNull(),
+  questionsAttempted: int("questionsAttempted").notNull(),
+  correctCount: int("correctCount").notNull(),
+  timeTakenSeconds: int("timeTakenSeconds").notNull(),
+  accuracyPercent: decimal("accuracyPercent", { precision: 5, scale: 2 }).notNull(),
+  completedAt: timestamp("completedAt").defaultNow().notNull(),
+});
+
+export type SpeedDrill = typeof speedDrills.$inferSelect;
+export type InsertSpeedDrill = typeof speedDrills.$inferInsert;
