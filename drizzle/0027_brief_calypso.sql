@@ -1,0 +1,1 @@
+ALTER TABLE `testSeries` ADD `syllabusTopicId` int;

@@ -2114,3 +2114,153 @@ export async function getSquadDashboard(userId: number) {
   }
   return results;
 }
+
+
+export async function getCommunityGroups() {
+  const db = await getDb();
+  if (!db) return [];
+  const groups = await db.select().from(communityGroups).where(eq(communityGroups.isActive, true)).orderBy(asc(communityGroups.name));
+  const links = await db.select().from(groupLinks).where(eq(groupLinks.isActive, true)).orderBy(asc(groupLinks.title));
+  return groups.map((group) => ({ ...group, links: links.filter((link) => link.groupId === group.id) }));
+}
+
+export async function getAllCommunityGroups() {
+  const db = await getDb();
+  if (!db) return [];
+  const [groups, links] = await Promise.all([db.select().from(communityGroups).orderBy(asc(communityGroups.name)), db.select().from(groupLinks).orderBy(asc(groupLinks.title))]);
+  return groups.map((group) => ({ ...group, links: links.filter((link) => link.groupId === group.id) }));
+}
+
+export async function createCommunityGroup(input: { name: string; description?: string; type: "telegram" | "whatsapp" | "discord" | "other"; createdBy: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(communityGroups).values(input);
+  const rows = await db.select().from(communityGroups).where(eq(communityGroups.id, Number(result[0].insertId))).limit(1);
+  return rows[0];
+}
+
+export async function createGroupLink(input: { groupId: number; title: string; url: string; subject?: string; class: "11" | "12" | "jeeMain" | "jeeAdvanced"; createdBy: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(groupLinks).values(input);
+  const rows = await db.select().from(groupLinks).where(eq(groupLinks.id, Number(result[0].insertId))).limit(1);
+  return rows[0];
+}
+
+export async function setGroupActive(input: { id: number; isActive: boolean }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(communityGroups).set({ isActive: input.isActive }).where(eq(communityGroups.id, input.id));
+  return { success: true };
+}
+
+export async function deleteGroupLink(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(groupLinks).set({ isActive: false }).where(eq(groupLinks.id, id));
+  return { success: true };
+}
+
+export async function getPublishedTestSeries() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(testSeries).where(eq(testSeries.isPublished, true)).orderBy(desc(testSeries.createdAt));
+}
+
+export async function getAllTestSeries() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(testSeries).orderBy(desc(testSeries.createdAt));
+}
+
+export async function getTestSeriesWithQuestions(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const series = await db.select().from(testSeries).where(eq(testSeries.id, id)).limit(1);
+  if (!series[0]) return undefined;
+  const questions = await db.select().from(testSeriesQuestions).where(eq(testSeriesQuestions.testSeriesId, id)).orderBy(asc(testSeriesQuestions.id));
+  return { ...series[0], questions };
+}
+
+export async function createTestSeries(input: { title: string; description?: string; subject: string; syllabusTopicId?: number; class: "11" | "12" | "jeeMain" | "jeeAdvanced"; totalQuestions: number; duration: number; createdBy: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(testSeries).values(input);
+  const rows = await db.select().from(testSeries).where(eq(testSeries.id, Number(result[0].insertId))).limit(1);
+  return rows[0];
+}
+
+export async function addTestSeriesQuestion(input: { testSeriesId: number; questionText: string; optionA: string; optionB: string; optionC: string; optionD: string; correctOption: "A" | "B" | "C" | "D"; explanation?: string; difficulty?: "easy" | "medium" | "hard" }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(testSeriesQuestions).values(input);
+  return result[0].insertId;
+}
+
+export async function publishTestSeries(id: number, isPublished: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(testSeries).set({ isPublished }).where(eq(testSeries.id, id));
+  return { success: true };
+}
+
+
+export async function recordTestSeriesAttempt(input: { userId: number; testSeriesId: number; score: number; totalQuestions: number; correctAnswers: number; wrongAnswers: number; skippedQuestions: number; timeTaken?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(userTestAttempts).values({ ...input, score: String(input.score) });
+  return { id: Number(result[0].insertId), ...input };
+}
+
+
+export async function updateCommunityGroup(input: { id: number; name: string; description?: string; type: "telegram" | "whatsapp" | "discord" | "other" }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(communityGroups).set({ name: input.name, description: input.description, type: input.type }).where(eq(communityGroups.id, input.id));
+  return { success: true };
+}
+
+export async function updateGroupLink(input: { id: number; title: string; url: string; subject?: string; class: "11" | "12" | "jeeMain" | "jeeAdvanced" }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(groupLinks).set({ title: input.title, url: input.url, subject: input.subject, class: input.class }).where(eq(groupLinks.id, input.id));
+  return { success: true };
+}
+
+export async function updateTestSeries(input: { id: number; title: string; description?: string; subject: string; syllabusTopicId?: number; class: "11" | "12" | "jeeMain" | "jeeAdvanced"; totalQuestions: number; duration: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(testSeries).set({ title: input.title, description: input.description, subject: input.subject, syllabusTopicId: input.syllabusTopicId, class: input.class, totalQuestions: input.totalQuestions, duration: input.duration }).where(eq(testSeries.id, input.id));
+  return { success: true };
+}
+
+export async function deleteTestSeries(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.delete(testSeriesQuestions).where(eq(testSeriesQuestions.testSeriesId, id));
+  await db.delete(testSeries).where(eq(testSeries.id, id));
+  return { success: true };
+}
+
+export async function updateTestSeriesQuestion(input: { id: number; questionText: string; optionA: string; optionB: string; optionC: string; optionD: string; correctOption: "A" | "B" | "C" | "D"; explanation?: string; difficulty?: "easy" | "medium" | "hard" }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(testSeriesQuestions).set({ questionText: input.questionText, optionA: input.optionA, optionB: input.optionB, optionC: input.optionC, optionD: input.optionD, correctOption: input.correctOption, explanation: input.explanation, difficulty: input.difficulty }).where(eq(testSeriesQuestions.id, input.id));
+  return { success: true };
+}
+
+export async function deleteTestSeriesQuestion(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.delete(testSeriesQuestions).where(eq(testSeriesQuestions.id, id));
+  return { success: true };
+}
+
+
+export async function deleteCommunityGroup(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(communityGroups).set({ isActive: false }).where(eq(communityGroups.id, id));
+  await db.update(groupLinks).set({ isActive: false }).where(eq(groupLinks.groupId, id));
+  return { success: true };
+}

@@ -10,6 +10,7 @@ import { useLocation } from "wouter";
 import { AdminCertificateManager } from "@/components/AdminCertificateManager";
 import { AdminNoticesTab } from "@/components/AdminNoticesTab";
 import { AdminSyllabusTab } from "@/components/AdminSyllabusTab";
+import { AdminContentTab } from "@/components/AdminContentTab";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -119,7 +120,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full grid-cols-8 bg-white shadow-lg mb-8">
+          <TabsList className="grid w-full grid-cols-2 gap-1 bg-card shadow-lg mb-8 sm:grid-cols-3 lg:grid-cols-9">
             <TabsTrigger value="contact">Contact Submissions</TabsTrigger>
             <TabsTrigger value="users">All Users</TabsTrigger>
             <TabsTrigger value="sessions">Study Sessions</TabsTrigger>
@@ -128,6 +129,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="notices">Notices</TabsTrigger>
             <TabsTrigger value="pdfs">PDF Management</TabsTrigger>
             <TabsTrigger value="syllabus">Syllabus</TabsTrigger>
+            <TabsTrigger value="content">Content studio</TabsTrigger>
           </TabsList>
 
           {/* Contact Submissions Tab */}
@@ -308,6 +310,11 @@ export default function AdminDashboard() {
           {/* Syllabus Management Tab */}
           <TabsContent value="syllabus">
             <AdminSyllabusTab />
+          </TabsContent>
+
+          {/* Content Studio Tab */}
+          <TabsContent value="content">
+            <AdminContentTab />
           </TabsContent>
 
           {/* PDF Management Tab */}

@@ -31,10 +31,10 @@
 ## Phase 1: Website Branding & Notice Section (NOTICE SECTION COMPLETED)
 
 ### Branding Updates
-- [ ] Update website title to "Board Exam Preparation"
+- [x] Update website title and metadata for the redesigned Prep / Hub brand
 - [ ] Set new logo from uploaded image
-- [ ] Update app metadata and favicon
-- [ ] Update navigation branding
+- [x] Update app metadata and retain PWA favicon/manifest hooks
+- [x] Update navigation branding
 
 ### Notice Section (FULLY COMPLETED)
 - [x] Create notices table in database
@@ -57,29 +57,29 @@
 - [ ] Remove Daily Tasks page (replace with admin-editable)
 
 ### Create Admin-Editable Content System
-- [ ] Create subjects table (admin can add/edit/delete)
-- [ ] Create chapters table (linked to subjects)
-- [ ] Create topics table (linked to chapters)
-- [ ] Create admin procedures for CRUD operations
-- [ ] Create admin UI for managing all content
+- [x] Create community_groups table (admin can add/edit/delete)
+- [x] Create group_links table (linked to subjects)
+- [x] Add an explicit chapter taxonomy table, chapter CRUD, and topic-to-chapter relation with embedded admin controls
+- [x] Create admin procedures for CRUD operations, including group archive, chapter CRUD, and syllabus topic CRUD
+- [x] Create admin UI for managing groups, links, test series, questions, chapters, and syllabus topics
 
 ---
 
 ## Phase 3: Enhance Admin Panel
 
 ### Group & Links Management
-- [ ] Create community_groups table
-- [ ] Create group_links table
-- [ ] Add admin procedures to manage groups and links
-- [ ] Create admin UI for editing all group links
-- [ ] Display group links on dashboard
+- [x] Create community_groups table
+- [x] Create group_links table
+- [x] Add admin procedures to manage groups and links
+- [x] Create admin UI for editing all group links
+- [x] Display group links through the Community Hub
 
 ### Test Series Management
-- [ ] Create test_series table
-- [ ] Create test_questions table
-- [ ] Add admin procedures for test series CRUD
-- [ ] Create admin UI for adding/editing test series
-- [ ] Link test series to subjects
+- [x] Create test_series table
+- [x] Create test_questions table
+- [x] Add admin procedures for test series CRUD
+- [x] Create admin UI for adding/editing test series
+- [x] Link test series to subjects
 
 ---
 
@@ -98,45 +98,45 @@
 - [ ] Remove Class 12 Board Exam timer (if needed)
 - [ ] Remove JEE Main timer (if needed)
 - [ ] Remove JEE Advanced timer (if needed)
-- [ ] Add AI Chat component with history
-- [ ] Add Group Links section to dashboard
-- [ ] Add Test Series section to dashboard
-- [ ] Add Mock Tests section to dashboard
+- [x] Add AI Chat component with history
+- [x] Add Group Links hub accessible from the student navigation
+- [x] Add Test Series section to the Community Hub
+- [x] Add timed Test Series runner and CBT review entry points
 
 ---
 
 ## Phase 5: Fix Mock Tests & Test Series
 
 ### Fix Mock Tests
-- [ ] Debug mock test functionality
-- [ ] Ensure questions display correctly
-- [ ] Add answer validation
-- [ ] Add score calculation
-- [ ] Add result display
+- [x] Debug mock/test-series functionality
+- [x] Ensure questions display correctly
+- [x] Add answer validation
+- [x] Add score calculation
+- [x] Add result display
 
 ### Admin Test Series Management
-- [ ] Allow admins to create test series
-- [ ] Allow admins to add questions to test series
-- [ ] Allow admins to set time limits
-- [ ] Allow admins to publish/unpublish tests
-- [ ] Display test series on dashboard
+- [x] Allow admins to create test series
+- [x] Allow admins to add questions to test series
+- [x] Allow admins to set time limits
+- [x] Allow admins to publish/unpublish tests
+- [x] Display published test series on Community Hub
 
 ---
 
 ## Phase 6: Testing & Deployment
 
 ### Testing
-- [ ] Test all admin CRUD operations
-- [ ] Test notice creation and display
-- [ ] Test AI chat functionality
-- [ ] Test mock tests
-- [ ] Test test series
-- [ ] Verify responsive design
-- [ ] Run all vitest tests
+- [x] Test all implemented admin CRUD contracts
+- [x] Test notice creation and display
+- [x] Test AI chat persistence through dedicated router/history coverage
+- [x] Test timed test-series score consistency and result flow
+- [x] Test published/unpublished test-series listing behavior
+- [ ] Verify rendered responsive design at mobile, tablet, and desktop breakpoints
+- [x] Run all Vitest tests (112 serial tests passing)
 
 ### Deployment
-- [ ] Build PWA
-- [ ] Create final checkpoint
+- [x] Build and validate PWA registration guard
+- [x] Create final redesign checkpoint
 - [ ] Deploy to production
 
 ## Phase 0.1: Dashboard & Leaderboard Updates (COMPLETED)

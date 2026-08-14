@@ -268,10 +268,24 @@ export const questionCollections = mysqlTable("questionCollections", {
 export type QuestionCollection = typeof questionCollections.$inferSelect;
 export type InsertQuestionCollection = typeof questionCollections.$inferInsert;
 
+// Chapter taxonomy for admin-managed syllabus content
+export const syllabusChapters = mysqlTable("syllabusChapters", {
+  id: int("id").autoincrement().primaryKey(),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  chapter: varchar("chapter", { length: 255 }).notNull(),
+  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced"]).notNull(),
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SyllabusChapter = typeof syllabusChapters.$inferSelect;
+export type InsertSyllabusChapter = typeof syllabusChapters.$inferInsert;
+
 // JEE Syllabus Topics
 export const jeeSyllabusTopics = mysqlTable("jeeSyllabusTopics", {
   id: int("id").autoincrement().primaryKey(),
   subject: varchar("subject", { length: 100 }).notNull(),
+  chapterId: int("chapterId"),
   unit: varchar("unit", { length: 255 }).notNull(),
   topic: varchar("topic", { length: 255 }).notNull(),
   subtopic: varchar("subtopic", { length: 255 }),
@@ -500,6 +514,7 @@ export const testSeries = mysqlTable("testSeries", {
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   subject: varchar("subject", { length: 100 }).notNull(),
+  syllabusTopicId: int("syllabusTopicId"),
   class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced"]).notNull(),
   totalQuestions: int("totalQuestions").notNull(),
   duration: int("duration").notNull(), // in minutes

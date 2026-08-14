@@ -6,7 +6,7 @@ import { sdk } from "./_core/sdk";
 import { getConfiguredAdminUser } from "./auth";
 import { z } from "zod";
 import { and, asc, eq } from "drizzle-orm";
-import { jeeSyllabusTopics, userTopicProgress } from "../drizzle/schema";
+import { jeeSyllabusTopics, syllabusChapters, userTopicProgress } from "../drizzle/schema";
 import {
   createAdminMessage,
   getAllAdminMessages,
@@ -136,6 +136,26 @@ import {
   createSquad,
   joinSquad,
   getSquadDashboard,
+  getCommunityGroups,
+  getAllCommunityGroups,
+  createCommunityGroup,
+  createGroupLink,
+  setGroupActive,
+  deleteGroupLink,
+  getPublishedTestSeries,
+  getAllTestSeries,
+  getTestSeriesWithQuestions,
+  createTestSeries,
+  addTestSeriesQuestion,
+  publishTestSeries,
+  recordTestSeriesAttempt,
+  updateCommunityGroup,
+  updateGroupLink,
+  updateTestSeries,
+  deleteTestSeries,
+  updateTestSeriesQuestion,
+  deleteTestSeriesQuestion,
+  deleteCommunityGroup,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { sendCertificateEarnedEmail } from "./certificate-email";
@@ -1601,6 +1621,8 @@ export const appRouter = router({
           .from(jeeSyllabusTopics)
           .where(conditions.length ? and(...conditions) : undefined)
           .orderBy(asc(jeeSyllabusTopics.subject), asc(jeeSyllabusTopics.unit), asc(jeeSyllabusTopics.topic));
+        const chapters = await db.select().from(syllabusChapters);
+        const chapterById = new Map(chapters.map((chapter) => [chapter.id, chapter]));
         const progress = await db
           .select()
           .from(userTopicProgress)
@@ -1609,6 +1631,7 @@ export const appRouter = router({
 
         return topics.map((topic) => ({
           ...topic,
+          chapter: topic.chapterId ? chapterById.get(topic.chapterId) ?? null : null,
           progress: progressByTopic.get(topic.id) ?? {
             status: "notStarted" as const,
             completionPercentage: 0,
@@ -1665,10 +1688,39 @@ export const appRouter = router({
 
         return { success: true };
       }),
+    chapters: adminProcedure.query(async () => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) return [];
+      return db.select().from(syllabusChapters).orderBy(asc(syllabusChapters.subject), asc(syllabusChapters.chapter));
+    }),
+    createChapter: adminProcedure.input(z.object({ subject: z.string().min(1).max(100), chapter: z.string().min(1).max(255), class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]), description: z.string().max(1000).optional() })).mutation(async ({ input }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const result = await db.insert(syllabusChapters).values(input);
+      return { id: result[0].insertId };
+    }),
+    updateChapter: adminProcedure.input(z.object({ id: z.number(), subject: z.string().min(1).max(100), chapter: z.string().min(1).max(255), class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]), description: z.string().max(1000).optional() })).mutation(async ({ input }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      await db.update(syllabusChapters).set({ subject: input.subject, chapter: input.chapter, class: input.class, description: input.description }).where(eq(syllabusChapters.id, input.id));
+      return { success: true };
+    }),
+    deleteChapter: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      await db.update(jeeSyllabusTopics).set({ chapterId: null }).where(eq(jeeSyllabusTopics.chapterId, input.id));
+      await db.delete(syllabusChapters).where(eq(syllabusChapters.id, input.id));
+      return { success: true };
+    }),
     create: adminProcedure
       .input(
         z.object({
           subject: z.string().min(1).max(100),
+          chapterId: z.number().int().optional(),
           unit: z.string().min(1).max(255),
           topic: z.string().min(1).max(255),
           subtopic: z.string().max(255).optional(),
@@ -1693,6 +1745,7 @@ export const appRouter = router({
         z.object({
           id: z.number(),
           subject: z.string().min(1).max(100).optional(),
+          chapterId: z.number().int().nullable().optional(),
           unit: z.string().min(1).max(255).optional(),
           topic: z.string().min(1).max(255).optional(),
           subtopic: z.string().max(255).optional(),
@@ -1820,6 +1873,32 @@ export const appRouter = router({
           questions,
         };
       }),
+  }),
+  groups: router({
+    list: publicProcedure.query(() => getCommunityGroups()),
+  }),
+  testSeries: router({
+    list: publicProcedure.query(() => getPublishedTestSeries()),
+    get: publicProcedure.input(z.object({ id: z.number() })).query(({ input }) => getTestSeriesWithQuestions(input.id)),
+    submit: protectedProcedure.input(z.object({ testSeriesId: z.number(), score: z.number().min(0).max(100), totalQuestions: z.number().int().min(1), correctAnswers: z.number().int().min(0), wrongAnswers: z.number().int().min(0), skippedQuestions: z.number().int().min(0), timeTaken: z.number().int().min(0).optional() })).mutation(({ ctx, input }) => recordTestSeriesAttempt({ ...input, userId: ctx.user.id })),
+  }),
+  adminContent: router({
+    groups: adminProcedure.query(() => getAllCommunityGroups()),
+    createGroup: adminProcedure.input(z.object({ name: z.string().min(2).max(255), description: z.string().max(1000).optional(), type: z.enum(["telegram", "whatsapp", "discord", "other"]) })).mutation(({ ctx, input }) => createCommunityGroup({ ...input, createdBy: ctx.user.id })),
+    updateGroup: adminProcedure.input(z.object({ id: z.number(), name: z.string().min(2).max(255), description: z.string().max(1000).optional(), type: z.enum(["telegram", "whatsapp", "discord", "other"]) })).mutation(({ input }) => updateCommunityGroup(input)),
+    deleteGroup: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => deleteCommunityGroup(input.id)),
+    createLink: adminProcedure.input(z.object({ groupId: z.number(), title: z.string().min(2).max(255), url: z.string().url(), subject: z.string().max(100).optional(), class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]) })).mutation(({ ctx, input }) => createGroupLink({ ...input, createdBy: ctx.user.id })),
+    updateLink: adminProcedure.input(z.object({ id: z.number(), title: z.string().min(2).max(255), url: z.string().url(), subject: z.string().max(100).optional(), class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]) })).mutation(({ input }) => updateGroupLink(input)),
+    setGroupActive: adminProcedure.input(z.object({ id: z.number(), isActive: z.boolean() })).mutation(({ input }) => setGroupActive(input)),
+    deleteLink: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => deleteGroupLink(input.id)),
+    series: adminProcedure.query(() => getAllTestSeries()),
+    createSeries: adminProcedure.input(z.object({ title: z.string().min(2).max(255), description: z.string().max(2000).optional(), subject: z.string().min(1).max(100), syllabusTopicId: z.number().int().optional(), class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]), totalQuestions: z.number().int().min(1).max(200), duration: z.number().int().min(1).max(300) })).mutation(({ ctx, input }) => createTestSeries({ ...input, createdBy: ctx.user.id })),
+    updateSeries: adminProcedure.input(z.object({ id: z.number(), title: z.string().min(2).max(255), description: z.string().max(2000).optional(), subject: z.string().min(1).max(100), syllabusTopicId: z.number().int().optional(), class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]), totalQuestions: z.number().int().min(1).max(200), duration: z.number().int().min(1).max(300) })).mutation(({ input }) => updateTestSeries(input)),
+    deleteSeries: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => deleteTestSeries(input.id)),
+    addQuestion: adminProcedure.input(z.object({ testSeriesId: z.number(), questionText: z.string().min(5), optionA: z.string().min(1), optionB: z.string().min(1), optionC: z.string().min(1), optionD: z.string().min(1), correctOption: z.enum(["A", "B", "C", "D"]), explanation: z.string().max(2000).optional(), difficulty: z.enum(["easy", "medium", "hard"]).optional() })).mutation(({ input }) => addTestSeriesQuestion(input)),
+    updateQuestion: adminProcedure.input(z.object({ id: z.number(), questionText: z.string().min(5), optionA: z.string().min(1), optionB: z.string().min(1), optionC: z.string().min(1), optionD: z.string().min(1), correctOption: z.enum(["A", "B", "C", "D"]), explanation: z.string().max(2000).optional(), difficulty: z.enum(["easy", "medium", "hard"]).optional() })).mutation(({ input }) => updateTestSeriesQuestion(input)),
+    deleteQuestion: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => deleteTestSeriesQuestion(input.id)),
+    publishSeries: adminProcedure.input(z.object({ id: z.number(), isPublished: z.boolean() })).mutation(({ input }) => publishTestSeries(input.id, input.isPublished)),
   }),
   adaptive: router({
     dashboard: protectedProcedure.query(({ ctx }) => getAdaptiveDashboardData(ctx.user.id)),

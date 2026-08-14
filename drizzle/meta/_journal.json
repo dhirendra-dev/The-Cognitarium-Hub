@@ -190,6 +190,20 @@
       "when": 1786689674001,
       "tag": "0026_careless_pestilence",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "5",
+      "when": 1786691805320,
+      "tag": "0027_brief_calypso",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "5",
+      "when": 1786693002798,
+      "tag": "0028_many_morlun",
+      "breakpoints": true
     }
   ]
 }

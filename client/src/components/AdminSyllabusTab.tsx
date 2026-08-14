@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Edit3, Loader, Plus, Save, Trash2, X } from "lucide-react";
+import { BookOpen, Edit3, Loader, Plus, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -14,6 +14,7 @@ type SyllabusClass = (typeof CLASS_OPTIONS)[number]["value"];
 type Difficulty = "easy" | "medium" | "hard";
 type FormState = {
   subject: string;
+  chapterId: string;
   unit: string;
   topic: string;
   subtopic: string;
@@ -25,6 +26,7 @@ type FormState = {
 
 const EMPTY_FORM: FormState = {
   subject: "Mathematics",
+  chapterId: "",
   unit: "",
   topic: "",
   subtopic: "",
@@ -37,7 +39,10 @@ const EMPTY_FORM: FormState = {
 export function AdminSyllabusTab() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [chapterForm, setChapterForm] = useState({ subject: "Mathematics", chapter: "", class: "jeeMain" as SyllabusClass, description: "" });
+  const [editingChapterId, setEditingChapterId] = useState<number | null>(null);
   const syllabusQuery = trpc.syllabus.list.useQuery({});
+  const chaptersQuery = trpc.syllabus.chapters.useQuery();
   const utils = trpc.useUtils();
   const refresh = async () => {
     await utils.syllabus.list.invalidate();
@@ -52,6 +57,9 @@ export function AdminSyllabusTab() {
     onSuccess: async () => { toast.success("Syllabus topic updated."); await refresh(); },
     onError: (error) => toast.error(error.message || "Could not update topic."),
   });
+  const createChapterMutation = trpc.syllabus.createChapter.useMutation({ onSuccess: async () => { toast.success("Chapter added."); setChapterForm({ subject: "Mathematics", chapter: "", class: "jeeMain", description: "" }); await utils.syllabus.chapters.invalidate(); }, onError: (error) => toast.error(error.message || "Could not add chapter.") });
+  const updateChapterMutation = trpc.syllabus.updateChapter.useMutation({ onSuccess: async () => { toast.success("Chapter updated."); setEditingChapterId(null); setChapterForm({ subject: "Mathematics", chapter: "", class: "jeeMain", description: "" }); await utils.syllabus.chapters.invalidate(); }, onError: (error) => toast.error(error.message || "Could not update chapter.") });
+  const deleteChapterMutation = trpc.syllabus.deleteChapter.useMutation({ onSuccess: async () => { toast.success("Chapter deleted."); await utils.syllabus.chapters.invalidate(); await utils.syllabus.list.invalidate(); }, onError: (error) => toast.error(error.message || "Could not delete chapter.") });
   const deleteMutation = trpc.syllabus.delete.useMutation({
     onSuccess: async () => { toast.success("Syllabus topic deleted."); await utils.syllabus.list.invalidate(); },
     onError: (error) => toast.error(error.message || "Could not delete topic."),
@@ -59,6 +67,13 @@ export function AdminSyllabusTab() {
 
   const updateField = <Key extends keyof FormState>(key: Key, value: FormState[Key]) => {
     setForm((previous) => ({ ...previous, [key]: value }));
+  };
+
+  const submitChapter = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!chapterForm.chapter.trim()) { toast.error("Chapter name is required."); return; }
+    const payload = { subject: chapterForm.subject.trim(), chapter: chapterForm.chapter.trim(), class: chapterForm.class, description: chapterForm.description.trim() || undefined };
+    if (editingChapterId) updateChapterMutation.mutate({ id: editingChapterId, ...payload }); else createChapterMutation.mutate(payload);
   };
 
   const submit = (event: React.FormEvent) => {
@@ -69,6 +84,7 @@ export function AdminSyllabusTab() {
     }
     const payload = {
       subject: form.subject.trim(),
+      chapterId: form.chapterId ? Number(form.chapterId) : undefined,
       unit: form.unit.trim(),
       topic: form.topic.trim(),
       subtopic: form.subtopic.trim() || undefined,
@@ -85,6 +101,7 @@ export function AdminSyllabusTab() {
     setEditingId(topic.id);
     setForm({
       subject: topic.subject,
+      chapterId: topic.chapterId ? String(topic.chapterId) : "",
       unit: topic.unit,
       topic: topic.topic,
       subtopic: topic.subtopic || "",
@@ -99,6 +116,11 @@ export function AdminSyllabusTab() {
   const isSaving = createMutation.isPending || updateMutation.isPending;
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+        <div className="mb-4 flex items-center gap-3"><span className="rounded-lg bg-amber-200 p-2 text-amber-900"><BookOpen className="h-4 w-4" /></span><div><h2 className="text-lg font-bold text-amber-950">Chapter taxonomy</h2><p className="text-sm text-amber-800">Create the chapter nodes that syllabus topics attach to.</p></div></div>
+        <form onSubmit={submitChapter} className="grid gap-3 md:grid-cols-4"><input value={chapterForm.subject} onChange={(event) => setChapterForm({ ...chapterForm, subject: event.target.value })} placeholder="Subject" className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm" required /><input value={chapterForm.chapter} onChange={(event) => setChapterForm({ ...chapterForm, chapter: event.target.value })} placeholder="Chapter name" className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm" required /><select value={chapterForm.class} onChange={(event) => setChapterForm({ ...chapterForm, class: event.target.value as SyllabusClass })} className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm">{CLASS_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select><input value={chapterForm.description} onChange={(event) => setChapterForm({ ...chapterForm, description: event.target.value })} placeholder="Optional description" className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm" /><button type="submit" className="rounded-lg bg-amber-700 px-4 py-2 font-semibold text-white hover:bg-amber-800 md:col-span-4">{editingChapterId ? "Save chapter" : "Add chapter"}</button></form>
+        <div className="mt-4 flex flex-wrap gap-2">{(chaptersQuery.data ?? []).map((chapter) => <span key={chapter.id} className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-amber-950"><span>{chapter.subject} · {chapter.chapter}</span><button type="button" onClick={() => { setEditingChapterId(chapter.id); setChapterForm({ subject: chapter.subject, chapter: chapter.chapter, class: chapter.class, description: chapter.description || "" }); }} className="rounded-full p-0.5 hover:bg-amber-100"><Edit3 className="h-3 w-3" /></button><button type="button" onClick={() => deleteChapterMutation.mutate({ id: chapter.id })} className="rounded-full p-0.5 hover:bg-rose-100 hover:text-rose-700"><Trash2 className="h-3 w-3" /></button></span>)}</div>
+      </div>
       <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-5">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -109,6 +131,7 @@ export function AdminSyllabusTab() {
         </div>
         <form onSubmit={submit} className="grid gap-3 md:grid-cols-2">
           <input value={form.subject} onChange={(event) => updateField("subject", event.target.value)} placeholder="Subject" className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm" required />
+          <select value={form.chapterId} onChange={(event) => updateField("chapterId", event.target.value)} className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm"><option value="">No chapter link</option>{(chaptersQuery.data ?? []).map((chapter) => <option key={chapter.id} value={chapter.id}>{chapter.subject} · {chapter.chapter}</option>)}</select>
           <input value={form.unit} onChange={(event) => updateField("unit", event.target.value)} placeholder="Unit / chapter group" className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm" required />
           <input value={form.topic} onChange={(event) => updateField("topic", event.target.value)} placeholder="Topic" className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm" required />
           <input value={form.subtopic} onChange={(event) => updateField("subtopic", event.target.value)} placeholder="Subtopic (optional)" className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm" />
@@ -136,7 +159,8 @@ export function AdminSyllabusTab() {
           <div className="divide-y divide-slate-100">
             {syllabusQuery.data.map((topic: any) => (
               <div key={topic.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
-                <div><p className="font-semibold text-slate-900">{topic.subject} · {topic.topic}</p><p className="text-sm text-slate-500">{topic.unit} · {topic.class === "jeeMain" ? "JEE Main" : topic.class === "jeeAdvanced" ? "JEE Advanced" : `Class ${topic.class}`} · {topic.difficulty}</p></div>
+                <div><p className="font-semibold text-slate-900">{topic.subject} · {topic.topic}</p><p className="text-sm text-slate-500">{topic.chapter?.chapter || topic.unit} · {topic.class === "jeeMain" ? "JEE Main" : topic.class === "jeeAdvanced" ? "JEE Advanced" : `Class ${topic.class}`} · {topic.difficulty}</p>
+</div>
                 <div className="flex gap-2"><button type="button" onClick={() => startEdit(topic)} className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"><Edit3 className="h-4 w-4" /> Edit</button><button type="button" onClick={() => deleteMutation.mutate({ id: topic.id })} disabled={deleteMutation.isPending} className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"><Trash2 className="h-4 w-4" /> Delete</button></div>
               </div>
             ))}

@@ -49,6 +49,7 @@ const navGroups = [
       { label: "Concept vault", path: "/concept-vault", icon: Lightbulb },
       { label: "Chat coach", path: "/chat-coach", icon: MessageCircle },
       { label: "Doubt desk", path: "/doubts", icon: CircleHelp },
+      { label: "Community hub", path: "/community", icon: Users },
       { label: "Study library", path: "/study-materials", icon: BookOpen },
     ],
   },

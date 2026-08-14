@@ -38,6 +38,8 @@ import MyCertificates from "./pages/MyCertificates";
 import Squads from "./pages/Squads";
 import DoubtDesk from "./pages/DoubtDesk";
 import CBTReview from "./pages/CBTReview";
+import CommunityHub from "./pages/CommunityHub";
+import TestSeriesRunner from "./pages/TestSeriesRunner";
 
 function DashboardRouter() {
   return (
@@ -72,6 +74,8 @@ function DashboardRouter() {
       <Route path={"/squads"} component={Squads} />
       <Route path={"/doubts"} component={DoubtDesk} />
       <Route path={"/cbt-review"} component={CBTReview} />
+      <Route path={"/community"} component={CommunityHub} />
+      <Route path={"/test-series/:id"} component={TestSeriesRunner} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
