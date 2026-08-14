@@ -473,3 +473,10 @@
 - [x] Add regression coverage for service-worker asset availability and MIME-safe registration behavior
 - [x] Run typecheck, tests, and project health checks (103 tests passing serially; TypeScript clean)
 - [x] Save a checkpoint for the PWA fix
+
+## Login Invalid-Credentials Fix
+- [x] Trace the login form, auth router, user schema, password hashing, and credential configuration
+- [x] Fix the invalid-email-or-password flow without weakening authentication security
+- [x] Add regression coverage for valid and invalid credential cases
+- [x] Run typecheck, tests, and project health checks (105 tests passing serially; TypeScript clean)
+- [x] Save a checkpoint for the login fix

@@ -150,6 +150,35 @@ export async function getUserByEmail(email: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function upsertAdminUser(input: { email: string; name: string; passwordHash: string }) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database unavailable");
+  }
+
+  const existing = await getUserByEmail(input.email);
+  if (existing) {
+    await db.update(users).set({
+      email: input.email,
+      name: input.name,
+      password: input.passwordHash,
+      loginMethod: "email",
+      role: "admin",
+    }).where(eq(users.id, existing.id));
+    return getUserById(existing.id);
+  }
+
+  const result = await db.insert(users).values({
+    openId: `admin-${randomBytes(16).toString("hex")}`,
+    email: input.email,
+    name: input.name,
+    password: input.passwordHash,
+    loginMethod: "email",
+    role: "admin",
+  });
+  return getUserById(Number(result[0].insertId));
+}
+
 export async function getUserById(id: number) {
   const db = await getDb();
   if (!db) {

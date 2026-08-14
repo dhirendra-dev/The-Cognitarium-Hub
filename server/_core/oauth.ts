@@ -3,6 +3,7 @@ import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { getConfiguredAdminUser } from "../auth";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -27,18 +28,16 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
-      // Get user by email
-      const user = await db.getUserByEmail(email);
-
-      if (!user) {
-        res.status(401).json({ error: "Invalid credentials" });
-        return;
+      // Get user by email and allow the securely configured administrator to
+      // bootstrap or repair its database row on the first successful login.
+      let user = await db.getUserByEmail(email);
+      const isPasswordValid = user?.password ? sdk.verifyPassword(password, user.password) : false;
+      if (!user || !isPasswordValid || user.role !== "admin") {
+        const configuredAdmin = await getConfiguredAdminUser(email, password);
+        if (configuredAdmin) user = configuredAdmin;
       }
 
-      // Verify password
-      const isPasswordValid = await sdk.verifyPassword(password, user.password || "");
-
-      if (!isPasswordValid) {
+      if (!user || !user.password || !sdk.verifyPassword(password, user.password)) {
         res.status(401).json({ error: "Invalid credentials" });
         return;
       }

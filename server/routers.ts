@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { sdk } from "./_core/sdk";
+import { getConfiguredAdminUser } from "./auth";
 import { z } from "zod";
 import { and, asc, eq } from "drizzle-orm";
 import { jeeSyllabusTopics, userTopicProgress } from "../drizzle/schema";
@@ -189,13 +190,14 @@ export const appRouter = router({
         password: z.string().min(1),
       }))
       .mutation(async ({ ctx, input }) => {
-        const user = await getUserByEmail(input.email);
-        if (!user || !user.password) {
-          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
+        let user = await getUserByEmail(input.email);
+        const isPasswordValid = user?.password ? sdk.verifyPassword(input.password, user.password) : false;
+        if (!user || !isPasswordValid || user.role !== "admin") {
+          const configuredAdmin = await getConfiguredAdminUser(input.email, input.password);
+          if (configuredAdmin) user = configuredAdmin;
         }
-        
-        const isPasswordValid = sdk.verifyPassword(input.password, user.password);
-        if (!isPasswordValid) {
+
+        if (!user || !user.password || !sdk.verifyPassword(input.password, user.password)) {
           throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
         }
         
