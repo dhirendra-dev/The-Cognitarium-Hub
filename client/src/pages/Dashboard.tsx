@@ -3,9 +3,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, BookOpen, BrainCircuit, CalendarClock, ChevronRight, Clock3, Flame, Gauge, Lightbulb, Medal, Play, Sparkles, Target, TrendingDown, TrendingUp, Users, Zap } from "lucide-react";
+import { ArrowRight, BookOpen, BrainCircuit, CalendarClock, ChevronRight, Clock3, Flame, Gauge, Lightbulb, Medal, Play, Search, Sparkles, Target, TrendingDown, TrendingUp, Users, Zap } from "lucide-react";
 import { useLocation } from "wouter";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 const JEE_MAIN_DATE = new Date("2028-01-22T09:00:00");
 const SUBJECTS = [
@@ -25,6 +25,7 @@ function percent(value: unknown) {
 export default function Dashboard() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const [topicSearch, setTopicSearch] = useState("");
   const { data: adaptive, isLoading: adaptiveLoading } = trpc.adaptive.dashboard.useQuery();
   const { data: revisionQueue } = trpc.adaptive.revisionQueue.useQuery();
   const { data: studySessions } = trpc.studySessions.getByUser.useQuery({ daysBack: 7 });
@@ -63,6 +64,12 @@ export default function Dashboard() {
   const trendImproving = (adaptive?.mastery ?? []).filter((item) => item.trend === "improving").length;
   const trendWorsening = (adaptive?.mastery ?? []).filter((item) => item.trend === "worsening").length;
 
+  const matchingTopics = useMemo(() => {
+    if (!topicSearch.trim()) return [];
+    const query = topicSearch.toLowerCase();
+    return (adaptive?.topics ?? []).filter((topic) => topic.topic.toLowerCase().includes(query) || topic.subject.toLowerCase().includes(query) || topic.unit.toLowerCase().includes(query)).slice(0, 5);
+  }, [adaptive?.topics, topicSearch]);
+
   return (
     <div className="mx-auto max-w-[1440px] space-y-7">
       <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8 lg:p-10">
@@ -76,6 +83,25 @@ export default function Dashboard() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Button onClick={() => navigate("/daily-tasks")} className="rounded-full px-5"><Play className="mr-2 h-4 w-4" /> Start today’s plan</Button>
               <Button variant="outline" onClick={() => navigate("/dpp-generator")} className="rounded-full bg-background/50 px-5"><Sparkles className="mr-2 h-4 w-4" /> Generate a drill</Button>
+            </div>
+            <div className="relative mt-2 max-w-md">
+              <div className="relative flex items-center">
+                <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
+                <input value={topicSearch} onChange={(event) => setTopicSearch(event.target.value)} placeholder="Quick search any syllabus topic..." className="w-full rounded-full border border-border bg-background/80 py-2.5 pl-10 pr-4 text-sm font-semibold outline-none transition-colors focus:border-primary" />
+              </div>
+              {matchingTopics.length > 0 && (
+                <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+                  {matchingTopics.map((topic) => (
+                    <button key={topic.id} onClick={() => { setTopicSearch(""); navigate("/concept-vault"); }} className="flex w-full items-center justify-between px-4 py-3 text-left text-sm hover:bg-accent/30">
+                      <div>
+                        <p className="font-bold text-foreground">{topic.topic}</p>
+                        <p className="text-xs text-muted-foreground">{topic.subject} · {topic.unit}</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div className="grid min-w-[260px] grid-cols-2 gap-3">
