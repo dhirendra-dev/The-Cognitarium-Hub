@@ -5,22 +5,17 @@ import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
+import { registerServiceWorker } from "./pwa";
 
 import "./index.css";
 
-// Register PWA Service Worker
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((registration) => {
-        console.log("[PWA] Service Worker registered:", registration);
-      })
-      .catch((error) => {
-        console.error("[PWA] Service Worker registration failed:", error);
-      });
-  });
-}
+// VitePWA generates `/sw.js` during production builds. The helper intentionally
+// skips development previews, where `/sw.js` falls through to the SPA HTML shell.
+registerServiceWorker(
+  import.meta.env.PROD,
+  typeof navigator !== "undefined" && "serviceWorker" in navigator ? navigator.serviceWorker : undefined,
+  (listener) => window.addEventListener("load", listener),
+);
 
 const queryClient = new QueryClient();
 

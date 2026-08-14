@@ -467,3 +467,9 @@
 - [x] Add or update Vitest coverage for the rebuilt features
 - [x] Run typecheck, tests, and project health checks (101 tests passing serially; TypeScript clean)
 - [x] Save a final checkpoint for the completed restructuring
+
+## PWA Service Worker MIME Fix
+- [x] Fix service-worker registration failing because `/sw.js` is served as `text/html`
+- [x] Add regression coverage for service-worker asset availability and MIME-safe registration behavior
+- [x] Run typecheck, tests, and project health checks (103 tests passing serially; TypeScript clean)
+- [x] Save a checkpoint for the PWA fix
