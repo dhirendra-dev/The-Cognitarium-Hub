@@ -126,6 +126,16 @@ import {
   getContactSubmissionById,
   getUserByEmail,
   createUser,
+  getAdaptiveDashboardData,
+  getRevisionQueue,
+  recordQuestionPerformance,
+  saveDiagnosticPlacement,
+  createDoubt,
+  getDoubtsByUser,
+  resolveDoubt,
+  createSquad,
+  joinSquad,
+  getSquadDashboard,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { sendCertificateEarnedEmail } from "./certificate-email";
@@ -1810,6 +1820,58 @@ export const appRouter = router({
           questions,
         };
       }),
+  }),
+  adaptive: router({
+    dashboard: protectedProcedure.query(({ ctx }) => getAdaptiveDashboardData(ctx.user.id)),
+    revisionQueue: protectedProcedure.query(({ ctx }) => getRevisionQueue(ctx.user.id)),
+    recordPerformance: protectedProcedure.input(z.object({
+      topicId: z.number().optional(),
+      topicType: z.enum(["jeeSyllabus", "boardSyllabus"]).optional(),
+      attemptId: z.number().optional(),
+      questionRef: z.string().optional(),
+      timeSpentSeconds: z.number().int().min(0).max(3600),
+      isCorrect: z.boolean(),
+      errorType: z.enum(["conceptual", "calculation", "silly", "timePressure", "none"]).optional(),
+      answerChanged: z.boolean().optional(),
+    })).mutation(({ ctx, input }) => recordQuestionPerformance({ userId: ctx.user.id, ...input })),
+    saveDiagnostic: protectedProcedure.input(z.object({
+      subject: z.string().min(1).max(100),
+      score: z.number().min(0).max(100),
+      level: z.enum(["foundation", "developing", "examReady", "advanced"]),
+      questionCount: z.number().int().min(1).max(100),
+    })).mutation(({ ctx, input }) => saveDiagnosticPlacement({ userId: ctx.user.id, ...input })),
+  }),
+  doubts: router({
+    list: protectedProcedure.query(({ ctx }) => getDoubtsByUser(ctx.user.id)),
+    ask: protectedProcedure.input(z.object({
+      subject: z.string().min(1).max(100),
+      topic: z.string().max(255).optional(),
+      questionText: z.string().min(5).max(8000),
+      attachmentUrl: z.string().url().optional(),
+      voiceTranscript: z.string().max(8000).optional(),
+    })).mutation(async ({ ctx, input }) => {
+      const doubt = await createDoubt({ userId: ctx.user.id, ...input });
+      try {
+        const response = await invokeLLM({ messages: [
+          { role: "system", content: "You are SahAI, a patient JEE/NEET mentor. Explain the solution step by step, name the likely misconception, and finish with one short practice prompt. Never invent missing data." },
+          { role: "user", content: `Subject: ${input.subject}\nTopic: ${input.topic ?? "Not specified"}\nQuestion: ${input.questionText}` },
+        ] });
+        const answer = response.choices?.[0]?.message?.content;
+        const text = typeof answer === "string" ? answer : "I need a little more context before I can solve this accurately.";
+        await resolveDoubt({ id: doubt.id, userId: ctx.user.id, aiResponse: text, confidence: 0.86, status: "aiResolved" });
+        return { ...doubt, aiResponse: text, confidence: "0.86", status: "aiResolved" as const };
+      } catch {
+        const fallback = "Your doubt has been queued for a mentor. Add a photo or a more specific topic to help us resolve it faster.";
+        await resolveDoubt({ id: doubt.id, userId: ctx.user.id, aiResponse: fallback, confidence: 0, status: "needsMentor" });
+        return { ...doubt, aiResponse: fallback, confidence: "0.00", status: "needsMentor" as const };
+      }
+    }),
+    escalate: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) => resolveDoubt({ id: input.id, userId: ctx.user.id, aiResponse: "Student requested mentor review.", confidence: 0, status: "needsMentor" })),
+  }),
+  squads: router({
+    mine: protectedProcedure.query(({ ctx }) => getSquadDashboard(ctx.user.id)),
+    create: protectedProcedure.input(z.object({ name: z.string().min(2).max(120) })).mutation(({ ctx, input }) => createSquad({ userId: ctx.user.id, name: input.name, inviteCode: crypto.randomBytes(5).toString("hex").toUpperCase() })),
+    join: protectedProcedure.input(z.object({ inviteCode: z.string().min(4).max(32) })).mutation(({ ctx, input }) => joinSquad(ctx.user.id, input.inviteCode)),
   }),
   streaks: router({
     getStreak: protectedProcedure.query(async ({ ctx }) => {

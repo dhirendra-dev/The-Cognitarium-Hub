@@ -35,6 +35,9 @@ import AdminUploadedMaterials from "./pages/AdminUploadedMaterials";
 import AdminMessaging from "./pages/AdminMessaging";
 import AdminPasswordReset from "./pages/AdminPasswordReset";
 import MyCertificates from "./pages/MyCertificates";
+import Squads from "./pages/Squads";
+import DoubtDesk from "./pages/DoubtDesk";
+import CBTReview from "./pages/CBTReview";
 
 function DashboardRouter() {
   return (
@@ -66,6 +69,9 @@ function DashboardRouter() {
       <Route path={"/admin-messaging"} component={AdminMessaging} />
       <Route path={"/admin-password-reset"} component={AdminPasswordReset} />
       <Route path={"/my-certificates"} component={MyCertificates} />
+      <Route path={"/squads"} component={Squads} />
+      <Route path={"/doubts"} component={DoubtDesk} />
+      <Route path={"/cbt-review"} component={CBTReview} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

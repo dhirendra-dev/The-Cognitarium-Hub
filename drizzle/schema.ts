@@ -767,3 +767,113 @@ export const xpAwardsLog = mysqlTable("xpAwardsLog", {
 
 export type XPAwardLog = typeof xpAwardsLog.$inferSelect;
 export type InsertXPAwardLog = typeof xpAwardsLog.$inferInsert;
+
+
+// Adaptive Learning: per-user mastery and spaced-repetition state
+export const userTopicMastery = mysqlTable("userTopicMastery", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  topicId: int("topicId").notNull(),
+  topicType: mysqlEnum("topicType", ["jeeSyllabus", "boardSyllabus"]).notNull(),
+  masteryScore: decimal("masteryScore", { precision: 5, scale: 2 }).default("0").notNull(),
+  attempts: int("attempts").default(0).notNull(),
+  correctAnswers: int("correctAnswers").default(0).notNull(),
+  trend: mysqlEnum("trend", ["improving", "stagnant", "worsening"]).default("stagnant").notNull(),
+  nextReviewAt: timestamp("nextReviewAt"),
+  lastAttemptedAt: timestamp("lastAttemptedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserTopicMastery = typeof userTopicMastery.$inferSelect;
+export type InsertUserTopicMastery = typeof userTopicMastery.$inferInsert;
+
+// Diagnostic placement results recorded during onboarding or re-assessment
+export const diagnosticPlacements = mysqlTable("diagnosticPlacements", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  score: decimal("score", { precision: 5, scale: 2 }).notNull(),
+  level: mysqlEnum("level", ["foundation", "developing", "examReady", "advanced"]).notNull(),
+  questionCount: int("questionCount").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DiagnosticPlacement = typeof diagnosticPlacements.$inferSelect;
+export type InsertDiagnosticPlacement = typeof diagnosticPlacements.$inferInsert;
+
+// Question-level performance for timing analytics and error taxonomy
+export const questionPerformance = mysqlTable("questionPerformance", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  topicId: int("topicId"),
+  topicType: mysqlEnum("topicType", ["jeeSyllabus", "boardSyllabus"]),
+  attemptId: int("attemptId"),
+  questionRef: varchar("questionRef", { length: 100 }),
+  timeSpentSeconds: int("timeSpentSeconds").default(0).notNull(),
+  isCorrect: boolean("isCorrect").notNull(),
+  errorType: mysqlEnum("errorType", ["conceptual", "calculation", "silly", "timePressure", "none"]).default("none").notNull(),
+  answerChanged: boolean("answerChanged").default(false).notNull(),
+  answeredAt: timestamp("answeredAt").defaultNow().notNull(),
+});
+
+export type QuestionPerformance = typeof questionPerformance.$inferSelect;
+export type InsertQuestionPerformance = typeof questionPerformance.$inferInsert;
+
+// Predicted rank snapshots for transparent progress tracking
+export const rankSnapshots = mysqlTable("rankSnapshots", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  examType: mysqlEnum("examType", ["jeeMain", "jeeAdvanced", "neet"]).notNull(),
+  estimatedMin: int("estimatedMin").notNull(),
+  estimatedMax: int("estimatedMax").notNull(),
+  confidence: decimal("confidence", { precision: 5, scale: 2 }).notNull(),
+  percentile: decimal("percentile", { precision: 5, scale: 2 }),
+  snapshotDate: timestamp("snapshotDate").defaultNow().notNull(),
+});
+
+export type RankSnapshot = typeof rankSnapshots.$inferSelect;
+export type InsertRankSnapshot = typeof rankSnapshots.$inferInsert;
+
+// Squad-based accountability and scoped leaderboards
+export const squads = mysqlTable("squads", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 120 }).notNull(),
+  inviteCode: varchar("inviteCode", { length: 32 }).notNull().unique(),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Squad = typeof squads.$inferSelect;
+export type InsertSquad = typeof squads.$inferInsert;
+
+export const squadMembers = mysqlTable("squadMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  squadId: int("squadId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["owner", "member"]).default("member").notNull(),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+});
+
+export type SquadMember = typeof squadMembers.$inferSelect;
+export type InsertSquadMember = typeof squadMembers.$inferInsert;
+
+// AI-first doubts with optional human escalation
+export const doubts = mysqlTable("doubts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  topic: varchar("topic", { length: 255 }),
+  questionText: text("questionText").notNull(),
+  attachmentUrl: text("attachmentUrl"),
+  voiceTranscript: text("voiceTranscript"),
+  aiResponse: text("aiResponse"),
+  confidence: decimal("confidence", { precision: 5, scale: 2 }),
+  status: mysqlEnum("status", ["open", "aiResolved", "needsMentor", "assigned", "resolved"]).default("open").notNull(),
+  assignedTo: int("assignedTo"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Doubt = typeof doubts.$inferSelect;
+export type InsertDoubt = typeof doubts.$inferInsert;

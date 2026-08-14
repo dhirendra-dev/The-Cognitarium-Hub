@@ -183,6 +183,13 @@
       "when": 1786637677022,
       "tag": "0025_aspiring_hemingway",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1786689674001,
+      "tag": "0026_careless_pestilence",
+      "breakpoints": true
     }
   ]
 }

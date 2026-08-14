@@ -50,6 +50,14 @@ import {
   testSeries,
   testSeriesQuestions,
   userTestAttempts,
+  userTopicMastery,
+  diagnosticPlacements,
+  questionPerformance,
+  rankSnapshots,
+  squads,
+  squadMembers,
+  doubts,
+  jeeSyllabusTopics,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -1966,4 +1974,143 @@ export async function getNoticeById(noticeId: number) {
     console.error("[Database] Failed to get notice:", error);
     return null;
   }
+}
+
+
+export async function getAdaptiveDashboardData(userId: number) {
+  const db = await getDb();
+  if (!db) return { topics: [], mastery: [], ranks: [], performance: [] };
+  const [topics, mastery, ranks, performance] = await Promise.all([
+    db.select().from(jeeSyllabusTopics).orderBy(asc(jeeSyllabusTopics.subject), asc(jeeSyllabusTopics.unit), asc(jeeSyllabusTopics.topic)),
+    db.select().from(userTopicMastery).where(eq(userTopicMastery.userId, userId)).orderBy(desc(userTopicMastery.masteryScore)),
+    db.select().from(rankSnapshots).where(eq(rankSnapshots.userId, userId)).orderBy(desc(rankSnapshots.snapshotDate)).limit(12),
+    db.select().from(questionPerformance).where(eq(questionPerformance.userId, userId)).orderBy(desc(questionPerformance.answeredAt)).limit(100),
+  ]);
+  return { topics, mastery, ranks, performance };
+}
+
+export async function getRevisionQueue(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const [mastery, topics] = await Promise.all([
+    db.select().from(userTopicMastery).where(eq(userTopicMastery.userId, userId)),
+    db.select().from(jeeSyllabusTopics),
+  ]);
+  const topicMap = new Map(topics.map((topic) => [topic.id, topic]));
+  const now = Date.now();
+  return mastery
+    .filter((item) => !item.nextReviewAt || new Date(item.nextReviewAt).getTime() <= now)
+    .map((item) => ({ ...item, topic: topicMap.get(item.topicId) }))
+    .filter((item) => item.topic)
+    .sort((a, b) => Number(a.masteryScore) - Number(b.masteryScore));
+}
+
+export async function recordQuestionPerformance(input: {
+  userId: number;
+  topicId?: number;
+  topicType?: "jeeSyllabus" | "boardSyllabus";
+  attemptId?: number;
+  questionRef?: string;
+  timeSpentSeconds: number;
+  isCorrect: boolean;
+  errorType?: "conceptual" | "calculation" | "silly" | "timePressure" | "none";
+  answerChanged?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(questionPerformance).values({
+    userId: input.userId,
+    topicId: input.topicId,
+    topicType: input.topicType,
+    attemptId: input.attemptId,
+    questionRef: input.questionRef,
+    timeSpentSeconds: input.timeSpentSeconds,
+    isCorrect: input.isCorrect,
+    errorType: input.errorType ?? "none",
+    answerChanged: input.answerChanged ?? false,
+  });
+  if (!input.topicId || !input.topicType) return { masteryScore: null, trend: null, nextReviewAt: null };
+
+  const existing = await db.select().from(userTopicMastery).where(and(
+    eq(userTopicMastery.userId, input.userId),
+    eq(userTopicMastery.topicId, input.topicId),
+    eq(userTopicMastery.topicType, input.topicType),
+  )).limit(1);
+  const previous = existing[0];
+  const currentScore = Number(previous?.masteryScore ?? 0);
+  const nextScore = Math.max(0, Math.min(100, input.isCorrect ? currentScore + (100 - currentScore) * 0.18 + 4 : currentScore - Math.max(6, currentScore * 0.14)));
+  const trend = nextScore > currentScore + 2 ? "improving" : nextScore < currentScore - 2 ? "worsening" : "stagnant";
+  const intervalDays = nextScore >= 85 ? 21 : nextScore >= 70 ? 7 : nextScore >= 45 ? 3 : 1;
+  const nextReviewAt = new Date(Date.now() + intervalDays * 24 * 60 * 60 * 1000);
+  const attempts = (previous?.attempts ?? 0) + 1;
+  const correctAnswers = (previous?.correctAnswers ?? 0) + (input.isCorrect ? 1 : 0);
+
+  if (previous) {
+    await db.update(userTopicMastery).set({ masteryScore: nextScore.toFixed(2), attempts, correctAnswers, trend, nextReviewAt, lastAttemptedAt: new Date() }).where(eq(userTopicMastery.id, previous.id));
+  } else {
+    await db.insert(userTopicMastery).values({ userId: input.userId, topicId: input.topicId, topicType: input.topicType, masteryScore: nextScore.toFixed(2), attempts, correctAnswers, trend, nextReviewAt, lastAttemptedAt: new Date() });
+  }
+  return { masteryScore: Number(nextScore.toFixed(2)), trend, nextReviewAt };
+}
+
+export async function saveDiagnosticPlacement(input: { userId: number; subject: string; score: number; level: "foundation" | "developing" | "examReady" | "advanced"; questionCount: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(diagnosticPlacements).values({ ...input, score: input.score.toFixed(2) });
+  return result[0].insertId;
+}
+
+export async function createDoubt(input: { userId: number; subject: string; topic?: string; questionText: string; attachmentUrl?: string; voiceTranscript?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(doubts).values(input);
+  const rows = await db.select().from(doubts).where(eq(doubts.id, Number(result[0].insertId))).limit(1);
+  return rows[0];
+}
+
+export async function getDoubtsByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(doubts).where(eq(doubts.userId, userId)).orderBy(desc(doubts.createdAt));
+}
+
+export async function resolveDoubt(input: { id: number; userId: number; aiResponse: string; confidence: number; status: "aiResolved" | "needsMentor" }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(doubts).set({ aiResponse: input.aiResponse, confidence: input.confidence.toFixed(2), status: input.status }).where(and(eq(doubts.id, input.id), eq(doubts.userId, input.userId)));
+  return { success: true };
+}
+
+export async function createSquad(input: { userId: number; name: string; inviteCode: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(squads).values({ name: input.name, inviteCode: input.inviteCode, createdBy: input.userId });
+  await db.insert(squadMembers).values({ squadId: Number(result[0].insertId), userId: input.userId, role: "owner" });
+  return db.select().from(squads).where(eq(squads.id, Number(result[0].insertId))).limit(1).then((rows) => rows[0]);
+}
+
+export async function joinSquad(userId: number, inviteCode: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const found = await db.select().from(squads).where(eq(squads.inviteCode, inviteCode.trim())).limit(1);
+  const squad = found[0];
+  if (!squad) return undefined;
+  const existing = await db.select().from(squadMembers).where(and(eq(squadMembers.squadId, squad.id), eq(squadMembers.userId, userId))).limit(1);
+  if (!existing[0]) await db.insert(squadMembers).values({ squadId: squad.id, userId, role: "member" });
+  return squad;
+}
+
+export async function getSquadDashboard(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const memberships = await db.select().from(squadMembers).where(eq(squadMembers.userId, userId));
+  const results = [];
+  for (const membership of memberships) {
+    const squadRows = await db.select().from(squads).where(eq(squads.id, membership.squadId)).limit(1);
+    const members = await db.select().from(squadMembers).where(eq(squadMembers.squadId, membership.squadId));
+    const memberIds = new Set(members.map((member) => member.userId));
+    const points = await db.select().from(leaderboard).orderBy(desc(leaderboard.points));
+    results.push({ squad: squadRows[0], members: points.filter((entry) => memberIds.has(entry.userId)).slice(0, 10) });
+  }
+  return results;
 }

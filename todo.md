@@ -480,3 +480,15 @@
 - [x] Add regression coverage for valid and invalid credential cases
 - [x] Run typecheck, tests, and project health checks (105 tests passing serially; TypeScript clean)
 - [x] Save a checkpoint for the login fix
+
+## Comprehensive Adaptive Learning Upgrade
+- [x] Extend the data model for mastery scores, spaced repetition, diagnostic placement, rank estimates, error taxonomy, doubt escalation, and squads
+- [x] Add backend procedures for adaptive learning, mastery updates, revision queue, rank estimates, CBT analytics, doubts, and squad leaderboards
+- [x] Replace the current visual shell with a warm notebook-inspired responsive design system
+- [x] Rebuild the student dashboard as an adaptive command center with coverage, mastery, pace, rank trend, and remediation
+- [x] Upgrade practice mode with adaptive difficulty and weak-topic remediation bundles
+- [x] Upgrade CBT review with time-pressure analytics, error taxonomy, cohort comparison, and replay mode
+- [x] Improve AI doubt solving with confidence handling and mentor escalation states
+- [x] Add squad-scoped accountability and effort-weighted engagement presentation
+- [x] Add focused regression tests for the upgrade surfaces (109 serial tests passing)
+- [x] Run typecheck, full tests, health checks, and save the upgraded checkpoint

@@ -1,220 +1,47 @@
-import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, BookOpen, Users, Award, Zap } from "lucide-react";
-import { StudyMaterialsPreview } from "@/components/StudyMaterialsPreview";
-import { TimeTrackersPreview } from "@/components/TimeTrackersPreview";
-import { CommunityPostsPreview } from "@/components/CommunityPostsPreview";
-import ToppersSection from "@/components/ToppersSection";
-import { PersonalizedHomepage } from "@/components/PersonalizedHomepage";
-import { ContinueLearning } from "@/components/ContinueLearning";
-import DashboardLayout from "@/components/DashboardLayout";
-import { NoticesDisplay } from "@/components/NoticesDisplay";
-import { UserStatsWidget } from "@/components/UserStatsWidget";
-import { StreaksWidget } from "@/components/StreaksWidget";
-import { CertificateShowcase } from "@/components/CertificateShowcase";
+import { ArrowRight, ArrowUpRight, BarChart3, BrainCircuit, BookOpen, ChartNoAxesCombined, Check, ChevronRight, Flame, Lightbulb, MessageCircle, NotebookPen, ShieldCheck, Sparkles, Swords, Target, Users } from "lucide-react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import DashboardLayout from "@/components/DashboardLayout";
+import Dashboard from "./Dashboard";
+import { CertificateShowcase } from "@/components/CertificateShowcase";
+
+const pillars = [
+  { icon: BrainCircuit, label: "Adaptive intelligence", copy: "Your weak topics shape the next drill, the next revision, and the next useful explanation." },
+  { icon: Users, label: "Social accountability", copy: "Small squads make consistency visible without turning a study app into a popularity contest." },
+  { icon: ChartNoAxesCombined, label: "Transparent progress", copy: "Coverage, mastery, pace, and rank signals in one place — with the data behind every nudge." },
+];
+
+const features = [
+  { icon: Swords, index: "01", title: "Practice that adjusts", copy: "Difficulty moves with your last answers so a session stays challenging without becoming noise." },
+  { icon: NotebookPen, index: "02", title: "A syllabus that remembers", copy: "Every topic can become a mastery signal and a spaced-repetition review, not just a checked box." },
+  { icon: MessageCircle, index: "03", title: "A coach in your corner", copy: "Ask a doubt, get a structured explanation, and escalate when you still need a human mentor." },
+  { icon: BarChart3, index: "04", title: "Know if you’re on track", copy: "See the pace required for your exam target, your study rhythm, and the topics worth revisiting." },
+];
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><div className="text-center"><div className="mx-auto mb-4 h-9 w-9 animate-spin rounded-full border-2 border-primary/20 border-t-primary" /><p className="text-sm font-bold text-muted-foreground">Opening your study desk…</p></div></div>;
+  if (isAuthenticated && user) return <DashboardLayout><Dashboard /></DashboardLayout>;
 
-  // If authenticated, show dashboard with preview sections
-  if (isAuthenticated && user) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          {/* Welcome Section */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-6 shadow-lg">
-            <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h1>
-            <p className="text-blue-100">Continue your exam preparation journey</p>
-          </div>
-
-          {/* Streaks Display - Show fire emoji with streak count */}
-          <StreaksWidget />
-
-          {/* Notices Section */}
-          <NoticesDisplay />
-
-          {/* User Stats Widget */}
-          <UserStatsWidget />
-
-          {/* Main Content Grid */}
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Study Materials - Takes 2 columns on large screens */}
-            <div className="lg:col-span-2">
-              <StudyMaterialsPreview />
-            </div>
-
-            {/* Time Trackers - Takes 1 column */}
-            <div>
-              <TimeTrackersPreview />
-            </div>
-          </div>
-
-          {/* Community Posts - Full width */}
-          <CommunityPostsPreview />
-
-          {/* Community Toppers Section */}
-          <ToppersSection />
-
-          {/* Continue Learning Section */}
-          <ContinueLearning sessions={[]} />
-
-          {/* Personalized Content */}
-          <PersonalizedHomepage userStream={user?.stream || "science"} userBoard="CBSE" />
-
-          {/* Quick Actions */}
-          <Card className="border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-              <CardDescription>Get started with these popular features</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-3 gap-3">
-                <Button
-                  variant="outline"
-                  className="justify-start"
-                  onClick={() => navigate("/daily-tasks")}
-                >
-                  📋 Daily Tasks
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-start"
-                  onClick={() => navigate("/board-questions")}
-                >
-                  ❓ Board Questions
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-start"
-                  onClick={() => navigate("/leaderboard")}
-                >
-                  🏆 Leaderboard
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  // Landing page for unauthenticated users
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="text-2xl font-bold text-blue-600">📚 HSLC Prep Hub</div>
-          <div className="flex gap-4">
-            <Button variant="outline" onClick={() => navigate("/contact")}>
-              Join Now
-            </Button>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen overflow-hidden bg-background text-foreground">
+      <header className="relative z-10 border-b border-border/70 bg-background/85 backdrop-blur-xl"><div className="mx-auto flex max-w-[1440px] items-center justify-between px-5 py-5 sm:px-8 lg:px-12"><button onClick={() => navigate("/")} className="flex items-center gap-3 text-left focus-ring"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/15"><BrainCircuit className="h-5 w-5" /></span><span><span className="block text-sm font-black tracking-tight">Prep / Hub</span><span className="block text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted-foreground">adaptive learning</span></span></button><nav className="hidden items-center gap-7 text-sm font-bold text-muted-foreground md:flex"><a href="#why" className="transition-colors hover:text-foreground">Why it works</a><a href="#features" className="transition-colors hover:text-foreground">The toolkit</a><a href="#certificates" className="transition-colors hover:text-foreground">Milestones</a></nav><div className="flex items-center gap-2 sm:gap-3"><Button variant="ghost" onClick={() => navigate("/login")} className="rounded-full text-sm font-bold">Sign in</Button><Button onClick={() => navigate("/contact")} className="rounded-full px-4 sm:px-5">Start free <ArrowUpRight className="ml-2 h-4 w-4" /></Button></div></div></header>
 
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Master Your Board Exams
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Comprehensive preparation platform for HSLC students with study materials, practice tests, and community support
-          </p>
-          <Button
-            size="lg"
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-            onClick={() => navigate("/contact")}
-          >
-            Get Started <ArrowRight className="ml-2 w-4 h-4" />
-          </Button>
-        </div>
+      <main>
+        <section className="paper-grid relative"><div className="mx-auto grid max-w-[1440px] gap-12 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-12 lg:pb-28"><div className="relative z-10"><p className="ink-kicker mb-5 flex items-center gap-2"><Sparkles className="h-3.5 w-3.5" /> built around how you learn</p><h1 className="display-serif max-w-3xl text-6xl font-bold leading-[0.9] tracking-tight sm:text-7xl lg:text-[6.75rem]">A smarter desk for your <span className="text-primary">big exam.</span></h1><p className="mt-7 max-w-xl text-lg leading-8 text-muted-foreground sm:text-xl">Prep / Hub is an adaptive JEE and NEET companion that turns the messy middle of preparation into a clear next move.</p><div className="mt-8 flex flex-col gap-3 sm:flex-row"><Button onClick={() => navigate("/contact")} size="lg" className="h-13 rounded-full px-6 text-base">Build my study path <ArrowRight className="ml-2 h-4 w-4" /></Button><Button onClick={() => navigate("/login")} size="lg" variant="outline" className="h-13 rounded-full bg-card/50 px-6 text-base">I already have an account</Button></div><div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-sm font-bold text-muted-foreground"><span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> Live syllabus map</span><span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> Spaced revision queue</span><span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> AI study coach</span></div></div><div className="relative mx-auto w-full max-w-xl lg:justify-self-end"><div className="absolute -right-10 -top-12 h-56 w-56 rounded-full bg-accent/55 blur-3xl" /><div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-primary/15 blur-3xl" /><div className="relative rotate-1 rounded-[2rem] border border-border bg-card p-4 shadow-2xl shadow-primary/10 sm:p-5"><div className="rounded-[1.5rem] bg-primary p-5 text-primary-foreground sm:p-7"><div className="flex items-center justify-between"><div><p className="text-xs font-black uppercase tracking-[0.18em] text-primary-foreground/60">Today’s desk</p><p className="mt-1 text-2xl font-black">One clear next move.</p></div><Flame className="h-7 w-7 text-primary-foreground/80" /></div><div className="mt-8 rounded-2xl bg-white/10 p-4"><div className="flex items-end justify-between"><div><p className="text-xs font-bold text-primary-foreground/60">Mastery baseline</p><p className="mt-1 text-4xl font-black">62<span className="text-xl">%</span></p></div><span className="rounded-full bg-emerald-300/20 px-3 py-1 text-xs font-black text-emerald-100">+8% this month</span></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-black/15"><div className="h-full w-[62%] rounded-full bg-accent" /></div></div><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-white/10 p-4"><p className="text-xs font-bold text-primary-foreground/60">Revise today</p><p className="mt-1 text-2xl font-black">4 topics</p></div><div className="rounded-2xl bg-white/10 p-4"><p className="text-xs font-bold text-primary-foreground/60">Target exam</p><p className="mt-1 text-2xl font-black">JEE Main</p></div></div></div><div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-background/70 p-4"><div className="rounded-xl bg-accent/60 p-2 text-primary"><Lightbulb className="h-4 w-4" /></div><div className="flex-1"><p className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">Adaptive nudge</p><p className="mt-1 text-sm font-black">Revisit rotational motion before a new mock.</p></div><ChevronRight className="h-4 w-4 text-muted-foreground" /></div></div></div></div></section>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          <Card className="border-2 border-blue-200 hover:shadow-lg transition">
-            <CardHeader>
-              <BookOpen className="w-8 h-8 text-blue-600 mb-2" />
-              <CardTitle className="text-lg">Study Materials</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Access comprehensive study materials and notes for all subjects</p>
-            </CardContent>
-          </Card>
+        <section id="why" className="mx-auto max-w-[1440px] px-5 py-20 sm:px-8 lg:px-12 lg:py-28"><div className="max-w-2xl"><p className="ink-kicker">Not another content dump</p><h2 className="display-serif mt-3 text-4xl font-bold leading-tight sm:text-5xl">The platform should know what to do <span className="text-primary">next.</span></h2><p className="mt-5 text-lg leading-8 text-muted-foreground">Preparation is not one big task. It is a sequence of small decisions made under a countdown. Prep / Hub keeps those decisions close, legible, and grounded in your own data.</p></div><div className="mt-12 grid gap-5 lg:grid-cols-3">{pillars.map(({ icon: Icon, label, copy }) => <div key={label} className="elevated-card rounded-[1.5rem] p-6 sm:p-7"><div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/55 text-primary"><Icon className="h-6 w-6" /></div><h3 className="text-xl font-black">{label}</h3><p className="mt-3 leading-7 text-muted-foreground">{copy}</p></div>)}</div></section>
 
-          <Card className="border-2 border-indigo-200 hover:shadow-lg transition">
-            <CardHeader>
-              <Zap className="w-8 h-8 text-indigo-600 mb-2" />
-              <CardTitle className="text-lg">Practice Tests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Take unlimited practice tests and track your progress</p>
-            </CardContent>
-          </Card>
+        <section id="features" className="border-y border-border/70 bg-card/65"><div className="mx-auto max-w-[1440px] px-5 py-20 sm:px-8 lg:px-12 lg:py-28"><div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div className="max-w-2xl"><p className="ink-kicker">The toolkit</p><h2 className="display-serif mt-3 text-4xl font-bold sm:text-5xl">Everything points back to better practice.</h2></div><p className="max-w-md text-base leading-7 text-muted-foreground">Start with one feature. The value compounds when the pieces share the same syllabus and the same mastery graph.</p></div><div className="mt-12 grid gap-px overflow-hidden rounded-[1.75rem] border border-border bg-border sm:grid-cols-2">{features.map(({ icon: Icon, index, title, copy }) => <div key={title} className="group bg-background p-7 transition-colors hover:bg-accent/15 sm:p-9"><div className="flex items-start justify-between"><span className="text-xs font-black tracking-[0.18em] text-muted-foreground">{index}</span><Icon className="h-6 w-6 text-primary transition-transform duration-200 group-hover:-translate-y-1 group-hover:rotate-3" /></div><h3 className="mt-12 text-2xl font-black">{title}</h3><p className="mt-3 max-w-sm leading-7 text-muted-foreground">{copy}</p><button onClick={() => navigate("/contact")} className="mt-7 flex items-center gap-2 text-sm font-black text-primary">Explore the desk <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button></div>)}</div></div></section>
 
-          <Card className="border-2 border-purple-200 hover:shadow-lg transition">
-            <CardHeader>
-              <Users className="w-8 h-8 text-purple-600 mb-2" />
-              <CardTitle className="text-lg">Community</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Connect with peers, ask questions, and share knowledge</p>
-            </CardContent>
-          </Card>
+        <section id="certificates" className="mx-auto max-w-[1440px] px-5 py-20 sm:px-8 lg:px-12 lg:py-28"><CertificateShowcase /></section>
 
-          <Card className="border-2 border-pink-200 hover:shadow-lg transition">
-            <CardHeader>
-              <Award className="w-8 h-8 text-pink-600 mb-2" />
-              <CardTitle className="text-lg">Certificates</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Earn certificates for your achievements and contributions</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Certificate Showcase Section */}
-        <CertificateShowcase />
-
-        {/* CTA Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-12 text-center border-2 border-blue-200">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Ready to Excel in Your Board Exams?
-          </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Join thousands of students already preparing with HSLC Prep Hub
-          </p>
-          <Button
-            size="lg"
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-            onClick={() => navigate("/contact")}
-          >
-            Join Our Community <ArrowRight className="ml-2 w-4 h-4" />
-          </Button>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white mt-20 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-400">© 2026 HSLC Prep Hub. All rights reserved.</p>
-        </div>
-      </footer>
+        <section className="mx-auto max-w-[1440px] px-5 pb-20 sm:px-8 lg:px-12 lg:pb-28"><div className="relative overflow-hidden rounded-[2rem] bg-primary p-8 text-primary-foreground sm:p-12 lg:p-16"><div className="absolute -right-16 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" /><div className="relative max-w-3xl"><p className="text-xs font-black uppercase tracking-[0.18em] text-primary-foreground/60">Start with clarity</p><h2 className="display-serif mt-4 text-4xl font-bold leading-tight sm:text-6xl">The next session is easier when the system remembers the last one.</h2><p className="mt-5 max-w-xl text-lg leading-8 text-primary-foreground/75">Build your baseline, find your weak topics, and turn preparation into a rhythm you can return to.</p><Button onClick={() => navigate("/contact")} size="lg" variant="secondary" className="mt-8 rounded-full px-6">Create my study desk <ArrowUpRight className="ml-2 h-4 w-4" /></Button></div></div></section>
+      </main>
+      <footer className="border-t border-border/70 bg-card/50"><div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-4 px-5 py-7 text-sm text-muted-foreground sm:flex-row sm:px-8 lg:px-12"><p className="font-black text-foreground">Prep / Hub</p><p>Adaptive preparation for students who want the data and the momentum.</p><p>© 2026 HSLC Prep Hub</p></div></footer>
     </div>
   );
 }
