@@ -12,7 +12,7 @@ export function PersonalizedHomepage({ userStream = "science", userBoard = "CBSE
   const [selectedBoard, setSelectedBoard] = useState(userBoard);
   const [filteredMaterials, setFilteredMaterials] = useState<any[]>([]);
 
-  const boards = ["CBSE", "HSLC", "MP_BOARD"];
+  const boards = ["JEE Main", "NEET", "CBSE", "State Board"];
   const streams = ["science", "commerce", "arts"];
 
   // Simulate filtering materials based on board
@@ -21,7 +21,7 @@ export function PersonalizedHomepage({ userStream = "science", userBoard = "CBSE
     const materials = [
       { id: 1, title: "Physics Notes", board: "CBSE", stream: "science" },
       { id: 2, title: "Chemistry Solutions", board: "CBSE", stream: "science" },
-      { id: 3, title: "Biology Revision", board: "HSLC", stream: "science" },
+      { id: 3, title: "Biology Revision", board: "NEET", stream: "science" },
       { id: 4, title: "Math Practice", board: "MP_BOARD", stream: "science" },
     ];
 
