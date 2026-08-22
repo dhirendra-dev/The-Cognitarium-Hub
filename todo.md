@@ -511,3 +511,10 @@
 - [x] Run responsive visual verification for login and account creation
 - [x] Save checkpoint for credential privacy and login handoff fix
 
+
+## Current Fix: Prominent Logout Button
+- [x] Add prominent logout button to authenticated header and mobile menu in DashboardLayout
+- [x] Ensure logout mutation clears session and redirects to sign-in page
+- [x] Run vitest suite and verify responsive layout rendering
+- [x] Save checkpoint for logout improvement
+

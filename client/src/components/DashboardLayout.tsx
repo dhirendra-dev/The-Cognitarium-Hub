@@ -191,6 +191,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground sm:flex"><CircleHelp className="h-3.5 w-3.5 text-primary" /> Need a nudge?</div>
             <button onClick={() => go("/daily-tasks")} className="hidden items-center gap-2 rounded-full bg-accent/50 px-3 py-2 text-xs font-black text-accent-foreground transition-transform hover:-translate-y-0.5 sm:flex"><Flame className="h-4 w-4 text-primary" /> Keep your streak</button>
             <button onClick={() => go("/settings")} className="focus-ring rounded-full"><Avatar className="h-10 w-10 border-2 border-card shadow-sm"><AvatarFallback className="bg-primary text-xs font-black text-primary-foreground">{initials}</AvatarFallback></Avatar></button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={logout}
+              className="hidden sm:flex items-center gap-1.5 rounded-full border-border/80 px-3.5 py-2 text-xs font-bold text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all"
+              title="Sign out of your account"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sign out
+            </Button>
           </div>
         </header>
         <main className="dashboard-surface paper-grid min-h-[calc(100vh-76px)] p-4 sm:p-7 lg:p-10">{children}</main>
