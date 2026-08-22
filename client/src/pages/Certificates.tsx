@@ -3,8 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Download, Award, Loader2, CheckCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Download, Award, Loader2, CheckCircle, Sparkles, Trophy } from "lucide-react";
 import { CertificateShareButtons } from "@/components/CertificateShareButtons";
 
 interface Certificate {
@@ -22,13 +21,9 @@ interface Certificate {
 export default function CertificatesPage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
 
-  // Fetch user certificates
   const { data: userCerts, isLoading: isCertsLoading, refetch: refetchCerts } = trpc.certificates.getUserCertificates.useQuery();
-
-  // Fetch contribution stats
   const { data: stats, isLoading: isStatsLoading } = trpc.certificates.getContributionStats.useQuery();
 
-  // Mark as downloaded mutation
   const markDownloadedMutation = trpc.certificates.markAsDownloaded.useMutation({
     onSuccess: () => {
       refetchCerts();
@@ -43,15 +38,12 @@ export default function CertificatesPage() {
 
   const handleDownloadCertificate = async (cert: Certificate) => {
     try {
-      // Get download URL from backend
       const response = await fetch(`/api/trpc/certificates.downloadCertificate?input=${JSON.stringify({ certificateId: cert.id })}`);
       const result = await response.json();
 
       if (result.result?.data?.downloadUrl) {
-        // Mark as downloaded
         markDownloadedMutation.mutate({ certificateId: cert.id });
 
-        // Trigger download
         const link = document.createElement("a");
         link.href = result.result.data.downloadUrl;
         link.download = result.result.data.fileName || `certificate-${cert.verificationCode}.pdf`;
@@ -66,115 +58,98 @@ export default function CertificatesPage() {
 
   if (isCertsLoading || isStatsLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <Award className="w-10 h-10 text-blue-600" />
-            Your Certificates
-          </h1>
-          <p className="text-gray-600">
-            Download your earned certificates and share them with others.
-          </p>
+    <div className="mx-auto max-w-[1440px] space-y-8 animate-in fade-in duration-300">
+      <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8 lg:p-10">
+        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-accent/30 blur-3xl pointer-events-none" />
+        <div className="relative">
+          <p className="ink-kicker mb-3">Milestones & Verification</p>
+          <h1 className="display-serif text-3xl font-bold tracking-tight sm:text-5xl">Your Earned Certificates</h1>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Download your verified credentials and share your study milestones with peers.</p>
         </div>
+      </section>
 
-        {/* Contribution Stats */}
-        {stats && (
-          <Card className="mb-8 border-2 border-blue-200 bg-white shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg">Your Contribution Stats</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{stats.postCount}</div>
-                  <div className="text-sm text-gray-600">Community Posts</div>
-                </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{stats.totalLikesReceived}</div>
-                  <div className="text-sm text-gray-600">Likes Received</div>
-                </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{stats.replyCount}</div>
-                  <div className="text-sm text-gray-600">Helpful Replies</div>
-                </div>
-                <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">{stats.streakDays}</div>
-                  <div className="text-sm text-gray-600">Study Streak Days</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Earned Certificates */}
-        {certificates.length > 0 ? (
+      {stats && (
+        <Card className="elevated-card rounded-[2rem] p-6 sm:p-8 space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-              Earned Certificates ({certificates.length})
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {certificates.map((cert) => (
-                <Card key={cert.id} className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg hover:shadow-xl transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="text-lg">{cert.title}</CardTitle>
-                    <CardDescription>{cert.contributionMetric}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <Badge className="bg-green-600 text-white">
-                        Earned on {new Date(cert.issuedAt).toLocaleDateString()}
-                      </Badge>
-                      <div className="text-sm text-gray-600">
-                        <strong>Verification Code:</strong> {cert.verificationCode.substring(0, 8)}...
-                      </div>
-                      <Button
-                        onClick={() => handleDownloadCertificate(cert)}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download Certificate
-                      </Button>
-                      {cert.isDownloaded && (
-                        <div className="text-xs text-green-600 text-center">✓ Downloaded</div>
-                      )}
-                      <div className="border-t border-green-200 pt-3 mt-3">
-                        <CertificateShareButtons
-                          certificateTitle={cert.title}
-                          certificateType={cert.certificateType}
-                          verificationCode={cert.verificationCode}
-                          certificateUrl={cert.certificateUrl}
-                          studentName="Student"
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <p className="ink-kicker">Engagement Metrics</p>
+            <h2 className="text-xl font-bold tracking-tight">Your Contribution Stats</h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-2xl border border-border/80 bg-background/50 p-5 space-y-1">
+              <p className="text-xs font-black uppercase text-muted-foreground">Community Posts</p>
+              <p className="text-3xl font-black text-foreground">{stats.postCount}</p>
+            </div>
+            <div className="rounded-2xl border border-border/80 bg-background/50 p-5 space-y-1">
+              <p className="text-xs font-black uppercase text-muted-foreground">Likes Received</p>
+              <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{stats.totalLikesReceived}</p>
+            </div>
+            <div className="rounded-2xl border border-border/80 bg-background/50 p-5 space-y-1">
+              <p className="text-xs font-black uppercase text-muted-foreground">Helpful Replies</p>
+              <p className="text-3xl font-black text-primary">{stats.replyCount}</p>
+            </div>
+            <div className="rounded-2xl border border-border/80 bg-background/50 p-5 space-y-1">
+              <p className="text-xs font-black uppercase text-muted-foreground">Study Streak Days</p>
+              <p className="text-3xl font-black text-amber-600">{stats.streakDays}</p>
             </div>
           </div>
+        </Card>
+      )}
+
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          Earned Certificates ({certificates.length})
+        </h2>
+        {certificates.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {certificates.map((cert) => (
+              <Card key={cert.id} className="elevated-card rounded-[2rem] p-6 sm:p-8 flex flex-col justify-between space-y-6 border border-border bg-card">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">Verified Credential</span>
+                    <Sparkles className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <h3 className="text-xl font-bold tracking-tight text-foreground">{cert.title}</h3>
+                  <p className="text-xs font-semibold text-muted-foreground">{cert.contributionMetric}</p>
+                </div>
+                <div className="space-y-4 pt-4 border-t border-border/60">
+                  <div className="text-xs font-semibold text-muted-foreground space-y-1">
+                    <p>Issued: <span className="font-bold text-foreground">{new Date(cert.issuedAt).toLocaleDateString()}</span></p>
+                    <p className="font-mono text-[0.7rem] text-muted-foreground">Code: {cert.verificationCode.substring(0, 12)}...</p>
+                  </div>
+                  <Button
+                    onClick={() => handleDownloadCertificate(cert)}
+                    className="w-full rounded-full font-bold shadow-sm"
+                  >
+                    <Download className="mr-2 h-4 w-4" /> Download Certificate
+                  </Button>
+                  {cert.isDownloaded && (
+                    <p className="text-xs font-bold text-emerald-600 text-center">✓ Downloaded</p>
+                  )}
+                  <div className="pt-2">
+                    <CertificateShareButtons
+                      certificateTitle={cert.title}
+                      certificateType={cert.certificateType}
+                      verificationCode={cert.verificationCode}
+                      certificateUrl={cert.certificateUrl}
+                      studentName="Student"
+                    />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         ) : (
-          <Card className="border-2 border-yellow-200 bg-yellow-50">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Award className="w-5 h-5 text-yellow-600" />
-                No Certificates Yet
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700">
-                You haven't earned any certificates yet. Participate in the community, complete study sessions, and maintain your streak to earn certificates!
-              </p>
-            </CardContent>
+          <Card className="rounded-[2rem] p-12 text-center space-y-3 border border-dashed border-border bg-card">
+            <Award className="mx-auto h-12 w-12 text-muted-foreground/60" />
+            <p className="text-base font-bold text-foreground">No Certificates Yet</p>
+            <p className="text-sm font-semibold text-muted-foreground max-w-md mx-auto">Participate in the community, complete study sessions, and maintain your streak to earn certificates!</p>
           </Card>
         )}
       </div>

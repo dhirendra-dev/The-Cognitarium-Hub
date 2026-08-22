@@ -1,11 +1,9 @@
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Search, Filter } from "lucide-react";
+import { ExternalLink, Search, Filter, BookOpen } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const CATEGORIES = [
   "PW Modules",
@@ -42,230 +40,107 @@ export default function StudyMaterialsPage() {
     });
   }, [allMaterials, searchQuery, selectedCategory, selectedSubject]);
 
-  const getResourceTypeIcon = (type: string) => {
-    switch (type) {
-      case "googleDrive":
-        return "📁";
-      case "telegram":
-        return "📱";
-      case "website":
-        return "🌐";
-      case "pdf":
-        return "📄";
-      case "video":
-        return "🎥";
-      default:
-        return "📚";
-    }
-  };
-
-  const getDifficultyColor = (difficulty?: string) => {
-    switch (difficulty) {
-      case "beginner":
-        return "bg-green-100 text-green-800";
-      case "intermediate":
-        return "bg-yellow-100 text-yellow-800";
-      case "advanced":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">📚 Study Materials</h1>
-          <p className="text-gray-600">
-            Access comprehensive JEE preparation resources curated from top coaching institutes
-          </p>
+    <div className="mx-auto max-w-[1440px] space-y-8 animate-in fade-in duration-300">
+      <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8 lg:p-10">
+        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-accent/30 blur-3xl pointer-events-none" />
+        <div className="relative">
+          <p className="ink-kicker mb-3">Curated Resource Library</p>
+          <h1 className="display-serif text-3xl font-bold tracking-tight sm:text-5xl">Study Materials</h1>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Access comprehensive JEE preparation resources curated from top coaching institutes and expert faculty.</p>
+        </div>
+      </section>
+
+      <Card className="elevated-card rounded-[2rem] p-6 sm:p-8 space-y-6">
+        <div className="relative">
+          <Search className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground" />
+          <Input
+            placeholder="Search materials by title, author, or keywords..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-2xl border border-border bg-background pl-12 pr-4 py-3 text-sm font-semibold text-foreground focus:outline-primary"
+          />
         </div>
 
-        {/* Search and Filters */}
-        <Card className="mb-8 shadow-lg">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
-                <Input
-                  placeholder="Search materials, authors, topics..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            {/* Category Filter */}
-            <div>
-              <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <Filter className="w-4 h-4" /> Filter by Category
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={selectedCategory === null ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(null)}
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground mb-3">Filter by Category</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${!selectedCategory ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+              >
+                All Categories
+              </button>
+              {CATEGORIES.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${selectedCategory === category ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
                 >
-                  All Categories
-                </Button>
-                {CATEGORIES.map((category) => (
-                  <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    {category}
-                  </Button>
-                ))}
-              </div>
+                  {category}
+                </button>
+              ))}
             </div>
+          </div>
 
-            {/* Subject Filter */}
-            <div>
-              <p className="text-sm font-semibold text-gray-700 mb-2">Filter by Subject</p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={selectedSubject === null ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedSubject(null)}
+          <div>
+            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground mb-3">Filter by Subject</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedSubject(null)}
+                className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${!selectedSubject ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+              >
+                All Subjects
+              </button>
+              {SUBJECTS.map((subject) => (
+                <button
+                  key={subject}
+                  onClick={() => setSelectedSubject(subject)}
+                  className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${selectedSubject === subject ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
                 >
-                  All Subjects
-                </Button>
-                {SUBJECTS.map((subject) => (
-                  <Button
-                    key={subject}
-                    variant={selectedSubject === subject ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedSubject(subject)}
-                  >
-                    {subject}
-                  </Button>
-                ))}
-              </div>
+                  {subject}
+                </button>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+      </Card>
 
-        {/* Tabs */}
-        <Tabs defaultValue="all" className="mb-8">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="all">All Materials ({filteredMaterials.length})</TabsTrigger>
-            <TabsTrigger value="popular">Popular ({popularMaterials.length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="all" className="space-y-4">
-            {filteredMaterials.length === 0 ? (
-              <Card className="text-center py-12">
-                <p className="text-gray-500">No materials found matching your criteria</p>
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold tracking-tight">Available Resources ({filteredMaterials.length})</h2>
+        {filteredMaterials.length === 0 ? (
+          <Card className="rounded-[2rem] p-12 text-center space-y-3 border border-dashed border-border bg-card">
+            <BookOpen className="mx-auto h-10 w-10 text-muted-foreground/60" />
+            <p className="text-base font-bold text-foreground">No study materials found</p>
+            <p className="text-sm font-semibold text-muted-foreground">Try adjusting your search query or filter selection.</p>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredMaterials.map((material) => (
+              <Card key={material.id} className="elevated-card rounded-[1.75rem] p-6 flex flex-col justify-between space-y-4 border border-border bg-card hover:border-primary/50 transition-all">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">{material.subject}</span>
+                    <span className="text-xs font-bold text-muted-foreground">{material.category}</span>
+                  </div>
+                  <h3 className="text-lg font-bold tracking-tight text-foreground">{material.title}</h3>
+                  <p className="text-xs font-semibold text-muted-foreground line-clamp-2">{material.description || "Curated study resource for deep conceptual mastery."}</p>
+                </div>
+                <div className="pt-4 border-t border-border/60 flex items-center justify-between">
+                  <span className="text-xs font-bold text-muted-foreground">Author: {material.author || "Expert Faculty"}</span>
+                  {material.url && (
+                    <Button asChild size="sm" className="rounded-full px-4 font-bold">
+                      <a href={material.url} target="_blank" rel="noopener noreferrer">
+                        Access <ExternalLink className="ml-1.5 h-3 w-3" />
+                      </a>
+                    </Button>
+                  )}
+                </div>
               </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredMaterials.map((material) => (
-                  <Card key={material.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg line-clamp-2">{material.title}</CardTitle>
-                          {material.author && (
-                            <CardDescription className="text-sm mt-1">
-                              by {material.author}
-                            </CardDescription>
-                          )}
-                        </div>
-                        <span className="text-2xl">{getResourceTypeIcon(material.resourceType)}</span>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {material.description && (
-                        <p className="text-sm text-gray-600 line-clamp-2">{material.description}</p>
-                      )}
-
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary">{material.category}</Badge>
-                        {material.subject && <Badge variant="outline">{material.subject}</Badge>}
-                        {material.difficulty && (
-                          <Badge className={getDifficultyColor(material.difficulty)}>
-                            {material.difficulty}
-                          </Badge>
-                        )}
-                      </div>
-
-                      <Button
-                        asChild
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                      >
-                        <a href={material.url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Access Resource
-                        </a>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="popular" className="space-y-4">
-            {popularMaterials.length === 0 ? (
-              <Card className="text-center py-12">
-                <p className="text-gray-500">No popular materials yet</p>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {popularMaterials.map((material) => (
-                  <Card key={material.id} className="hover:shadow-lg transition-shadow border-2 border-yellow-200">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <CardTitle className="text-lg line-clamp-2">{material.title}</CardTitle>
-                            <Badge className="bg-yellow-500 text-white">⭐ Popular</Badge>
-                          </div>
-                          {material.author && (
-                            <CardDescription className="text-sm mt-1">
-                              by {material.author}
-                            </CardDescription>
-                          )}
-                        </div>
-                        <span className="text-2xl">{getResourceTypeIcon(material.resourceType)}</span>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {material.description && (
-                        <p className="text-sm text-gray-600 line-clamp-2">{material.description}</p>
-                      )}
-
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary">{material.category}</Badge>
-                        {material.subject && <Badge variant="outline">{material.subject}</Badge>}
-                        {material.difficulty && (
-                          <Badge className={getDifficultyColor(material.difficulty)}>
-                            {material.difficulty}
-                          </Badge>
-                        )}
-                      </div>
-
-                      <Button
-                        asChild
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                      >
-                        <a href={material.url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Access Resource
-                        </a>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

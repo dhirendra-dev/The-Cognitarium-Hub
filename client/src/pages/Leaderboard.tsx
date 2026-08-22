@@ -1,10 +1,10 @@
-import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Medal, Flame } from "lucide-react";
+import { Trophy, Medal, Flame, Award } from "lucide-react";
 import { useState } from "react";
 import ComparisonView from "@/components/ComparisonView";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Leaderboard() {
   const { user } = useAuth();
@@ -13,194 +13,135 @@ export default function Leaderboard() {
   const { data: userRank } = trpc.leaderboard.getUserRank.useQuery();
   const { data: allToppers = [] } = trpc.toppers.getToppers.useQuery();
 
-  // Filter toppers by selected board
   const filteredToppers = selectedBoard
     ? allToppers.filter((t: any) => t.board === selectedBoard)
     : allToppers;
 
-  // Get unique boards from toppers data
   const boards = Array.from(new Set(allToppers.map((t: any) => t.board))).sort();
 
   const getMedalIcon = (position: number) => {
-    if (position === 1) return <Trophy className="w-6 h-6 text-yellow-500" />;
-    if (position === 2) return <Medal className="w-6 h-6 text-gray-400" />;
-    if (position === 3) return <Medal className="w-6 h-6 text-orange-600" />;
+    if (position === 1) return <Trophy className="h-6 w-6 text-amber-500" />;
+    if (position === 2) return <Medal className="h-6 w-6 text-slate-400" />;
+    if (position === 3) return <Medal className="h-6 w-6 text-amber-700" />;
     return null;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Trophy className="w-10 h-10 text-yellow-500" />
-            <h1 className="text-4xl font-bold text-gray-800">Leaderboard</h1>
-          </div>
-          <p className="text-gray-600">Top performers in HSLC exam preparation</p>
+    <div className="mx-auto max-w-[1440px] space-y-8 animate-in fade-in duration-300">
+      <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8 lg:p-10">
+        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-accent/30 blur-3xl pointer-events-none" />
+        <div className="relative">
+          <p className="ink-kicker mb-3">Excellence & Recognition</p>
+          <h1 className="display-serif text-3xl font-bold tracking-tight sm:text-5xl">Community Leaderboard</h1>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Compare your XP and engagement progress with top-performing peers across India.</p>
         </div>
+      </section>
 
-        {/* Your Rank */}
-        {userRank && (
-          <Card className="bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg p-8 mb-8 text-white">
-            <div className="flex items-center justify-between">
+      {userRank && (
+        <Card className="elevated-card rounded-[2rem] p-6 sm:p-8 bg-primary text-primary-foreground shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="space-y-1">
+              <p className="text-xs font-black uppercase tracking-wider text-primary-foreground/75">Your Standing</p>
+              <h2 className="text-4xl font-black">Rank #{userRank.rank || "—"}</h2>
+            </div>
+            <div className="flex items-center gap-8">
               <div>
-                <p className="text-sm font-semibold opacity-90">Your Rank</p>
-                <h2 className="text-4xl font-bold mt-2">#{userRank.rank || "—"}</h2>
+                <p className="text-xs font-bold uppercase tracking-wider text-primary-foreground/75">Total XP</p>
+                <p className="text-3xl font-black mt-1">{userRank.points || 0}</p>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold opacity-90">Points</p>
-                <p className="text-4xl font-bold mt-2">{userRank.points || 0}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold opacity-90">Streak</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <Flame className="w-6 h-6" />
-                  <p className="text-3xl font-bold">{(userRank as any).currentStreak || 0}</p>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-primary-foreground/75">Streak</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Flame className="h-6 w-6 text-accent" />
+                  <p className="text-3xl font-black">{(userRank as any).currentStreak || 0} d</p>
                 </div>
               </div>
             </div>
-          </Card>
-        )}
-
-        {/* Leaderboard Table */}
-        <Card className="bg-white shadow-lg overflow-hidden">
-          <div className="p-6 border-b-2 border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-800">Top 50 Performers</h2>
           </div>
+        </Card>
+      )}
 
-          {topUsers && topUsers.length > 0 ? (
-            <div className="divide-y divide-gray-200">
-              {topUsers.map((performer, index) => (
-                <div
-                  key={performer.id}
-                  className={`p-6 flex items-center justify-between hover:bg-gray-50 transition-colors ${
-                    index < 3 ? "bg-gradient-to-r from-yellow-50 to-transparent" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-6 flex-1">
-                    <div className="flex items-center justify-center w-12 h-12">
-                      {getMedalIcon(index + 1) || (
-                        <span className="text-2xl font-bold text-indigo-600">#{index + 1}</span>
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-800">{(performer as any).userName || `User ${performer.userId}`}</p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {performer.topicsCompleted} topics • {parseFloat(performer.totalHoursStudied as any).toFixed(1)} hrs
-                      </p>
-                    </div>
+      <div className="grid gap-8 lg:grid-cols-2">
+        <Card className="elevated-card rounded-[2rem] p-6 sm:p-8 space-y-6">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <div>
+              <p className="ink-kicker">Top 50 Performers</p>
+              <h2 className="text-2xl font-bold tracking-tight">Platform Leaderboard</h2>
+            </div>
+            <Trophy className="h-6 w-6 text-primary" />
+          </div>
+          {!topUsers || topUsers.length === 0 ? (
+            <div className="py-12 text-center space-y-2">
+              <Award className="mx-auto h-10 w-10 text-muted-foreground/60" />
+              <p className="text-sm font-bold text-muted-foreground">No leaderboard records yet. Start earning XP to rank up!</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {topUsers.map((u: any, idx: number) => (
+                <div key={u.id} className="flex items-center gap-4 rounded-2xl border border-border/70 bg-background/50 p-4">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted font-black text-sm text-foreground">
+                    {getMedalIcon(idx + 1) || `#${idx + 1}`}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-foreground truncate">{u.name || "Student"}</p>
+                    <p className="text-xs font-semibold text-muted-foreground">Level {Math.floor((u.points || 0) / 500) + 1}</p>
                   </div>
-
-                  <div className="flex items-center gap-8">
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600 font-semibold">Streak</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Flame className="w-4 h-4 text-orange-500" />
-                        <p className="font-bold text-gray-800">{(performer as any).currentStreak || 0}</p>
-                      </div>
-                    </div>
-                    <div className="text-right min-w-24">
-                      <p className="text-2xl font-bold text-indigo-600">{performer.points}</p>
-                      <p className="text-xs text-gray-500">points</p>
-                    </div>
+                  <div className="text-right">
+                    <p className="font-black text-primary">{u.points || 0} XP</p>
                   </div>
                 </div>
               ))}
-            </div>
-          ) : (
-            <div className="p-8 text-center text-gray-500">
-              <p>No leaderboard data available yet. Start studying to appear on the leaderboard!</p>
             </div>
           )}
         </Card>
 
-        {/* Community Toppers Section with Board Filter */}
-        <div className="mt-12 mb-12">
-          <Card className="bg-white shadow-lg p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Community Toppers</h2>
-              <p className="text-gray-600 mb-4">Top performers from Cognitarium Hub Merit List 2026</p>
-              
-              {/* Board Filter Buttons */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                <Button
-                  variant={selectedBoard === null ? "default" : "outline"}
-                  onClick={() => setSelectedBoard(null)}
-                  size="sm"
-                >
-                  All Boards ({allToppers.length})
-                </Button>
-                {boards.map((board) => {
-                  const count = allToppers.filter((t: any) => t.board === board).length;
-                  return (
-                    <Button
-                      key={board}
-                      variant={selectedBoard === board ? "default" : "outline"}
-                      onClick={() => setSelectedBoard(board)}
-                      size="sm"
-                    >
-                      {board} ({count})
-                    </Button>
-                  );
-                })}
-              </div>
+        <Card className="elevated-card rounded-[2rem] p-6 sm:p-8 space-y-6">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <div>
+              <p className="ink-kicker">Honor Roll</p>
+              <h2 className="text-2xl font-bold tracking-tight">Community Toppers</h2>
             </div>
+            <Medal className="h-6 w-6 text-primary" />
+          </div>
 
-            {/* Toppers Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredToppers.slice(0, 10).map((topper: any) => (
-                <Card key={topper.rank} className="p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl font-bold text-blue-600">#{topper.rank}</span>
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">{topper.board}</span>
-                      </div>
-                      <h3 className="font-semibold text-gray-800">{topper.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{topper.marks}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-green-600">{topper.percentage}</p>
-                    </div>
-                  </div>
-                </Card>
+          {boards.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedBoard(null)}
+                className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${!selectedBoard ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+              >
+                All Boards
+              </button>
+              {boards.map((b: any) => (
+                <button
+                  key={b}
+                  onClick={() => setSelectedBoard(b)}
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${selectedBoard === b ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                >
+                  {b}
+                </button>
               ))}
             </div>
-            
-            {filteredToppers.length > 10 && (
-              <div className="mt-6 text-center">
-                <Button variant="outline" onClick={() => window.location.href = '/community-toppers'}>
-                  View All {filteredToppers.length} Toppers →
-                </Button>
+          )}
+
+          <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+            {filteredToppers.slice(0, 20).map((topper: any) => (
+              <div key={topper.id} className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/50 p-4">
+                <div>
+                  <p className="font-bold text-foreground">{topper.name}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{topper.board} · {topper.stream}</p>
+                </div>
+                <div className="text-right">
+                  <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-black text-emerald-700 dark:text-emerald-300">{topper.percentage}%</span>
+                </div>
               </div>
-            )}
-          </Card>
-        </div>
-
-        {/* Comparison View */}
-        <div className="mt-12 mb-12">
-          <ComparisonView />
-        </div>
-
-        {/* Info Section */}
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg p-6 mt-8 border-2 border-blue-200">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">How Points Are Calculated</h3>
-          <div className="space-y-3 text-gray-700">
-            <p>
-              <span className="font-semibold">Topics Completed:</span> 10 points per topic
-            </p>
-            <p>
-              <span className="font-semibold">Study Hours:</span> 1 point per hour
-            </p>
-            <p>
-              <span className="font-semibold">Daily Streak:</span> Bonus points for consecutive days of study
-            </p>
-            <p>
-              <span className="font-semibold">Sample Papers:</span> 5 points per paper completed
-            </p>
+            ))}
           </div>
         </Card>
+      </div>
+
+      <div className="pt-4">
+        <ComparisonView />
       </div>
     </div>
   );

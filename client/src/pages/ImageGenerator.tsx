@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Image as ImageIcon, Loader, Download, Trash2, Maximize2, X } from 'lucide-react';
-import DashboardLayout from '@/components/DashboardLayout';
+import { useState } from 'react';
+import { Image as ImageIcon, Loader, Download, Trash2, Maximize2, X, Sparkles } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface GeneratedImage {
   id: string;
@@ -38,7 +39,6 @@ export default function ImageGenerator() {
   const [fullscreenImage, setFullscreenImage] = useState<GeneratedImage | null>(null);
   const [imageNotes, setImageNotes] = useState('');
 
-
   const generateImageMutation = trpc.imageGeneration.generateImage.useMutation({
     onSuccess: (result) => {
       if (result.success && result.imageUrl) {
@@ -53,22 +53,12 @@ export default function ImageGenerator() {
         setGeneratedImages(prev => [newImage, ...prev]);
         setCustomPrompt('');
         setImageNotes('');
-        console.log('Image generated successfully');
-      } else {
-        console.error('Failed to generate image:', result.error);
       }
-    },
-    onError: (error) => {
-      console.error('Error:', error.message);
     },
   });
 
   const handleGenerateImage = async (prompt: string) => {
-    if (!prompt.trim()) {
-      console.error('Please enter a prompt');
-      return;
-    }
-
+    if (!prompt.trim()) return;
     setLoading(true);
     try {
       await generateImageMutation.mutateAsync({ prompt });
@@ -77,179 +67,129 @@ export default function ImageGenerator() {
     }
   };
 
-  const handleDeleteImage = (id: string) => {
-    setGeneratedImages(prev => prev.filter(img => img.id !== id));
-  };
-
-  const handleDownloadImage = (image: GeneratedImage) => {
-    const link = document.createElement('a');
-    link.href = image.url;
-    link.download = `concept-${image.id}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-6 shadow-lg">
-          <div className="flex items-center gap-3 mb-2">
-            <ImageIcon className="w-8 h-8" />
-            <h1 className="text-3xl font-bold">Image Generator</h1>
-          </div>
-          <p className="text-blue-100">Generate technical visualizations for complex concepts using Manus AI</p>
+    <div className="mx-auto max-w-[1440px] space-y-8 animate-in fade-in duration-300">
+      <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8 lg:p-10">
+        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-accent/30 blur-3xl pointer-events-none" />
+        <div className="relative">
+          <p className="ink-kicker mb-3">AI Visual Studio</p>
+          <h1 className="display-serif text-3xl font-bold tracking-tight sm:text-5xl">Concept Image Studio</h1>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Generate high-precision technical visualizations and FBD diagrams for complex JEE concepts using Manus AI.</p>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Panel - Configuration */}
-          <div className="lg:col-span-1">
-            <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6 sticky top-6 shadow-sm">
-              {/* Subject Selection */}
-              <div>
-                <label className="block text-gray-900 font-semibold mb-3">Subject</label>
-                <div className="space-y-2">
-                  {(['physics', 'chemistry', 'math'] as const).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setSubject(s)}
-                      className={`w-full text-left px-4 py-2 rounded-lg font-semibold transition-all ${
-                        subject === s
-                          ? 'bg-blue-600 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Preset Prompts */}
-              <div>
-                <label className="block text-gray-900 font-semibold mb-3">Preset Concepts</label>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {PRESET_PROMPTS[subject].map((preset, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleGenerateImage(preset.prompt)}
-                      disabled={loading}
-                      className="w-full text-left px-3 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 text-gray-700 rounded-lg text-sm transition-colors"
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom Prompt */}
-              <div>
-                <label className="block text-gray-900 font-semibold mb-3">Custom Prompt</label>
-                <textarea
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
-                  placeholder="Describe the concept visualization you want..."
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none h-24"
-                />
-              </div>
-
-              {/* Generate Button */}
-              <button
-                onClick={() => handleGenerateImage(customPrompt)}
-                disabled={loading || !customPrompt.trim()}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
-              >
-                {loading ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon className="w-5 h-5" />
-                    Generate Image
-                  </>
-                )}
-              </button>
+      <div className="grid gap-8 lg:grid-cols-3">
+        <Card className="elevated-card rounded-[2rem] p-6 sm:p-8 space-y-6 lg:col-span-1 h-fit border border-border bg-card">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground mb-3">Select Subject</p>
+            <div className="grid grid-cols-3 gap-2">
+              {(['physics', 'chemistry', 'math'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSubject(s)}
+                  className={`rounded-xl px-4 py-2.5 text-xs font-bold capitalize transition-all ${subject === s ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                >
+                  {s}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Right Panel - Gallery */}
-          <div className="lg:col-span-2">
-            {generatedImages.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-lg p-12 text-center shadow-sm">
-                <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600 text-lg">No images generated yet</p>
-                <p className="text-gray-500 text-sm mt-2">Select a preset or enter a custom prompt to get started</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-6">
-                {generatedImages.map((image) => (
-                  <div key={image.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                    {/* Image */}
-                    <div className="relative bg-gray-100 aspect-video flex items-center justify-center group">
-                      <img src={image.url} alt={image.prompt} className="w-full h-full object-cover" />
-                      <button
-                        onClick={() => setFullscreenImage(image)}
-                        className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Maximize2 className="w-5 h-5" />
-                      </button>
-                    </div>
+          <div className="space-y-3">
+            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Preset Concepts</p>
+            <div className="space-y-2">
+              {PRESET_PROMPTS[subject].map((preset, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleGenerateImage(preset.prompt)}
+                  disabled={loading}
+                  className="w-full text-left rounded-xl border border-border/80 bg-background/50 p-3.5 text-xs font-bold text-foreground hover:bg-muted/50 transition-all flex items-center justify-between group"
+                >
+                  <span>{preset.label}</span>
+                  <Sparkles className="h-3.5 w-3.5 text-primary opacity-60 group-hover:opacity-100" />
+                </button>
+              ))}
+            </div>
+          </div>
 
-                    {/* Info */}
-                    <div className="p-4 space-y-3">
-                      <div>
-                        <p className="text-gray-500 text-sm">Prompt</p>
-                        <p className="text-gray-900 text-sm line-clamp-2">{image.prompt}</p>
-                      </div>
+          <div className="space-y-3">
+            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Custom Prompt</p>
+            <textarea
+              value={customPrompt}
+              onChange={(e) => setCustomPrompt(e.target.value)}
+              placeholder="Describe the technical diagram..."
+              className="w-full rounded-xl border border-border bg-background p-3.5 text-xs font-semibold text-foreground min-h-24 focus:outline-primary"
+            />
+            <Button
+              onClick={() => handleGenerateImage(customPrompt)}
+              disabled={loading || !customPrompt.trim()}
+              className="w-full rounded-full font-bold h-11"
+            >
+              {loading ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              {loading ? "Generating Diagram..." : "Generate Diagram"}
+            </Button>
+          </div>
+        </Card>
 
-                      {image.notes && (
-                        <div>
-                          <p className="text-gray-500 text-sm">Notes</p>
-                          <p className="text-gray-700 text-sm">{image.notes}</p>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                        <p className="text-gray-500 text-xs">{image.timestamp}</p>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => handleDownloadImage(image)}
-                            className="text-gray-500 hover:text-blue-600 transition-colors"
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteImage(image.id)}
-                            className="text-gray-500 hover:text-red-600 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
+        <div className="lg:col-span-2 space-y-6">
+          <h2 className="text-2xl font-bold tracking-tight">Generated Visualizations ({generatedImages.length})</h2>
+          {generatedImages.length === 0 ? (
+            <Card className="rounded-[2rem] p-16 text-center space-y-3 border border-dashed border-border bg-card">
+              <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground/60" />
+              <p className="text-base font-bold text-foreground">No visualizations generated yet</p>
+              <p className="text-sm font-semibold text-muted-foreground max-w-sm mx-auto">Click a preset concept on the left or enter a custom prompt to create your first technical diagram.</p>
+            </Card>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2">
+              {generatedImages.map((img) => (
+                <Card key={img.id} className="elevated-card rounded-[1.75rem] overflow-hidden border border-border bg-card flex flex-col justify-between">
+                  <div className="relative group aspect-video bg-muted">
+                    <img src={img.url} alt={img.prompt} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                      <Button size="icon" variant="secondary" onClick={() => setFullscreenImage(img)} className="rounded-full">
+                        <Maximize2 className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="secondary" onClick={() => {
+                        const a = document.createElement('a');
+                        a.href = img.url;
+                        a.download = `concept-${img.id}.png`;
+                        a.click();
+                      }} className="rounded-full">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="destructive" onClick={() => setGeneratedImages(prev => prev.filter(i => i.id !== img.id))} className="rounded-full">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  <div className="p-5 space-y-2">
+                    <span className="rounded-full bg-primary/10 px-3 py-0.5 text-[0.65rem] font-black uppercase text-primary">{img.subject}</span>
+                    <p className="text-xs font-semibold text-foreground line-clamp-2">{img.prompt}</p>
+                    <p className="text-[0.65rem] text-muted-foreground">{img.timestamp}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Fullscreen Modal */}
       {fullscreenImage && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-          <button
-            onClick={() => setFullscreenImage(null)}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
-          >
-            <X className="w-8 h-8" />
-          </button>
-          <img src={fullscreenImage.url} alt={fullscreenImage.prompt} className="max-w-4xl max-h-[90vh] object-contain" />
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="relative max-w-4xl w-full bg-card rounded-[2rem] overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg">Diagram Preview</h3>
+              <Button size="icon" variant="ghost" onClick={() => setFullscreenImage(null)} className="rounded-full">
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="rounded-2xl overflow-hidden bg-muted aspect-video">
+              <img src={fullscreenImage.url} alt={fullscreenImage.prompt} className="w-full h-full object-contain" />
+            </div>
+            <p className="text-sm text-muted-foreground">{fullscreenImage.prompt}</p>
+          </div>
         </div>
       )}
-    </DashboardLayout>
+    </div>
   );
 }
