@@ -14,7 +14,7 @@ export default function Login() {
   
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: () => {
-      toast.success("Welcome back to Prep / Hub!");
+      toast.success("Welcome back to The Cognitarium Hub!");
       navigate("/dashboard");
     },
     onError: (error: any) => {
@@ -38,10 +38,10 @@ export default function Login() {
 
       <div className="w-full max-w-md relative z-10 space-y-6">
         <div className="text-center space-y-2">
-          <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-            <BookOpen className="h-6 w-6" />
+          <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary p-2.5 shadow-sm">
+            <img src="/manus-storage/cognitarium-hub-logo_2e4f180f.svg" alt="The Cognitarium Hub logo" className="h-full w-full object-contain" />
           </div>
-          <h1 className="display-serif text-3xl font-bold tracking-tight">Prep / Hub</h1>
+          <h1 className="display-serif text-3xl font-bold tracking-tight">The Cognitarium Hub</h1>
           <p className="text-sm font-semibold text-muted-foreground">Adaptive JEE & Board Study Command Center</p>
         </div>
 

@@ -1,4 +1,4 @@
-# Board Exam Preparation - Major Restructuring
+# The Cognitarium Hub - Major Restructuring
 
 ## Authentication System Overhaul (COMPLETED)
 - [x] Remove Manus OAuth authentication system completely
@@ -31,10 +31,10 @@
 ## Phase 1: Website Branding & Notice Section (NOTICE SECTION COMPLETED)
 
 ### Branding Updates
-- [x] Update website title and metadata for the redesigned Prep / Hub brand
-- [ ] Set new logo from uploaded image
+- [x] Update website title and metadata for The Cognitarium Hub
+- [x] Create and configure the official Cognitarium Hub logo mark
 - [x] Update app metadata and retain PWA favicon/manifest hooks
-- [x] Update navigation branding
+- [x] Update navigation branding with the official name and logo
 
 ### Notice Section (FULLY COMPLETED)
 - [x] Create notices table in database
@@ -496,3 +496,8 @@
 - [ ] Add Google and GitHub social login buttons and secure OAuth callback flows to the authentication experience
 - [ ] Add regression coverage for social-login route handling and safe provider configuration
 - [ ] Verify the refreshed authentication page at desktop and mobile breakpoints
+
+- [x] Replace every visible HSLC Prep Hub reference with The Cognitarium Hub
+- [x] Apply the official Cognitarium Hub logo mark to navigation, auth, public pages, and app metadata
+- [x] Update favicon/PWA metadata and project title for the official brand
+- [x] Verify legacy-name removal and responsive brand rendering

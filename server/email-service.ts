@@ -22,7 +22,7 @@ export async function sendCredentialsEmail(
       <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1e3a8a;">Welcome to HSLC Prep Hub! 🎓</h2>
+            <h2 style="color: #1e3a8a;">Welcome to The Cognitarium Hub! 🎓</h2>
             
             <p>Hi <strong>${name}</strong>,</p>
             
@@ -51,7 +51,7 @@ export async function sendCredentialsEmail(
             
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
             <p style="font-size: 12px; color: #6b7280;">
-              © 2026 HSLC Prep Hub. All rights reserved.
+              © 2026 The Cognitarium Hub. All rights reserved.
             </p>
           </div>
         </body>
@@ -61,9 +61,9 @@ export async function sendCredentialsEmail(
     await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
-      subject: "Welcome to HSLC Prep Hub - Your Account is Ready!",
+      subject: "Welcome to The Cognitarium Hub - Your Account is Ready!",
       html: htmlContent,
-      text: `Welcome to HSLC Prep Hub!\n\nYour account has been created.\n\nEmail: ${email}\nPassword: ${password}\n\nPlease login at: ${process.env.VITE_FRONTEND_URL || "https://hslcprep-fefyutzm.manus.space"}/login`,
+      text: `Welcome to The Cognitarium Hub!\n\nYour account has been created.\n\nEmail: ${email}\nPassword: ${password}\n\nPlease login at: ${process.env.VITE_FRONTEND_URL || "https://hslcprep-fefyutzm.manus.space"}/login`,
     });
 
     console.log(`[Email] Credentials sent successfully to ${email}`);
@@ -80,7 +80,7 @@ export async function sendAdminNotificationEmail(
   phone: string | null
 ): Promise<boolean> {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || "admin@hslcprephub.com";
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@cognitariumhub.com";
     
     const htmlContent = `
       <html>
@@ -98,7 +98,7 @@ export async function sendAdminNotificationEmail(
               <p><strong>Created:</strong> ${new Date().toLocaleString()}</p>
             </div>
             
-            <p>This is an automated notification from HSLC Prep Hub.</p>
+            <p>This is an automated notification from The Cognitarium Hub.</p>
           </div>
         </body>
       </html>

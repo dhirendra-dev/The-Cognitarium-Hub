@@ -7,7 +7,8 @@ export default function ComparisonView() {
   const { data: topUsers = [] } = trpc.leaderboard.getTop.useQuery({ limit: 50 });
   const { data: toppers = [] } = trpc.toppers.getToppers.useQuery();
 
-  // Calculate statistics for HSLC Prep Hub
+      // Calculate statistics for The Cognitarium Hub
+
   const hslcStats = {
     totalPerformers: topUsers.length,
     avgPoints: topUsers.length > 0 ? Math.round(topUsers.reduce((sum: number, u: any) => sum + u.points, 0) / topUsers.length) : 0,
@@ -45,9 +46,9 @@ export default function ComparisonView() {
     <div className="space-y-8">
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* HSLC Prep Hub Stats */}
-        <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">HSLC Prep Hub</h3>
+        {/* The Cognitarium Hub Stats */}
+        <Card className="p-6 bg-gradient-to-br from-[#f8ede7] to-[#f2e7df] border-2 border-primary/20">
+          <h3 className="text-xl font-bold text-gray-800 mb-4">The Cognitarium Hub</h3>
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-600">Total Performers</p>
@@ -68,9 +69,9 @@ export default function ComparisonView() {
           </div>
         </Card>
 
-        {/* Cognitarium Hub Stats */}
-        <Card className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Cognitarium Hub</h3>
+        {/* Community Benchmark Stats */}
+        <Card className="p-6 bg-gradient-to-br from-[#f6f1eb] to-[#ece7df] border-2 border-border">
+          <h3 className="text-xl font-bold text-gray-800 mb-4">Community Benchmark</h3>
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-600">Total Performers</p>
@@ -126,9 +127,9 @@ export default function ComparisonView() {
       <Card className="p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4">Top Performers Comparison</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* HSLC Prep Hub Top 5 */}
+          {/* The Cognitarium Hub Top 5 */}
           <div>
-            <h4 className="font-semibold text-gray-700 mb-3">HSLC Prep Hub Top 5</h4>
+            <h4 className="font-semibold text-gray-700 mb-3">The Cognitarium Hub Top 5</h4>
             <div className="space-y-2">
               {topUsers.slice(0, 5).map((user: any, index: number) => (
                 <div key={user.id} className="flex items-center justify-between p-2 bg-blue-50 rounded">
@@ -142,9 +143,9 @@ export default function ComparisonView() {
             </div>
           </div>
 
-          {/* Cognitarium Hub Top 5 */}
+          {/* Community Benchmark Top 5 */}
           <div>
-            <h4 className="font-semibold text-gray-700 mb-3">Cognitarium Hub Top 5</h4>
+            <h4 className="font-semibold text-gray-700 mb-3">Community Benchmark Top 5</h4>
             <div className="space-y-2">
               {toppers.slice(0, 5).map((topper: any, index: number) => (
                 <div key={topper.rank} className="flex items-center justify-between p-2 bg-purple-50 rounded">
@@ -165,13 +166,13 @@ export default function ComparisonView() {
         <h3 className="text-xl font-bold text-gray-800 mb-4">Key Insights</h3>
         <div className="space-y-3 text-gray-700">
           <p>
-            <span className="font-semibold">HSLC Prep Hub</span> has {hslcStats.totalPerformers} active performers with an average of {hslcStats.avgPoints} points, demonstrating strong engagement through topic completion and study hours.
+            <span className="font-semibold">The Cognitarium Hub</span> has {hslcStats.totalPerformers} active performers with an average of {hslcStats.avgPoints} points, demonstrating strong engagement through topic completion and study hours.
           </p>
           <p>
             <span className="font-semibold">Cognitarium Hub</span> features {cogniStats.totalPerformers} top performers across {boardDistribution.length} different boards, with an average score of {cogniStats.avgPercentage}% out of 100%.
           </p>
           <p>
-            The two platforms complement each other - HSLC Prep Hub focuses on continuous learning and practice, while Cognitarium Hub showcases board exam excellence across multiple educational boards.
+            The Cognitarium Hub brings continuous learning, adaptive practice, and board-exam excellence into one connected preparation workspace.
           </p>
         </div>
       </Card>

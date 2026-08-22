@@ -46,7 +46,7 @@ const studyLinks = [
     color: "bg-yellow-100 text-yellow-700",
   },
   {
-    title: "Telegram – Official Board Exam Preparation",
+    title: "Telegram – The Cognitarium Hub Community",
     description: "Official Telegram channel for exam updates and resources",
     icon: Send,
     url: "https://t.me/+C0UKYQKjgFc3MGE1",

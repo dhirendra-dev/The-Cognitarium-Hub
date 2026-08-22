@@ -204,7 +204,7 @@ export async function generateCertificate(data: CertificateData): Promise<{
     color: textColor,
   });
 
-  page.drawText("Board Exam Preparation", {
+  page.drawText("The Cognitarium Hub", {
     x: 100,
     y: signatureLineY - 40,
     size: 10,
@@ -310,7 +310,7 @@ function drawBorder(
  * Draw a subtle watermark in the background
  */
 function drawWatermark(page: PDFPage, width: number, height: number, font: any) {
-  page.drawText("Board Exam Preparation", {
+  page.drawText("The Cognitarium Hub", {
     x: width / 2 - 200,
     y: height / 2 - 30,
     size: 60,

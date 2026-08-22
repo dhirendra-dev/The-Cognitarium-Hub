@@ -1,205 +1,95 @@
 import { Card } from "@/components/ui/card";
-import { Heart, Target, Zap, BookOpen, Users, Trophy } from "lucide-react";
+import { Heart, Target, Zap, BookOpen, Users, Trophy, Sparkles, ArrowRight } from "lucide-react";
+
+const journey = [
+  { icon: BookOpen, label: "Map the syllabus", copy: "Follow Physics, Chemistry, and Mathematics through a connected chapter and topic map." },
+  { icon: Zap, label: "Build a rhythm", copy: "Use daily plans, streaks, and short practice loops to make progress visible and repeatable." },
+  { icon: Target, label: "Practice with intent", copy: "Move from formulas and PYQs to timed drills, CBT review, and targeted revision." },
+  { icon: Users, label: "Learn together", copy: "Join focused squads and community spaces that make accountability feel human." },
+  { icon: Heart, label: "Ask without friction", copy: "Bring difficult formulas and PYQs to SahAI for structured explanations and follow-up questions." },
+];
+
+const principles = [
+  { icon: Trophy, title: "Progress over pressure", copy: "The goal is not to make preparation louder. It is to make the next useful action easier to see." },
+  { icon: Sparkles, title: "Clarity by design", copy: "Every tool is organized around the same syllabus, the same mastery signals, and the same study story." },
+  { icon: Target, title: "Practice that remembers", copy: "Your review queue, drill history, and performance patterns help shape what you do next." },
+  { icon: Users, title: "A desk, not a dump", copy: "Resources, coaching, community, and analytics come together in one calm preparation workspace." },
+];
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">JEE & Board Exam Prep Hub</h1>
-          <p className="text-xl text-gray-600">
-            Your comprehensive companion for Class 11-12 and JEE Main/Advanced success
-          </p>
+    <div className="mx-auto max-w-[1200px] space-y-8 pb-12">
+      <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-10 lg:p-14">
+        <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-accent/35 blur-3xl pointer-events-none" />
+        <div className="relative grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div>
+            <div className="mb-6 flex items-center gap-3">
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary p-3 shadow-lg shadow-primary/15">
+                <img src="/manus-storage/cognitarium-hub-logo_2e4f180f.svg" alt="The Cognitarium Hub logo" className="h-full w-full object-contain" />
+              </span>
+              <div>
+                <p className="text-sm font-black tracking-tight">The Cognitarium Hub</p>
+                <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted-foreground">adaptive learning</p>
+              </div>
+            </div>
+            <p className="ink-kicker flex items-center gap-2"><Sparkles className="h-3.5 w-3.5" /> A calmer way to prepare</p>
+            <h1 className="display-serif mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-6xl">A study desk that remembers what matters next.</h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">The Cognitarium Hub is an adaptive preparation workspace for students balancing board exams with JEE Main and JEE Advanced. It turns a large syllabus into a sequence of focused decisions.</p>
+          </div>
+          <div className="rounded-[1.5rem] bg-primary p-6 text-primary-foreground shadow-xl shadow-primary/15 sm:p-8">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-primary-foreground/65">The promise</p>
+            <p className="mt-4 text-2xl font-black leading-tight">Less guesswork. Better practice. A clearer next session.</p>
+            <div className="mt-7 flex items-center gap-2 text-sm font-bold text-primary-foreground/75"><ArrowRight className="h-4 w-4" /> Built around how you learn</div>
+          </div>
         </div>
+      </section>
 
-        {/* About Section */}
-        <Card className="bg-white shadow-lg p-8 mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">About This Platform</h2>
-          <div className="space-y-6 text-gray-700 leading-relaxed">
-            <p>
-              Welcome to JEE & Board Exam Prep Hub – a comprehensive study platform designed for Class 11-12 students preparing for board exams and JEE Main/Advanced. This platform understands that you're juggling multiple goals: excelling in board exams while preparing for competitive exams like JEE.
-            </p>
-
-            <p>
-              As a Class 11-12 student, you face unique challenges: managing Physics, Chemistry, and Mathematics simultaneously, balancing board exam preparation with JEE prep, tracking your progress across multiple exams, staying motivated through the grind, and finding effective study strategies. This platform addresses all these challenges by providing a centralized hub for your entire preparation journey.
-            </p>
-
-            <p>
-              Whether you're in Class 11, Class 12, or preparing for JEE, this platform adapts to your needs. From logging your daily study hours to tracking topic completion across all subjects, from accessing structured study materials to connecting with a community of thousands of students – everything is designed to support your success.
-            </p>
+      <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <Card className="elevated-card rounded-[1.75rem] p-6 sm:p-8">
+          <p className="ink-kicker">Why it exists</p>
+          <h2 className="display-serif mt-3 text-3xl font-bold sm:text-4xl">Preparation is a system of small decisions.</h2>
+          <div className="mt-6 space-y-4 text-base leading-7 text-muted-foreground">
+            <p>Students are often asked to manage a syllabus, a timetable, a question bank, revision, doubts, and motivation all at once. The Cognitarium Hub brings those pieces closer together.</p>
+            <p>Instead of treating every student as a blank slate, the platform uses your selected syllabus, practice activity, mastery signals, and revision history to make the workspace more useful over time.</p>
+            <p>It is designed for steady progress: one topic, one explanation, one timed set, and one better decision at a time.</p>
           </div>
         </Card>
 
-        {/* Student Journey */}
-        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 shadow-lg p-8 mb-8 border-2 border-indigo-200">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Your Journey to Success</h2>
-          <div className="space-y-6">
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-600 text-white">
-                  <BookOpen className="h-6 w-6" />
+        <Card className="elevated-card rounded-[1.75rem] p-6 sm:p-8">
+          <p className="ink-kicker">Your preparation loop</p>
+          <h2 className="display-serif mt-3 text-3xl font-bold sm:text-4xl">From syllabus map to confident recall.</h2>
+          <div className="mt-7 space-y-5">
+            {journey.map(({ icon: Icon, label, copy }, index) => (
+              <div key={label} className="flex gap-4">
+                <div className="flex shrink-0 flex-col items-center gap-2">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/60 text-primary"><Icon className="h-5 w-5" /></span>
+                  {index < journey.length - 1 && <span className="h-full min-h-5 w-px bg-border" />}
                 </div>
+                <div className="pb-3"><h3 className="font-black">{label}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{copy}</p></div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">Organize Your Studies</h3>
-                <p className="text-gray-700 mt-2">
-                  Track Physics, Chemistry, and Mathematics systematically. Break down each subject into chapters and topics, mark your progress, and never lose sight of what you've covered.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="flex items-center justify-center h-12 w-12 rounded-md bg-green-600 text-white">
-                  <Zap className="h-6 w-6" />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">Stay Consistent</h3>
-                <p className="text-gray-700 mt-2">
-                  Log your daily study hours, track your study sessions, and visualize your progress through charts. Consistency is the key to cracking JEE and board exams.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="flex items-center justify-center h-12 w-12 rounded-md bg-yellow-600 text-white">
-                  <Target className="h-6 w-6" />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">Access Study Materials</h3>
-                <p className="text-gray-700 mt-2">
-                  Download comprehensive notes, previous year questions, practice papers, and study guides. All materials are curated for both board exams and JEE preparation.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="flex items-center justify-center h-12 w-12 rounded-md bg-purple-600 text-white">
-                  <Users className="h-6 w-6" />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">Join the Community</h3>
-                <p className="text-gray-700 mt-2">
-                  Connect with thousands of students through official WhatsApp groups, Telegram channels, and Google Classroom. Get doubt clarification, share resources, and stay motivated together.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="flex items-center justify-center h-12 w-12 rounded-md bg-pink-600 text-white">
-                  <Heart className="h-6 w-6" />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">Get AI-Powered Guidance</h3>
-                <p className="text-gray-700 mt-2">
-                  Our AI assistant generates personalized tips, practice questions, and answers your subject-specific questions. Get expert guidance whenever you need it.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </Card>
+      </section>
 
-        {/* Why This Matters */}
-        <Card className="bg-white shadow-lg p-8 mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Why This Preparation Matters</h2>
-          <div className="space-y-4 text-gray-700 leading-relaxed">
-            <p>
-              Class 11-12 board exams and JEE are not just tests – they are crucial milestones that shape your academic and professional future. These exams test not just your knowledge but also your ability to manage stress, organize information, and perform under pressure.
-            </p>
-
-            <p>
-              Success in board exams and JEE opens doors to top colleges, desired branches, and career opportunities. More importantly, it builds confidence and develops study habits that will serve you throughout your life.
-            </p>
-
-            <p>
-              This platform is designed to help you navigate this critical phase with confidence. By providing tools for organization, tracking, community support, and personalized guidance, we aim to make your preparation more effective, collaborative, and less stressful.
-            </p>
-          </div>
-        </Card>
-
-        {/* Key Features */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg p-6 border-2 border-blue-200">
-            <div className="flex items-center gap-3 mb-4">
-              <BookOpen className="w-6 h-6 text-blue-600" />
-              <h3 className="text-lg font-bold text-gray-800">Multi-Subject Tracking</h3>
-            </div>
-            <p className="text-gray-700">
-              Track Physics, Chemistry, and Mathematics with individual progress indicators, topic completion, and notes for each chapter.
-            </p>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg p-6 border-2 border-green-200">
-            <div className="flex items-center gap-3 mb-4">
-              <Zap className="w-6 h-6 text-green-600" />
-              <h3 className="text-lg font-bold text-gray-800">Daily Progress Tracking</h3>
-            </div>
-            <p className="text-gray-700">
-              Log your study hours daily, track practice papers, and visualize your progress through interactive charts and statistics.
-            </p>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg p-6 border-2 border-purple-200">
-            <div className="flex items-center gap-3 mb-4">
-              <Trophy className="w-6 h-6 text-purple-600" />
-              <h3 className="text-lg font-bold text-gray-800">Study Materials & Resources</h3>
-            </div>
-            <p className="text-gray-700">
-              Access comprehensive notes, PYQs, practice papers, and study guides curated for both board exams and JEE preparation.
-            </p>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-orange-50 to-red-50 shadow-lg p-6 border-2 border-orange-200">
-            <div className="flex items-center gap-3 mb-4">
-              <Users className="w-6 h-6 text-orange-600" />
-              <h3 className="text-lg font-bold text-gray-800">Community Support</h3>
-            </div>
-            <p className="text-gray-700">
-              Connect with thousands of students through official WhatsApp groups, Telegram channels, and Google Classroom for doubt clarification and motivation.
-            </p>
-          </Card>
+      <section>
+        <div className="max-w-2xl"><p className="ink-kicker">What we believe</p><h2 className="display-serif mt-3 text-3xl font-bold sm:text-4xl">A serious tool can still feel human.</h2></div>
+        <div className="mt-7 grid gap-5 sm:grid-cols-2">
+          {principles.map(({ icon: Icon, title, copy }) => (
+            <Card key={title} className="elevated-card rounded-[1.5rem] p-6 sm:p-7">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/60 text-primary"><Icon className="h-5 w-5" /></span>
+              <h3 className="mt-6 text-xl font-black">{title}</h3>
+              <p className="mt-3 leading-7 text-muted-foreground">{copy}</p>
+            </Card>
+          ))}
         </div>
+      </section>
 
-        {/* Motivational Message */}
-        <Card className="bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg p-8 text-white">
-          <h2 className="text-3xl font-bold mb-4">Remember</h2>
-          <div className="space-y-4 text-lg leading-relaxed">
-            <p>
-              "Success is not about being perfect. It's about consistent effort, smart preparation, and believing in yourself. Every hour you study, every topic you complete, every question you solve brings you closer to your goal."
-            </p>
-
-            <p>
-              Your board exam and JEE are not measures of your intelligence – they are measures of your preparation and dedication. With the right tools, the right mindset, and consistent effort, you can achieve excellent results.
-            </p>
-
-            <p className="font-bold text-xl">
-              Stay disciplined. Stay focused. Stay consistent. 💪
-            </p>
-
-            <p className="font-bold text-xl">
-              This platform is here to support you every step of the way. Let's make your Class 11-12 and JEE journey a success story! 🚀
-            </p>
-          </div>
-        </Card>
-
-        {/* Footer */}
-        <div className="text-center mt-12 text-gray-600">
-          <p>
-            Built with ❤️ for Class 11-12 students preparing for board exams and JEE
-          </p>
-          <p className="mt-2 text-sm">
-            © 2025 JEE & Board Exam Prep Hub. All rights reserved.
-          </p>
-        </div>
-      </div>
+      <footer className="border-t border-border/70 pt-7 text-center text-sm text-muted-foreground">
+        <p className="font-black text-foreground">The Cognitarium Hub</p>
+        <p className="mt-1">Adaptive preparation for students who want the data and the momentum.</p>
+        <p className="mt-2 text-xs">© 2026 The Cognitarium Hub. All rights reserved.</p>
+      </footer>
     </div>
   );
 }

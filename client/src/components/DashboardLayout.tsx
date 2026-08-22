@@ -5,7 +5,6 @@ import {
   Bell,
   BookOpen,
   BookMarked,
-  BrainCircuit,
   CalendarDays,
   ChevronRight,
   CircleHelp,
@@ -98,15 +97,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navigation = (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 border-b border-sidebar-border px-6 py-6">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-black/10">
-          <BrainCircuit className="h-6 w-6" />
+          <div className="flex items-center gap-3 border-b border-sidebar-border px-6 py-6">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sidebar-primary p-2 shadow-lg shadow-black/10">
+          <img src="/manus-storage/cognitarium-hub-logo_2e4f180f.svg" alt="The Cognitarium Hub logo" className="h-full w-full object-contain" />
         </div>
-        <div>
-          <p className="font-black tracking-tight text-sidebar-foreground">Prep / Hub</p>
+        <div className="min-w-0">
+          <p className="truncate font-black tracking-tight text-sidebar-foreground">The Cognitarium Hub</p>
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/55">adaptive learning</p>
         </div>
-        <span className="ml-auto h-2 w-2 rounded-full bg-emerald-400" title="Systems online" />
+        <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-emerald-400" title="Systems online" />
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-5">

@@ -175,7 +175,7 @@ export function generateCertificateEmailHTML(data: CertificateEmailData): string
           </div>
 
           <div class="footer">
-            <p>Board Exam Preparation Hub</p>
+            <p>The Cognitarium Hub</p>
             <p>Empowering students through community learning</p>
             <p style="margin-top: 15px; color: #9ca3af;">
               This is an automated email. Please do not reply directly to this message.
@@ -210,7 +210,7 @@ This certificate recognizes your dedication and valuable contributions to our co
 Keep up the excellent work and continue earning more certificates!
 
 ---
-Board Exam Preparation Hub
+The Cognitarium Hub
 Empowering students through community learning
   `;
 }

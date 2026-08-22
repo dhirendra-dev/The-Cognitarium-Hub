@@ -20,7 +20,7 @@ export function CertificateShareButtons({
 }: CertificateShareButtonsProps) {
   const [copied, setCopied] = useState(false);
 
-  const shareText = `🎓 I just earned the "${certificateTitle}" certificate from Board Exam Preparation Hub! This recognizes my commitment to community learning and academic excellence.`;
+  const shareText = `🎓 I just earned the "${certificateTitle}" certificate from The Cognitarium Hub! This recognizes my commitment to community learning and academic excellence.`;
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const verificationText = `Verification Code: ${verificationCode}`;
 
@@ -54,7 +54,7 @@ export function CertificateShareButtons({
 
   const handleShareEmail = () => {
     const emailSubject = `Check out my ${certificateTitle} Certificate!`;
-    const emailBody = `Hi,\n\n${shareText}\n\nYou can view my certificate here: ${certificateUrl}\n\n${verificationText}\n\nJoin me on Board Exam Preparation Hub!\n\nBest regards,\n${studentName}`;
+    const emailBody = `Hi,\n\n${shareText}\n\nYou can view my certificate here: ${certificateUrl}\n\n${verificationText}\n\nJoin me on The Cognitarium Hub!\n\nBest regards,\n${studentName}`;
     const mailtoLink = `mailto:?subject=${encodeURIComponent(
       emailSubject
     )}&body=${encodeURIComponent(emailBody)}`;

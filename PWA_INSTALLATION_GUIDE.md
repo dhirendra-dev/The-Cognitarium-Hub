@@ -1,6 +1,6 @@
-# Board Exam Preparation - PWA Installation Guide
+# The Cognitarium Hub - PWA Installation Guide
 
-Your **Board Exam Preparation** app is now available as a Progressive Web App (PWA) that can be installed on Android, iOS, and desktop devices like a native app!
+The **Cognitarium Hub** app is now available as a Progressive Web App (PWA) that can be installed on Android, iOS, and desktop devices like a native app!
 
 ## What is a PWA?
 
@@ -29,7 +29,7 @@ A Progressive Web App (PWA) is a web application that works like a native app:
 
 3. **Access the app**
    - The app will appear on your home screen
-   - Tap the "Board Exam Preparation" icon to launch
+   - Tap the "The Cognitarium Hub" icon to launch
    - It will open in full-screen mode without the browser UI
 
 ### Method 2: Using the Menu
@@ -49,7 +49,7 @@ A Progressive Web App (PWA) is a web application that works like a native app:
 2. **Add to Home Screen**
    - Tap the **Share** button (arrow pointing up from a box)
    - Select **"Add to Home Screen"**
-   - Enter a name (or use default "Board Exam Prep")
+   - Enter a name (or use default "Cognitarium Hub")
    - Tap **"Add"**
 
 3. **Access the app**
@@ -120,7 +120,7 @@ A Progressive Web App (PWA) is a web application that works like a native app:
 
 ### "App not opening"
 - Check your internet connection
-- Clear the app cache: Settings → Apps → Board Exam Prep → Storage → Clear Cache
+- Clear the app cache: Settings → Apps → Cognitarium Hub → Storage → Clear Cache
 - Uninstall and reinstall the app
 
 ### "Offline features not working"
@@ -141,7 +141,7 @@ A Progressive Web App (PWA) is a web application that works like a native app:
 2. **Use Full Screen** - The app works best in full-screen mode
 3. **Bookmark the App** - Add the web URL to your bookmarks as backup
 4. **Regular Sync** - Connect to internet regularly to sync your progress
-5. **Clear Cache Monthly** - Settings → Apps → Board Exam Prep → Storage → Clear Cache
+5. **Clear Cache Monthly** - Settings → Apps → Cognitarium Hub → Storage → Clear Cache
 
 ---
 
@@ -178,4 +178,4 @@ After installing the app:
 
 **Happy Studying! 📚**
 
-Your Board Exam Preparation app is now ready to help you ace your exams!
+The Cognitarium Hub app is now ready to help you ace your exams!
