@@ -2183,6 +2183,132 @@ export const appRouter = router({
       return result;
     }),
   }),
+  pyqArchive: router({
+    list: publicProcedure
+      .input(
+        z.object({
+          subject: z.string().optional(),
+          examYear: z.number().int().optional(),
+        }).optional()
+      )
+      .query(async ({ input }) => {
+        const { getDb } = await import("./db");
+        const db = await getDb();
+        if (!db) return [];
+        const { pyqArchive } = await import("../drizzle/schema");
+        const conditions = [
+          input?.subject ? eq(pyqArchive.subject, input.subject) : undefined,
+          input?.examYear ? eq(pyqArchive.examYear, input.examYear) : undefined,
+        ].filter(Boolean) as any[];
+
+        const rows = await db
+          .select()
+          .from(pyqArchive)
+          .where(conditions.length ? and(...conditions) : undefined)
+          .orderBy(desc(pyqArchive.examYear), asc(pyqArchive.questionNumber));
+
+        return rows;
+      }),
+    syncOfficialPyqs: adminProcedure.mutation(async () => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const { pyqArchive } = await import("../drizzle/schema");
+
+      const officialPyqs = [
+        {
+          examYear: 2025,
+          examSession: "Jan Shift 1",
+          subject: "Physics",
+          questionNumber: 1,
+          questionText: "A projectile is thrown with initial velocity u at an angle θ to the horizontal. At the highest point of its trajectory, the horizontal component of velocity is halved. What is the angle of projection θ?",
+          optionA: "30°",
+          optionB: "45°",
+          optionC: "60°",
+          optionD: "75°",
+          correctOption: "C" as const,
+          solutionMarkdown: "At the highest point, velocity is u cos θ. Given that u cos θ = u / 2, therefore cos θ = 1/2, which gives θ = 60°.",
+          weightageTags: "High Yield · Kinematics",
+        },
+        {
+          examYear: 2025,
+          examSession: "Jan Shift 1",
+          subject: "Physics",
+          questionNumber: 2,
+          questionText: "A uniform solid cylinder of mass M and radius R rolls without slipping on a horizontal surface with linear speed v. What is its total kinetic energy?",
+          optionA: "3/4 Mv²",
+          optionB: "3/8 Mv²",
+          optionC: "1/2 Mv²",
+          optionD: "3/2 Mv²",
+          correctOption: "A" as const,
+          solutionMarkdown: "Total KE = KE(translational) + KE(rotational) = 1/2 Mv² + 1/2 Iω². For solid cylinder, I = 1/2 MR². Since ω = v/R, KE(rot) = 1/2 (1/2 MR²) (v/R)² = 1/4 Mv². Total KE = 1/2 Mv² + 1/4 Mv² = 3/4 Mv².",
+          weightageTags: "High Yield · Rotational Dynamics",
+        },
+        {
+          examYear: 2025,
+          examSession: "Jan Shift 1",
+          subject: "Chemistry",
+          questionNumber: 3,
+          questionText: "Which of the following complex ions exhibits optical isomerism?",
+          optionA: "[Co(en)3]³⁺",
+          optionB: "[Co(NH3)6]³⁺",
+          optionC: "[PtCl4]²⁻",
+          optionD: "[Ni(CN)4]²⁻",
+          correctOption: "A" as const,
+          solutionMarkdown: "[Co(en)3]³⁺ contains three symmetrical bidentate ethylenediamine ligands, making the complex chiral and optically active.",
+          weightageTags: "High Yield · Coordination Compounds",
+        },
+        {
+          examYear: 2025,
+          examSession: "Jan Shift 1",
+          subject: "Chemistry",
+          questionNumber: 4,
+          questionText: "What is the correct order of acidic strength among haloacetic acids: FCH2COOH, ClCH2COOH, BrCH2COOH, ICH2COOH?",
+          optionA: "FCH2COOH > ClCH2COOH > BrCH2COOH > ICH2COOH",
+          optionB: "ICH2COOH > BrCH2COOH > ClCH2COOH > FCH2COOH",
+          optionC: "ClCH2COOH > FCH2COOH > BrCH2COOH > ICH2COOH",
+          optionD: "FCH2COOH > ICH2COOH > BrCH2COOH > ClCH2COOH",
+          correctOption: "A" as const,
+          solutionMarkdown: "Acidic strength depends on the electron-withdrawing inductive effect (-I effect) of the halogen. Fluorine is the most electronegative, stabilizing the carboxylate anion best.",
+          weightageTags: "High Yield · Organic GOC",
+        },
+        {
+          examYear: 2025,
+          examSession: "Jan Shift 1",
+          subject: "Mathematics",
+          questionNumber: 5,
+          questionText: "If A is a 3 × 3 matrix such that |A| = 5, find the value of |adj(adj A)|.",
+          optionA: "25",
+          optionB: "125",
+          optionC: "625",
+          optionD: "3125",
+          correctOption: "C" as const,
+          solutionMarkdown: "For an n × n matrix A, |adj(adj A)| = |A|^(n-1)^2. Here n = 3, so 5^(2^2) = 5^4 = 625.",
+          weightageTags: "High Yield · Matrices & Determinants",
+        },
+        {
+          examYear: 2025,
+          examSession: "National Test",
+          subject: "Biology",
+          questionNumber: 6,
+          questionText: "Which of the following enzymes is responsible for transcription of mRNA in eukaryotes alongside RNA Polymerase II?",
+          optionA: "RNA Polymerase I & III",
+          optionB: "DNA Ligase",
+          optionC: "Taq Polymerase",
+          optionD: "Reverse Transcriptase",
+          correctOption: "A" as const,
+          solutionMarkdown: "In eukaryotes, RNA polymerase I transcribes rRNAs, RNA polymerase II transcribes mRNA, and RNA polymerase III transcribes tRNAs and 5S rRNA.",
+          weightageTags: "High Yield · Molecular Basis of Inheritance",
+        },
+      ];
+
+      for (const q of officialPyqs) {
+        await db.insert(pyqArchive).values(q).onDuplicateKeyUpdate({ set: { questionText: q.questionText } });
+      }
+
+      return { success: true, count: officialPyqs.length };
+    }),
+  }),
   imageGeneration: router({
     generateImage: protectedProcedure
       .input(z.object({ prompt: z.string().min(10).max(1000) }))
