@@ -19,7 +19,7 @@ export default function SpeedDrillsPage() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  const { data: history } = trpc.speedDrills.history.useQuery();
+  const { data: history, isLoading: historyLoading } = trpc.speedDrills.history.useQuery();
   const recordMutation = trpc.speedDrills.record.useMutation({
     onSuccess: async () => {
       toast.success("Speed drill score recorded!");
@@ -59,67 +59,88 @@ export default function SpeedDrillsPage() {
 
   const finishDrill = () => {
     setIsCompleted(true);
-    const modeObj = DRILL_MODES.find((m) => m.id === activeMode)!;
-    const questions = mockQuestions.slice(0, modeObj.count > mockQuestions.length ? mockQuestions.length : modeObj.count);
-    let correct = 0;
-    questions.forEach((q, idx) => {
-      if (selectedAnswers[idx] === q.correct) correct++;
+    let correctCount = 0;
+    mockQuestions.forEach((q, idx) => {
+      if (selectedAnswers[idx] === q.correct) correctCount++;
     });
-    const accuracy = Math.round((correct / questions.length) * 100);
+    const score = Math.round((correctCount / mockQuestions.length) * 100);
+    const modeObj = DRILL_MODES.find((m) => m.id === activeMode) || DRILL_MODES[0];
+    const timeSpent = modeObj.seconds - timeLeft;
+
     recordMutation.mutate({
+      mode: activeMode || "lightning15",
       subject: selectedSubject,
-      mode: activeMode!,
-      questionsAttempted: questions.length,
-      correctCount: correct,
-      timeTakenSeconds: modeObj.seconds - timeLeft,
-      accuracyPercent: accuracy,
+      questionsAttempted: mockQuestions.length,
+      correctCount,
+      timeTakenSeconds: timeSpent > 0 ? timeSpent : 30,
+      accuracyPercent: score,
     });
   };
 
+  const currentQ = mockQuestions[currentIndex];
+
   if (activeMode && !isCompleted) {
-    const modeObj = DRILL_MODES.find((m) => m.id === activeMode)!;
-    const questions = mockQuestions.slice(0, modeObj.count > mockQuestions.length ? mockQuestions.length : modeObj.count);
-    const q = questions[currentIndex];
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
-
     return (
-      <div className="mx-auto max-w-4xl space-y-7">
-        <div className="flex items-center justify-between rounded-2xl bg-card p-6 shadow-sm border border-border">
-          <div>
-            <p className="text-xs font-bold text-muted-foreground uppercase">{selectedSubject} · {modeObj.title}</p>
-            <h2 className="text-xl font-bold">Question {currentIndex + 1} of {questions.length}</h2>
+      <div className="mx-auto max-w-4xl space-y-6 animate-in fade-in duration-300">
+        <div className="flex items-center justify-between rounded-2xl bg-card border border-border p-5 shadow-xs">
+          <div className="flex items-center gap-3">
+            <span className="rounded-xl bg-primary/10 p-2.5 text-primary"><Zap className="h-5 w-5" /></span>
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">{selectedSubject} Drill</p>
+              <h2 className="text-lg font-bold">Question {currentIndex + 1} of {mockQuestions.length}</h2>
+            </div>
           </div>
-          <div className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 font-black text-primary">
-            <Clock className="h-4 w-4 animate-pulse" />
-            <span>{minutes}:{seconds < 10 ? "0" : ""}{seconds}</span>
+          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 font-mono text-sm font-bold text-foreground">
+            <Clock className="h-4 w-4 text-primary animate-pulse" />
+            {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
           </div>
         </div>
 
-        <Card className="rounded-2xl p-8 border border-border shadow-sm">
-          <p className="text-lg font-bold leading-relaxed">{q.text}</p>
-          <div className="mt-6 grid gap-3">
-            {[
-              { key: "A", text: q.options[0] },
-              { key: "B", text: q.options[1] },
-              { key: "C", text: q.options[2] },
-              { key: "D", text: q.options[3] },
-            ].map((opt) => {
-              const isSelected = selectedAnswers[currentIndex] === opt.key;
+        <Card className="elevated-card rounded-[2rem] p-8 space-y-6">
+          <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">{currentQ.text}</h3>
+
+          <div className="grid gap-3">
+            {["A", "B", "C", "D"].map((optKey, idx) => {
+              const optText = currentQ.options[idx];
+              const isSelected = selectedAnswers[currentIndex] === optKey;
               return (
-                <button key={opt.key} onClick={() => setSelectedAnswers({ ...selectedAnswers, [currentIndex]: opt.key })} className={`flex items-center gap-3 rounded-xl border p-4 text-left font-semibold transition-all ${isSelected ? "border-primary bg-primary/10 text-primary font-black" : "border-border bg-background hover:bg-muted/50"}`}>
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-card border border-border text-xs font-black">{opt.key}</span>
-                  <span>{opt.text}</span>
+                <button
+                  key={optKey}
+                  onClick={() => setSelectedAnswers((prev) => ({ ...prev, [currentIndex]: optKey }))}
+                  className={`flex items-center gap-4 rounded-2xl border p-4 text-left font-semibold transition-all ${isSelected ? "border-primary bg-primary/10 text-primary shadow-xs" : "border-border/80 bg-background/50 hover:bg-muted/50"}`}
+                >
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-xl font-bold text-xs ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{optKey}</span>
+                  <span className="flex-1">{optText}</span>
                 </button>
               );
             })}
           </div>
-          <div className="mt-8 flex justify-between border-t border-border/60 pt-6">
-            <Button variant="outline" disabled={currentIndex === 0} onClick={() => setCurrentIndex((prev) => prev - 1)} className="rounded-full">Previous</Button>
-            {currentIndex < questions.length - 1 ? (
-              <Button onClick={() => setCurrentIndex((prev) => prev + 1)} className="rounded-full">Next Question <ArrowRight className="ml-2 h-4 w-4" /></Button>
+
+          <div className="flex items-center justify-between pt-4 border-t border-border/60">
+            <Button
+              variant="outline"
+              disabled={currentIndex === 0}
+              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
+              className="rounded-full font-bold"
+            >
+              Previous
+            </Button>
+            {currentIndex < mockQuestions.length - 1 ? (
+              <Button
+                onClick={() => setCurrentIndex((prev) => prev + 1)}
+                className="rounded-full font-bold px-6"
+              >
+                Next Question <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             ) : (
-              <Button onClick={finishDrill} className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white">Submit Drill</Button>
+              <Button
+                onClick={finishDrill}
+                className="rounded-full font-bold px-8 bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                Submit Drill <CheckCircle2 className="ml-2 h-4 w-4" />
+              </Button>
             )}
           </div>
         </Card>
@@ -128,31 +149,58 @@ export default function SpeedDrillsPage() {
   }
 
   if (isCompleted) {
+    let correctCount = 0;
+    mockQuestions.forEach((q, idx) => {
+      if (selectedAnswers[idx] === q.correct) correctCount++;
+    });
+    const score = Math.round((correctCount / mockQuestions.length) * 100);
     return (
-      <div className="mx-auto max-w-2xl space-y-7 py-12 text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-          <Award className="h-10 w-10" />
-        </div>
-        <h1 className="display-serif text-4xl font-bold">Drill Completed!</h1>
-        <p className="text-muted-foreground">Your speed and accuracy have been recorded to your adaptive progress profile.</p>
-        <div className="flex justify-center gap-4 pt-4">
-          <Button onClick={() => { setActiveMode(null); setIsCompleted(false); setCurrentIndex(0); setSelectedAnswers({}); }} className="rounded-full">Back to Speed Drills</Button>
-        </div>
+      <div className="mx-auto max-w-xl space-y-6 animate-in fade-in duration-300 py-12 text-center">
+        <Card className="elevated-card rounded-[2.5rem] p-8 sm:p-10 space-y-6">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary shadow-sm">
+            <Trophy className="h-10 w-10" />
+          </div>
+          <div>
+            <p className="ink-kicker">Drill Completed</p>
+            <h2 className="text-3xl font-bold mt-1">Great Reflex Sprints!</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-4 rounded-2xl bg-muted/50 p-6 text-left">
+            <div>
+              <p className="text-xs font-black uppercase text-muted-foreground">Accuracy Score</p>
+              <p className="text-3xl font-bold text-primary mt-1">{score}%</p>
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase text-muted-foreground">Correct Answers</p>
+              <p className="text-3xl font-bold text-foreground mt-1">{correctCount} / {mockQuestions.length}</p>
+            </div>
+          </div>
+          <Button
+            onClick={() => {
+              setActiveMode(null);
+              setIsCompleted(false);
+              setCurrentIndex(0);
+              setSelectedAnswers({});
+            }}
+            className="w-full h-12 rounded-full font-bold"
+          >
+            <RotateCcw className="mr-2 h-4 w-4" /> Back to Speed Drills
+          </Button>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-[1440px] space-y-7">
+    <div className="mx-auto max-w-[1440px] space-y-8 animate-in fade-in duration-300">
       <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8 lg:p-10">
-        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-accent/30 blur-3xl" />
+        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-accent/30 blur-3xl pointer-events-none" />
         <div className="relative">
-          <p className="ink-kicker mb-3">High-intensity practice</p>
-          <h1 className="display-serif text-3xl font-bold tracking-tight sm:text-5xl">Speed Drills & Reflex Sprints</h1>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Sharpen your time management and calculation reflexes under strict countdown conditions.</p>
+          <p className="ink-kicker mb-3">Reflex training</p>
+          <h1 className="display-serif text-3xl font-bold tracking-tight sm:text-5xl">Speed Drills & Sprints</h1>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Train your mental agility and time management under high-pressure simulated exam countdowns.</p>
           <div className="mt-6 flex flex-wrap gap-3">
             {["Physics", "Chemistry", "Mathematics"].map((sub) => (
-              <button key={sub} onClick={() => setSelectedSubject(sub)} className={`rounded-full px-5 py-2 text-sm font-bold transition-colors ${selectedSubject === sub ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground hover:bg-muted"}`}>
+              <button key={sub} onClick={() => setSelectedSubject(sub)} className={`rounded-full px-5 py-2 text-sm font-bold transition-all ${selectedSubject === sub ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/60 text-muted-foreground hover:bg-muted"}`}>
                 {sub}
               </button>
             ))}
@@ -162,39 +210,57 @@ export default function SpeedDrillsPage() {
 
       <div className="grid gap-6 md:grid-cols-3">
         {DRILL_MODES.map((mode) => (
-          <Card key={mode.id} className="elevated-card flex flex-col justify-between rounded-2xl p-6">
-            <div>
-              <div className="mb-4 inline-flex rounded-xl bg-primary/10 p-3 text-primary">
+          <Card key={mode.id} className="elevated-card rounded-[1.75rem] p-6 sm:p-8 space-y-6 flex flex-col justify-between group hover:border-primary/50 transition-all">
+            <div className="space-y-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                 <Zap className="h-6 w-6" />
-              </div>
-              <h3 className="text-2xl font-black">{mode.title}</h3>
-              <p className="mt-1 text-sm font-semibold text-muted-foreground">{mode.subtitle}</p>
+              </span>
+              <h3 className="text-2xl font-bold tracking-tight">{mode.title}</h3>
+              <p className="text-sm font-semibold text-muted-foreground">{mode.subtitle}</p>
             </div>
-            <div className="mt-8">
-              <Button onClick={() => setActiveMode(mode.id)} className="w-full rounded-full">Start {mode.title}</Button>
-            </div>
+            <Button
+              onClick={() => setActiveMode(mode.id)}
+              className="w-full h-12 rounded-full font-bold shadow-sm"
+            >
+              Start Sprint <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </Card>
         ))}
       </div>
 
-      <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-        <h3 className="text-xl font-bold">Recent Drill History</h3>
-        <div className="mt-4 divide-y divide-border/60">
-          {(history ?? []).map((drill) => (
-            <div key={drill.id} className="flex items-center justify-between py-4">
-              <div>
-                <p className="font-bold">{drill.subject} · {drill.mode}</p>
-                <p className="text-xs text-muted-foreground">{new Date(drill.completedAt).toLocaleDateString()} · {Math.round(drill.timeTakenSeconds / 60)} mins</p>
-              </div>
-              <div className="text-right">
-                <span className="text-lg font-black text-emerald-600">{Number(drill.accuracyPercent)}%</span>
-                <p className="text-xs text-muted-foreground">{drill.correctCount}/{drill.questionsAttempted} correct</p>
-              </div>
-            </div>
-          ))}
-          {!history?.length && <p className="py-6 text-center text-sm text-muted-foreground">No speed drills recorded yet. Start your first sprint above!</p>}
-        </div>
-      </section>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold tracking-tight">Recent Drill History</h2>
+        {historyLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((n) => (
+              <Card key={n} className="p-6 rounded-[1.75rem] border border-border/60 space-y-3 animate-pulse">
+                <div className="h-5 w-28 bg-muted rounded-full" />
+                <div className="h-8 w-20 bg-muted rounded-xl" />
+                <div className="h-4 w-36 bg-muted rounded-full" />
+              </Card>
+            ))}
+          </div>
+        ) : !history || history.length === 0 ? (
+          <Card className="rounded-[1.75rem] p-8 text-center space-y-2">
+            <p className="text-sm font-bold text-muted-foreground">No speed drills recorded yet. Start your first sprint above!</p>
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {history.map((record) => (
+              <Card key={record.id} className="rounded-[1.75rem] p-6 space-y-3 border border-border/80 bg-card">
+                <div className="flex items-center justify-between">
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">{record.subject}</span>
+                  <span className="text-xs font-bold text-muted-foreground">{new Date(record.completedAt).toLocaleDateString()}</span>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{record.accuracyPercent}% Accuracy</p>
+                  <p className="text-xs font-semibold text-muted-foreground mt-0.5">{record.correctCount} / {record.questionsAttempted} correct answers</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
