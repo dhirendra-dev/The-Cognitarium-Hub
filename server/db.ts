@@ -912,6 +912,7 @@ export async function completeStudyTimerSession(
   userId: number,
   endTime: Date,
   notes?: string,
+  duration?: number,
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -921,6 +922,7 @@ export async function completeStudyTimerSession(
       isCompleted: true,
       endTime,
       ...(notes === undefined ? {} : { notes }),
+      ...(duration === undefined ? {} : { duration }),
     })
     .where(and(eq(studyTimerSessions.id, id), eq(studyTimerSessions.userId, userId)));
 

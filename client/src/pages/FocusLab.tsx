@@ -13,6 +13,7 @@ import {
   Pause,
   Play,
   RotateCcw,
+  ShieldCheck,
   Sparkles,
   TimerReset,
   TriangleAlert,
@@ -25,6 +26,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 type FocusPhase = "focus" | "shortBreak" | "longBreak";
+type TimerMode = "pomodoro" | "custom" | "stopwatch";
 
 const PHASES: Record<FocusPhase, { label: string; minutes: number; accent: string; description: string }> = {
   focus: {
@@ -76,7 +78,10 @@ function formatTime(totalSeconds: number) {
 export default function FocusLab() {
   const [today] = useState(() => new Date());
   const [phase, setPhase] = useState<FocusPhase>("focus");
+  const [timerMode, setTimerMode] = useState<TimerMode>("pomodoro");
+  const [customMinutes, setCustomMinutes] = useState(45);
   const [remaining, setRemaining] = useState(PHASES.focus.minutes * 60);
+  const [stopwatchElapsed, setStopwatchElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [completedCycles, setCompletedCycles] = useState(0);
@@ -85,6 +90,7 @@ export default function FocusLab() {
   const [distractions, setDistractions] = useState<string[]>([]);
   const [activeRoutine, setActiveRoutine] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [readiness, setReadiness] = useState({ desk: false, device: false, material: false });
 
   const utils = trpc.useUtils();
   const insightsQuery = trpc.studyTimer.getInsights.useQuery({ daysBack: 7 });
@@ -99,9 +105,17 @@ export default function FocusLab() {
   });
   const cancelSession = trpc.studyTimer.cancel.useMutation();
 
-  const current = PHASES[phase];
-  const totalSeconds = current.minutes * 60;
-  const elapsedPercent = Math.min(100, Math.max(0, ((totalSeconds - remaining) / totalSeconds) * 100));
+  const basePhase = PHASES[phase];
+  const focusMinutes = timerMode === "custom" ? customMinutes : PHASES.focus.minutes;
+  const activeMinutes = phase === "focus" ? focusMinutes : basePhase.minutes;
+  const current = phase === "focus" && timerMode === "stopwatch"
+    ? { ...basePhase, label: "Study stopwatch", description: "Track an open-ended study sprint, then stop when the concept feels complete." }
+    : { ...basePhase, minutes: activeMinutes };
+  const totalSeconds = activeMinutes * 60;
+  const displaySeconds = phase === "focus" && timerMode === "stopwatch" ? stopwatchElapsed : remaining;
+  const elapsedPercent = phase === "focus" && timerMode === "stopwatch"
+    ? Math.min(100, (stopwatchElapsed / Math.max(1, customMinutes * 60)) * 100)
+    : Math.min(100, Math.max(0, ((totalSeconds - remaining) / totalSeconds) * 100));
   const todayCompleted = useMemo(
     () => (sessionsQuery.data ?? []).filter((session) => session.isCompleted).length,
     [sessionsQuery.data],
@@ -110,6 +124,7 @@ export default function FocusLab() {
   const sessionNotes = () =>
     JSON.stringify({
       kind: "focus",
+      mode: timerMode,
       intention: intention.trim() || "Focused study block",
       distractions,
     });
@@ -118,6 +133,16 @@ export default function FocusLab() {
     if (isRunning || sessionId) return;
     setPhase(nextPhase);
     setRemaining(PHASES[nextPhase].minutes * 60);
+    setStopwatchElapsed(0);
+    setDistractions([]);
+  };
+
+  const switchTimerMode = (nextMode: TimerMode) => {
+    if (isRunning || sessionId) return;
+    setTimerMode(nextMode);
+    setPhase("focus");
+    setStopwatchElapsed(0);
+    setRemaining((nextMode === "custom" ? customMinutes : PHASES.focus.minutes) * 60);
     setDistractions([]);
   };
 
@@ -126,7 +151,11 @@ export default function FocusLab() {
 
     if (phase === "focus" && sessionId) {
       try {
-        await completeSession.mutateAsync({ id: sessionId, notes: sessionNotes() });
+        await completeSession.mutateAsync({
+          id: sessionId,
+          notes: sessionNotes(),
+          ...(timerMode === "stopwatch" ? { duration: Math.max(1, Math.ceil(stopwatchElapsed / 60)) } : {}),
+        });
         toast.success("Focus block logged. Your attention earned a real recovery break.");
       } catch {
         toast.error("We could not save this focus block. Please retry your next session.");
@@ -137,6 +166,7 @@ export default function FocusLab() {
       const nextPhase = nextCycle % 4 === 0 ? "longBreak" : "shortBreak";
       setPhase(nextPhase);
       setRemaining(PHASES[nextPhase].minutes * 60);
+      setStopwatchElapsed(0);
       setDistractions([]);
       return;
     }
@@ -144,21 +174,27 @@ export default function FocusLab() {
     if (phase !== "focus") {
       toast.success("Reset complete. Pick the next focused task when you are ready.");
       setPhase("focus");
-      setRemaining(PHASES.focus.minutes * 60);
+      setRemaining((timerMode === "custom" ? customMinutes : PHASES.focus.minutes) * 60);
     }
   };
 
   useEffect(() => {
-    if (!isRunning || remaining <= 0) return;
-    const interval = window.setInterval(() => setRemaining((value) => Math.max(0, value - 1)), 1000);
+    if (!isRunning) return;
+    const interval = window.setInterval(() => {
+      if (phase === "focus" && timerMode === "stopwatch") {
+        setStopwatchElapsed((value) => value + 1);
+      } else {
+        setRemaining((value) => Math.max(0, value - 1));
+      }
+    }, 1000);
     return () => window.clearInterval(interval);
-  }, [isRunning, remaining]);
+  }, [isRunning, phase, timerMode]);
 
   useEffect(() => {
-    if (isRunning && remaining === 0) {
+    if (isRunning && timerMode !== "stopwatch" && remaining === 0) {
       void completeFocusPhase();
     }
-  }, [isRunning, remaining]);
+  }, [isRunning, remaining, timerMode]);
 
   const start = async () => {
     if (phase !== "focus") {
@@ -175,7 +211,7 @@ export default function FocusLab() {
       const result = await createSession.mutateAsync({
         date: new Date(),
         subject: subject.trim() || "General study",
-        duration: current.minutes,
+        duration: timerMode === "stopwatch" ? 1 : activeMinutes,
         notes: sessionNotes(),
       });
       setSessionId(result.id);
@@ -197,6 +233,7 @@ export default function FocusLab() {
     }
     setSessionId(null);
     setRemaining(totalSeconds);
+    setStopwatchElapsed(0);
     setDistractions([]);
   };
 
@@ -255,6 +292,32 @@ export default function FocusLab() {
           </div>
 
           <div className="mt-6 grid grid-cols-3 gap-2 rounded-2xl bg-muted/40 p-1.5">
+            {([
+              ["pomodoro", "Pomodoro"],
+              ["custom", "Custom"],
+              ["stopwatch", "Stopwatch"],
+            ] as Array<[TimerMode, string]>).map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                aria-pressed={timerMode === mode}
+                disabled={isRunning || sessionId !== null}
+                onClick={() => switchTimerMode(mode)}
+                className={`rounded-xl px-2 py-2.5 text-xs font-black transition-all disabled:cursor-not-allowed disabled:opacity-55 ${timerMode === mode && phase === "focus" ? "bg-[#2D2420] text-white" : "text-muted-foreground hover:bg-background/70"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {timerMode === "custom" && phase === "focus" && (
+            <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-background/45 p-4">
+              <div><p className="text-sm font-black">Custom focus length</p><p className="mt-1 text-xs text-muted-foreground">Choose a realistic block between 10 and 180 minutes.</p></div>
+              <Input type="number" min={10} max={180} disabled={isRunning || sessionId !== null} value={customMinutes} onChange={(event) => { const next = Math.min(180, Math.max(10, Number(event.target.value) || 10)); setCustomMinutes(next); setRemaining(next * 60); }} className="h-10 w-24 rounded-xl bg-background text-center font-black" />
+            </div>
+          )}
+
+          <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl bg-muted/40 p-1.5">
             {(Object.keys(PHASES) as FocusPhase[]).map((item) => (
               <button
                 key={item}
@@ -275,7 +338,7 @@ export default function FocusLab() {
               <circle cx="50" cy="50" r="43" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" className="text-primary transition-all duration-500" strokeDasharray={`${elapsedPercent * 2.7} 270`} />
             </svg>
             <div className="relative text-center">
-              <p className="text-5xl font-black tabular-nums tracking-tight text-foreground sm:text-6xl">{formatTime(remaining)}</p>
+              <p className="text-5xl font-black tabular-nums tracking-tight text-foreground sm:text-6xl">{formatTime(displaySeconds)}</p>
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{isRunning ? "attention protected" : "ready when you are"}</p>
             </div>
           </div>
@@ -293,11 +356,22 @@ export default function FocusLab() {
           <div className="mt-8 grid gap-4 border-t border-border/70 pt-6 md:grid-cols-2">
             <div>
               <label htmlFor="focus-subject" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Study subject</label>
-              <Input id="focus-subject" value={subject} onChange={(event) => setSubject(event.target.value)} disabled={isRunning} className="mt-2 h-11 rounded-xl bg-background/60 font-semibold" placeholder="Physics, Biology, Maths…" />
+              <Input id="focus-subject" value={subject} onChange={(event) => setSubject(event.target.value)} disabled={isRunning || sessionId !== null} className="mt-2 h-11 rounded-xl bg-background/60 font-semibold" placeholder="Physics, Biology, Maths…" />
             </div>
             <div>
               <label htmlFor="focus-intention" className="text-xs font-black uppercase tracking-wider text-muted-foreground">One intention</label>
-              <Input id="focus-intention" value={intention} onChange={(event) => setIntention(event.target.value)} disabled={isRunning} className="mt-2 h-11 rounded-xl bg-background/60 font-semibold" placeholder="e.g. finish electrostatics notes" />
+              <Input id="focus-intention" value={intention} onChange={(event) => setIntention(event.target.value)} disabled={isRunning || sessionId !== null} className="mt-2 h-11 rounded-xl bg-background/60 font-semibold" placeholder="e.g. finish electrostatics notes" />
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-900/30 dark:bg-emerald-950/20">
+            <div className="flex items-start gap-3"><span className="rounded-xl bg-white/80 p-2 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"><ShieldCheck className="h-4 w-4" /></span><div><p className="text-sm font-black">Before you begin</p><p className="mt-1 text-xs leading-5 text-muted-foreground">This check is for your own intention. The website will not access, block, or inspect your device apps.</p></div></div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {([
+                ["desk", "Desk clear"],
+                ["device", "Device focus mode on"],
+                ["material", "Materials open"],
+              ] as Array<[keyof typeof readiness, string]>).map(([key, label]) => <button key={key} type="button" onClick={() => setReadiness((items) => ({ ...items, [key]: !items[key] }))} className={`rounded-xl border px-3 py-2 text-left text-xs font-black transition-all ${readiness[key] ? "border-emerald-300 bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100" : "border-border bg-background/60 text-muted-foreground"}`}>{readiness[key] && <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />}{label}</button>)}
             </div>
           </div>
         </Card>

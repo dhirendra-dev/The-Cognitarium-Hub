@@ -526,6 +526,12 @@
 - [x] Integrate the suite into authenticated navigation and the warm Cognitarium notebook design system
 - [x] Add Vitest coverage, responsive verification, and a deployment checkpoint
 
+## Current Feature: Advanced Focus Lab Controls
+- [x] Add custom-duration and stopwatch study modes alongside Pomodoro cycles
+- [x] Preserve timer-mode metadata in secure, user-scoped study session records
+- [x] Add a pre-focus readiness checklist and clear device-boundary guidance
+- [x] Run regression checks, responsive verification, and save a checkpoint
+
 ## Current Fix: NEET Syllabus Sync
 - [x] Align the live syllabus-topic class enum with NEET import records
 - [x] Make the NTA syllabus import idempotent and safe to retry

@@ -1223,9 +1223,9 @@ export const appRouter = router({
       }),
 
     complete: protectedProcedure
-      .input(z.object({ id: z.number(), notes: z.string().max(1200).optional() }))
+      .input(z.object({ id: z.number(), notes: z.string().max(1200).optional(), duration: z.number().int().min(1).max(480).optional() }))
       .mutation(async ({ input, ctx }) => {
-        return completeStudyTimerSession(input.id, ctx.user.id, new Date(), input.notes);
+        return completeStudyTimerSession(input.id, ctx.user.id, new Date(), input.notes, input.duration);
       }),
 
     cancel: protectedProcedure

@@ -464,8 +464,11 @@ describe("Study Timer Router", () => {
     const result = await caller.studyTimer.complete({
       id: session.id,
       notes: JSON.stringify({ kind: "focus", distractions: ["phone"] }),
+      duration: 40,
     });
     expect(result.updated).toBe(true);
+    const sessions = await caller.studyTimer.getSessions({ date: new Date() });
+    expect(sessions.find((item) => item.id === session.id)?.duration).toBe(40);
   });
 
   it("does not let another user complete an unfinished focus session", async () => {
