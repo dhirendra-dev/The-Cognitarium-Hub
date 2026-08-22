@@ -321,6 +321,15 @@ export default function FocusLab() {
     }
   };
 
+  const dismissPlannedBlock = async (id: number) => {
+    try {
+      await dismissPlan.mutateAsync({ id });
+      toast.success("Planned block dismissed.");
+    } catch {
+      toast.error("We could not dismiss that plan. Please retry.");
+    }
+  };
+
   const toggleFullscreen = async () => {
     try {
       if (!document.fullscreenElement) {
@@ -483,7 +492,7 @@ export default function FocusLab() {
                     <span className="rounded-xl bg-accent/50 p-2 text-primary"><CalendarClock className="h-4 w-4" /></span>
                     <div className="min-w-0 flex-1"><p className="truncate text-sm font-black">{plan.subject} · {plan.intention}</p><p className="mt-1 text-xs font-semibold text-muted-foreground">{formatPlannedDate(new Date(plan.scheduledFor))} · {plan.duration} min · {plan.timerMode}</p></div>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => void startPlannedBlock(plan)} className="rounded-full bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground">Load</button><button type="button" onClick={() => editPlan(plan)} className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-black text-foreground"><Pencil className="mr-1 inline h-3 w-3" />Edit</button><button type="button" onClick={() => void dismissPlan.mutateAsync({ id: plan.id })} className="rounded-full px-3 py-1.5 text-xs font-black text-muted-foreground hover:text-foreground">Dismiss</button></div>
+                  <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => void startPlannedBlock(plan)} className="rounded-full bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground">Load</button><button type="button" onClick={() => editPlan(plan)} className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-black text-foreground"><Pencil className="mr-1 inline h-3 w-3" />Edit</button><button type="button" onClick={() => void dismissPlannedBlock(plan.id)} disabled={dismissPlan.isPending} className="rounded-full px-3 py-1.5 text-xs font-black text-muted-foreground hover:text-foreground disabled:opacity-50">Dismiss</button></div>
                 </div>
               ))}
               {!plansQuery.isLoading && !(plansQuery.data ?? []).length && <div className="rounded-2xl border border-dashed border-border p-4 text-center text-xs leading-5 text-muted-foreground">No upcoming focus block yet. Keep the next start small and specific.</div>}
