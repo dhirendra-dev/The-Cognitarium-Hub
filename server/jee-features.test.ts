@@ -60,5 +60,13 @@ describe("JEE Features Router Suite", () => {
     const history = await caller.speedDrills.history();
     expect(Array.isArray(history)).toBe(true);
     expect(history.length).toBeGreaterThan(0);
+
+    const analytics = await caller.speedDrills.analytics();
+    expect(analytics).toBeDefined();
+    expect(typeof analytics.totalDrills).toBe("number");
+    expect(typeof analytics.avgAccuracy).toBe("number");
+    expect(typeof analytics.avgSpeedSecPerQ).toBe("number");
+    expect(Array.isArray(analytics.subjectBreakdown)).toBe(true);
+    expect(Array.isArray(analytics.recentTrend)).toBe(true);
   });
 });

@@ -1974,7 +1974,62 @@ export const appRouter = router({
       const db = await getDb();
       if (!db) return [];
       const { speedDrills } = await import("../drizzle/schema");
-      return db.select().from(speedDrills).where(eq(speedDrills.userId, ctx.user.id)).orderBy(desc(speedDrills.completedAt)).limit(20);
+      return db.select().from(speedDrills).where(eq(speedDrills.userId, ctx.user.id)).orderBy(desc(speedDrills.completedAt)).limit(50);
+    }),
+    analytics: protectedProcedure.query(async ({ ctx }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) return { totalDrills: 0, avgAccuracy: 0, avgSpeedSecPerQ: 0, subjectBreakdown: [], recentTrend: [] };
+      const { speedDrills } = await import("../drizzle/schema");
+      const records = await db.select().from(speedDrills).where(eq(speedDrills.userId, ctx.user.id)).orderBy(asc(speedDrills.completedAt));
+      
+      const totalDrills = records.length;
+      if (totalDrills === 0) {
+        return { totalDrills: 0, avgAccuracy: 0, avgSpeedSecPerQ: 0, subjectBreakdown: [], recentTrend: [] };
+      }
+
+      let totalAccuracy = 0;
+      let totalTimePerQ = 0;
+      const subjectMap: Record<string, { count: number; totalAcc: number; totalTime: number }> = {};
+      const recentTrend = records.slice(-10).map((r) => {
+        const acc = Number(r.accuracyPercent) || 0;
+        const timePerQ = r.questionsAttempted > 0 ? Math.round(r.timeTakenSeconds / r.questionsAttempted) : 0;
+        totalAccuracy += acc;
+        totalTimePerQ += timePerQ;
+
+        if (!subjectMap[r.subject]) {
+          subjectMap[r.subject] = { count: 0, totalAcc: 0, totalTime: 0 };
+        }
+        subjectMap[r.subject].count += 1;
+        subjectMap[r.subject].totalAcc += acc;
+        subjectMap[r.subject].totalTime += timePerQ;
+
+        return {
+          id: r.id,
+          date: new Date(r.completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+          accuracy: acc,
+          speedSecPerQ: timePerQ,
+          subject: r.subject,
+        };
+      });
+
+      const avgAccuracy = Math.round(totalAccuracy / totalDrills);
+      const avgSpeedSecPerQ = Math.round((totalTimePerQ / totalDrills) * 10) / 10;
+
+      const subjectBreakdown = Object.entries(subjectMap).map(([subject, stats]) => ({
+        subject,
+        drillsCount: stats.count,
+        avgAccuracy: Math.round(stats.totalAcc / stats.count),
+        avgSpeedSecPerQ: Math.round((stats.totalTime / stats.count) * 10) / 10,
+      }));
+
+      return {
+        totalDrills,
+        avgAccuracy,
+        avgSpeedSecPerQ,
+        subjectBreakdown,
+        recentTrend,
+      };
     }),
     record: protectedProcedure.input(z.object({ subject: z.string(), mode: z.enum(["lightning15", "sprint30", "marathon60"]), questionsAttempted: z.number(), correctCount: z.number(), timeTakenSeconds: z.number(), accuracyPercent: z.number() })).mutation(async ({ ctx, input }) => {
       const { getDb } = await import("./db");
