@@ -29,9 +29,14 @@ export default function SyllabusTracker() {
   const syncMutation = trpc.syllabus.syncNtaSyllabus.useMutation({
     onSuccess: async (data) => {
       await utils.syllabus.list.invalidate();
-      toast.success(`Successfully synchronized ${data.count} official NTA 2025 syllabus topics!`);
+      toast.success(
+        `Syllabus synchronized: ${data.created} added and ${data.refreshed} refreshed across ${data.count} official topics.`,
+      );
     },
-    onError: (error) => toast.error(error.message || "Could not sync official syllabus."),
+    onError: () =>
+      toast.error(
+        "Could not synchronize the official syllabus right now. Please retry in a moment.",
+      ),
   });
 
   const updateProgress = trpc.syllabus.updateProgress.useMutation({

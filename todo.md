@@ -518,3 +518,16 @@
 - [x] Run vitest suite and verify responsive layout rendering
 - [x] Save checkpoint for logout improvement
 
+## Current Feature: Focus & Digital Wellbeing Suite
+- [ ] Add a configurable Pomodoro study timer with focus, short-break, and long-break cycles
+- [ ] Add study intention, task selection, pause controls, and session-completion logging
+- [ ] Add Regain-inspired distraction reflection and focused reset routines designed for students
+- [ ] Add focus insights for completed cycles, deep-work time, break balance, and interruption patterns
+- [ ] Integrate the suite into authenticated navigation and the warm Cognitarium notebook design system
+- [ ] Add Vitest coverage, responsive verification, and a deployment checkpoint
+
+## Current Fix: NEET Syllabus Sync
+- [x] Align the live syllabus-topic class enum with NEET import records
+- [x] Make the NTA syllabus import idempotent and safe to retry
+- [x] Verify Biology/NEET synchronization and display a clear success/error result
+- [x] Add regression coverage and save a repair checkpoint

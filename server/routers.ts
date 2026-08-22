@@ -1948,20 +1948,54 @@ export const appRouter = router({
         { subject: "Biology", class: "neet" as const, unit: "Ecology & Environment", topic: "Organisms, Populations & Ecosystems", subtopic: "Biotic interactions, pyramids, biodiversity conservation, issues", weightage: "12.00", difficulty: "easy" as const, conceptsRequired: "Ecological balance" },
       ];
 
-      // Check if topics already exist to avoid complete duplication
-      const existing = await db.select({ count: jeeSyllabusTopics.id }).from(jeeSyllabusTopics).limit(1);
-      if (existing.length === 0) {
-        for (const topic of officialTopics) {
+      let created = 0;
+      let refreshed = 0;
+
+      const storedTopics = await db
+        .select({
+          id: jeeSyllabusTopics.id,
+          subject: jeeSyllabusTopics.subject,
+          class: jeeSyllabusTopics.class,
+          unit: jeeSyllabusTopics.unit,
+          topic: jeeSyllabusTopics.topic,
+        })
+        .from(jeeSyllabusTopics);
+
+      const identityFor = (item: {
+        class: string;
+        subject: string;
+        unit: string;
+        topic: string;
+      }) => [item.class, item.subject, item.unit, item.topic].join("::");
+
+      const existingByIdentity = new Map(
+        storedTopics.map((item) => [identityFor(item), item.id]),
+      );
+
+      // The legacy table has no natural unique key. Resolve each record by its stable
+      // exam, subject, unit, and topic identity so sync is safe to run repeatedly.
+      for (const topic of officialTopics) {
+        const existingId = existingByIdentity.get(identityFor(topic));
+
+        if (!existingId) {
           await db.insert(jeeSyllabusTopics).values(topic);
+          created += 1;
+          continue;
         }
-      } else {
-        // Upsert or insert new 2025 NTA topics
-        for (const topic of officialTopics) {
-          await db.insert(jeeSyllabusTopics).values(topic).onDuplicateKeyUpdate({ set: { topic: topic.topic } });
-        }
+
+        await db
+          .update(jeeSyllabusTopics)
+          .set({
+            subtopic: topic.subtopic,
+            weightage: topic.weightage,
+            difficulty: topic.difficulty,
+            conceptsRequired: topic.conceptsRequired,
+          })
+          .where(eq(jeeSyllabusTopics.id, existingId));
+        refreshed += 1;
       }
 
-      return { success: true, count: officialTopics.length };
+      return { success: true, count: officialTopics.length, created, refreshed };
     }),
   }),
   dpp: router({

@@ -119,6 +119,25 @@ describe("adaptive learning contracts", () => {
     await adminCaller.syllabus.delete({ id: Number(topic.id) });
   }, 20000);
 
+  it("synchronizes NEET syllabus topics safely on repeated runs", async () => {
+    const adminCaller = appRouter.createCaller(mockContext("admin"));
+    const userCaller = appRouter.createCaller(mockContext());
+
+    const firstSync = await adminCaller.syllabus.syncNtaSyllabus();
+    expect(firstSync.success).toBe(true);
+    expect(firstSync.created + firstSync.refreshed).toBe(firstSync.count);
+
+    const secondSync = await adminCaller.syllabus.syncNtaSyllabus();
+    expect(secondSync.success).toBe(true);
+    expect(secondSync.created + secondSync.refreshed).toBe(secondSync.count);
+
+    const biologyTopics = await userCaller.syllabus.list({
+      subject: "Biology",
+      exam: "neet",
+    });
+    expect(biologyTopics.length).toBeGreaterThan(0);
+  }, 20000);
+
   it("returns stable dashboard and revision collections", async () => {
     const caller = appRouter.createCaller(mockContext(987654));
     const dashboard = await caller.adaptive.dashboard();
