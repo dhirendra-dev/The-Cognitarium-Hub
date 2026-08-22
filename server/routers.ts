@@ -2011,6 +2011,28 @@ export const appRouter = router({
       }
     }),
     escalate: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) => resolveDoubt({ id: input.id, userId: ctx.user.id, aiResponse: "Student requested mentor review.", confidence: 0, status: "needsMentor" })),
+    followUp: protectedProcedure.input(z.object({ id: z.number(), message: z.string().min(1).max(2000) })).mutation(async ({ ctx, input }) => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const { doubts } = await import("../drizzle/schema");
+      const existing = await db.select().from(doubts).where(and(eq(doubts.id, input.id), eq(doubts.userId, ctx.user.id)));
+      if (existing.length === 0) throw new TRPCError({ code: "NOT_FOUND", message: "Doubt not found" });
+      const doubt = existing[0];
+      try {
+        const response = await invokeLLM({ messages: [
+          { role: "system", content: "You are SahAI, an expert JEE/NEET tutor. Continue explaining this doubt conversationally, resolving any formula derivations or PYQ trick points." },
+          { role: "user", content: `Original Doubt: ${doubt.questionText}\nPrevious AI Answer: ${doubt.aiResponse}\nStudent Follow-up: ${input.message}` },
+        ] });
+        const answer = response.choices?.[0]?.message?.content;
+        const text = typeof answer === "string" ? answer : "I am here to help you solve this step by step.";
+        const updatedResponse = `${doubt.aiResponse}\n\n--- Follow-up ---\n**You:** ${input.message}\n**SahAI:** ${text}`;
+        await db.update(doubts).set({ aiResponse: updatedResponse, updatedAt: new Date() }).where(eq(doubts.id, doubt.id));
+        return { reply: text };
+      } catch {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI tutor is busy. Please try again." });
+      }
+    }),
   }),
   squads: router({
     mine: protectedProcedure.query(({ ctx }) => getSquadDashboard(ctx.user.id)),
