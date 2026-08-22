@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   BellRing,
   Brain,
+  CalendarClock,
+  CalendarPlus,
   CheckCircle2,
   ChevronRight,
   Clock3,
@@ -11,6 +13,7 @@ import {
   Leaf,
   Minimize,
   Pause,
+  Pencil,
   Play,
   RotateCcw,
   ShieldCheck,
@@ -18,6 +21,7 @@ import {
   TimerReset,
   TriangleAlert,
   Waves,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -75,6 +79,21 @@ function formatTime(totalSeconds: number) {
   return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 
+function toLocalDateTimeInput(date: Date) {
+  const offset = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function formatPlannedDate(date: Date) {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
 export default function FocusLab() {
   const [today] = useState(() => new Date());
   const [phase, setPhase] = useState<FocusPhase>("focus");
@@ -91,6 +110,8 @@ export default function FocusLab() {
   const [activeRoutine, setActiveRoutine] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [readiness, setReadiness] = useState({ desk: false, device: false, material: false });
+  const [planScheduledFor, setPlanScheduledFor] = useState(() => toLocalDateTimeInput(new Date(Date.now() + 30 * 60_000)));
+  const [editingPlanId, setEditingPlanId] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
   const insightsQuery = trpc.studyTimer.getInsights.useQuery({ daysBack: 7 });
@@ -104,6 +125,10 @@ export default function FocusLab() {
     },
   });
   const cancelSession = trpc.studyTimer.cancel.useMutation();
+  const plansQuery = trpc.focusPlans.list.useQuery();
+  const createPlan = trpc.focusPlans.create.useMutation({ onSuccess: () => utils.focusPlans.list.invalidate() });
+  const updatePlan = trpc.focusPlans.update.useMutation({ onSuccess: () => utils.focusPlans.list.invalidate() });
+  const dismissPlan = trpc.focusPlans.dismiss.useMutation({ onSuccess: () => utils.focusPlans.list.invalidate() });
 
   const basePhase = PHASES[phase];
   const focusMinutes = timerMode === "custom" ? customMinutes : PHASES.focus.minutes;
@@ -235,6 +260,65 @@ export default function FocusLab() {
     setRemaining(totalSeconds);
     setStopwatchElapsed(0);
     setDistractions([]);
+  };
+
+  const plannerDuration = timerMode === "stopwatch" ? customMinutes : focusMinutes;
+
+  const savePlan = async () => {
+    const scheduledFor = new Date(planScheduledFor);
+    if (!subject.trim() || !intention.trim() || Number.isNaN(scheduledFor.getTime())) {
+      toast.error("Add a subject, one intention, and a valid start time before saving your plan.");
+      return;
+    }
+    const input = {
+      subject: subject.trim(),
+      intention: intention.trim(),
+      scheduledFor,
+      duration: plannerDuration,
+      timerMode,
+    };
+    try {
+      if (editingPlanId) {
+        await updatePlan.mutateAsync({ id: editingPlanId, ...input });
+        toast.success("Upcoming focus block updated.");
+      } else {
+        await createPlan.mutateAsync(input);
+        toast.success("Your next focus block is saved in Focus Lab.");
+      }
+      setEditingPlanId(null);
+    } catch {
+      toast.error("We could not save that plan. Please retry.");
+    }
+  };
+
+  const editPlan = (plan: NonNullable<typeof plansQuery.data>[number]) => {
+    setEditingPlanId(plan.id);
+    setSubject(plan.subject);
+    setIntention(plan.intention);
+    setPlanScheduledFor(toLocalDateTimeInput(new Date(plan.scheduledFor)));
+    setTimerMode(plan.timerMode);
+    setCustomMinutes(plan.duration);
+    setPhase("focus");
+    setRemaining(plan.duration * 60);
+    setStopwatchElapsed(0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const startPlannedBlock = async (plan: NonNullable<typeof plansQuery.data>[number]) => {
+    try {
+      await updatePlan.mutateAsync({ id: plan.id, status: "started" });
+      setSubject(plan.subject);
+      setIntention(plan.intention);
+      setTimerMode(plan.timerMode);
+      setCustomMinutes(plan.duration);
+      setPhase("focus");
+      setRemaining(plan.duration * 60);
+      setStopwatchElapsed(0);
+      toast.success("Plan loaded. Start your focus block when you are ready.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      toast.error("We could not load that planned block. Please retry.");
+    }
   };
 
   const toggleFullscreen = async () => {
@@ -377,6 +461,35 @@ export default function FocusLab() {
         </Card>
 
         <div className="space-y-7">
+          <Card className="elevated-card rounded-[2rem] p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="ink-kicker">Focus planner</p>
+                <h2 className="mt-1 text-lg font-black">Make the next block visible.</h2>
+              </div>
+              <CalendarPlus className="h-5 w-5 text-primary" />
+            </div>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Save your next intentional block here. It stays in your study desk, with no automatic device notification or background reminder.</p>
+            <label htmlFor="focus-planned-for" className="mt-5 block text-xs font-black uppercase tracking-wider text-muted-foreground">Start time</label>
+            <Input id="focus-planned-for" type="datetime-local" value={planScheduledFor} onChange={(event) => setPlanScheduledFor(event.target.value)} className="mt-2 h-11 rounded-xl bg-background/60 font-semibold" />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button onClick={() => void savePlan()} disabled={createPlan.isPending || updatePlan.isPending} className="rounded-full px-4 font-black"><CalendarPlus className="mr-2 h-4 w-4" />{editingPlanId ? "Save changes" : "Save next block"}</Button>
+              {editingPlanId && <Button variant="outline" onClick={() => setEditingPlanId(null)} className="rounded-full bg-background/60 px-4 font-black"><X className="mr-2 h-4 w-4" />Cancel edit</Button>}
+            </div>
+            <div className="mt-5 space-y-2">
+              {(plansQuery.data ?? []).slice(0, 3).map((plan) => (
+                <div key={plan.id} className="rounded-2xl border border-border/70 bg-background/50 p-3">
+                  <div className="flex gap-3">
+                    <span className="rounded-xl bg-accent/50 p-2 text-primary"><CalendarClock className="h-4 w-4" /></span>
+                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-black">{plan.subject} · {plan.intention}</p><p className="mt-1 text-xs font-semibold text-muted-foreground">{formatPlannedDate(new Date(plan.scheduledFor))} · {plan.duration} min · {plan.timerMode}</p></div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => void startPlannedBlock(plan)} className="rounded-full bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground">Load</button><button type="button" onClick={() => editPlan(plan)} className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-black text-foreground"><Pencil className="mr-1 inline h-3 w-3" />Edit</button><button type="button" onClick={() => void dismissPlan.mutateAsync({ id: plan.id })} className="rounded-full px-3 py-1.5 text-xs font-black text-muted-foreground hover:text-foreground">Dismiss</button></div>
+                </div>
+              ))}
+              {!plansQuery.isLoading && !(plansQuery.data ?? []).length && <div className="rounded-2xl border border-dashed border-border p-4 text-center text-xs leading-5 text-muted-foreground">No upcoming focus block yet. Keep the next start small and specific.</div>}
+            </div>
+          </Card>
+
           <Card className="elevated-card rounded-[2rem] p-6">
             <div className="flex items-start gap-3">
               <span className="rounded-2xl bg-rose-100 p-3 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300"><TriangleAlert className="h-5 w-5" /></span>

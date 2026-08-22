@@ -461,6 +461,23 @@ export const studyTimerSessions = mysqlTable("studyTimerSessions", {
 export type StudyTimerSession = typeof studyTimerSessions.$inferSelect;
 export type InsertStudyTimerSession = typeof studyTimerSessions.$inferInsert;
 
+// Focus Plans - Upcoming user-managed study blocks inside Focus Lab
+export const focusPlans = mysqlTable("focusPlans", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  intention: varchar("intention", { length: 255 }).notNull(),
+  scheduledFor: timestamp("scheduledFor").notNull(),
+  duration: int("duration").notNull(),
+  timerMode: mysqlEnum("timerMode", ["pomodoro", "custom", "stopwatch"]).default("pomodoro").notNull(),
+  status: mysqlEnum("status", ["planned", "started", "dismissed"]).default("planned").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FocusPlan = typeof focusPlans.$inferSelect;
+export type InsertFocusPlan = typeof focusPlans.$inferInsert;
+
 
 // Notices - Admin announcements
 export const notices = mysqlTable("notices", {

@@ -97,6 +97,10 @@ import {
   completeStudyTimerSession,
   cancelStudyTimerSession,
   getFocusInsights,
+  createFocusPlan,
+  getUpcomingFocusPlans,
+  updateFocusPlan,
+  deleteFocusPlan,
   getUserQuestionAnswers,
   getUserQuestionStats,
   getAllBoardExamQuestions,
@@ -1239,6 +1243,38 @@ export const appRouter = router({
       .query(async ({ input, ctx }) => {
         return getFocusInsights(ctx.user.id, input?.daysBack ?? 7);
       }),
+  }),
+  focusPlans: router({
+    list: protectedProcedure.query(async ({ ctx }) => getUpcomingFocusPlans(ctx.user.id)),
+    create: protectedProcedure
+      .input(z.object({
+        subject: z.string().trim().min(1).max(100),
+        intention: z.string().trim().min(1).max(255),
+        scheduledFor: z.date(),
+        duration: z.number().int().min(1).max(480),
+        timerMode: z.enum(["pomodoro", "custom", "stopwatch"]),
+      }))
+      .mutation(async ({ input, ctx }) => createFocusPlan({ ...input, userId: ctx.user.id, status: "planned" })),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        subject: z.string().trim().min(1).max(100).optional(),
+        intention: z.string().trim().min(1).max(255).optional(),
+        scheduledFor: z.date().optional(),
+        duration: z.number().int().min(1).max(480).optional(),
+        timerMode: z.enum(["pomodoro", "custom", "stopwatch"]).optional(),
+        status: z.enum(["planned", "started", "dismissed"]).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...data } = input;
+        return updateFocusPlan(id, ctx.user.id, data);
+      }),
+    dismiss: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => updateFocusPlan(input.id, ctx.user.id, { status: "dismissed" })),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => deleteFocusPlan(input.id, ctx.user.id)),
   }),
   // Community Contribution Certificates
   certificates: router({

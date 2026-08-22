@@ -496,3 +496,41 @@ describe("Study Timer Router", () => {
     expect(result.interruptionCount).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe("Focus Plans Router", () => {
+  it("creates, lists, and dismisses a user-owned upcoming focus block", async () => {
+    const caller = appRouter.createCaller(createMockContext(511));
+    const scheduledFor = new Date(Date.now() + 60 * 60_000);
+    const plan = await caller.focusPlans.create({
+      subject: "Biology",
+      intention: "Revise genetics diagrams",
+      scheduledFor,
+      duration: 45,
+      timerMode: "custom",
+    });
+
+    const plans = await caller.focusPlans.list();
+    expect(plans.some((item) => item.id === plan.id)).toBe(true);
+
+    const dismissed = await caller.focusPlans.dismiss({ id: plan.id });
+    expect(dismissed.updated).toBe(true);
+    const remainingPlans = await caller.focusPlans.list();
+    expect(remainingPlans.some((item) => item.id === plan.id)).toBe(false);
+  });
+
+  it("does not let another student change a planned focus block", async () => {
+    const owner = appRouter.createCaller(createMockContext(512));
+    const otherUser = appRouter.createCaller(createMockContext(513));
+    const plan = await owner.focusPlans.create({
+      subject: "Physics",
+      intention: "Solve electrostatics PYQs",
+      scheduledFor: new Date(Date.now() + 2 * 60 * 60_000),
+      duration: 25,
+      timerMode: "pomodoro",
+    });
+
+    const result = await otherUser.focusPlans.dismiss({ id: plan.id });
+    expect(result.updated).toBe(false);
+    await owner.focusPlans.delete({ id: plan.id });
+  });
+});

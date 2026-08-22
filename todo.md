@@ -532,6 +532,11 @@
 - [x] Add a pre-focus readiness checklist and clear device-boundary guidance
 - [x] Run regression checks, responsive verification, and save a checkpoint
 
+## Current Feature: In-App Focus Planner
+- [x] Add an upcoming-block planner that keeps the next study session visible in Focus Lab
+- [x] Allow students to edit, start, or dismiss planned focus blocks without background reminder claims
+- [ ] Add coverage, responsive verification, and a deployment checkpoint
+
 ## Current Fix: NEET Syllabus Sync
 - [x] Align the live syllabus-topic class enum with NEET import records
 - [x] Make the NTA syllabus import idempotent and safe to retry

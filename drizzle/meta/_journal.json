@@ -218,6 +218,13 @@
       "when": 1787391200005,
       "tag": "0030_orange_union_jack",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1787394834059,
+      "tag": "0031_smooth_punisher",
+      "breakpoints": true
     }
   ]
 }

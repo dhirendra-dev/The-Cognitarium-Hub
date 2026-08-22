@@ -21,6 +21,7 @@ import {
   InsertPDFDocument,
   InsertPostReply,
   InsertStudyTimerSession,
+  InsertFocusPlan,
   InsertNotice,
   InsertCommunityGroup,
   InsertGroupLink,
@@ -44,6 +45,7 @@ import {
   pdfDocuments,
   postReplies,
   studyTimerSessions,
+  focusPlans,
   notices,
   communityGroups,
   groupLinks,
@@ -1018,6 +1020,48 @@ export async function getFocusInsights(userId: number, daysBack: number = 7) {
     interruptionCount,
     topDistraction,
   };
+}
+
+// Focus Plans - Upcoming study blocks for the in-app Focus Lab planner
+export async function createFocusPlan(data: InsertFocusPlan) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(focusPlans).values(data);
+  return { id: Number(result[0].insertId) };
+}
+
+export async function getUpcomingFocusPlans(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(focusPlans)
+    .where(and(eq(focusPlans.userId, userId), eq(focusPlans.status, "planned")))
+    .orderBy(asc(focusPlans.scheduledFor))
+    .limit(12);
+}
+
+export async function updateFocusPlan(
+  id: number,
+  userId: number,
+  data: Partial<Pick<InsertFocusPlan, "subject" | "intention" | "scheduledFor" | "duration" | "timerMode" | "status">>,
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .update(focusPlans)
+    .set(data)
+    .where(and(eq(focusPlans.id, id), eq(focusPlans.userId, userId)));
+  return { success: true, updated: Number(result[0]?.affectedRows ?? 0) > 0 };
+}
+
+export async function deleteFocusPlan(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .delete(focusPlans)
+    .where(and(eq(focusPlans.id, id), eq(focusPlans.userId, userId)));
+  return { success: true, deleted: Number(result[0]?.affectedRows ?? 0) > 0 };
 }
 
 
