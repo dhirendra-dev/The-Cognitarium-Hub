@@ -95,6 +95,8 @@ import {
   getStudyTimerSessions,
   getDailyStudyTime,
   completeStudyTimerSession,
+  cancelStudyTimerSession,
+  getFocusInsights,
   getUserQuestionAnswers,
   getUserQuestionStats,
   getAllBoardExamQuestions,
@@ -1192,17 +1194,20 @@ export const appRouter = router({
           date: z.date(),
           subject: z.string().optional(),
           duration: z.number().min(1).max(480),
+          notes: z.string().max(1200).optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
-        return createStudyTimerSession({
+        const result = await createStudyTimerSession({
           userId: ctx.user.id,
           date: input.date,
           subject: input.subject,
           duration: input.duration,
           startTime: new Date(),
           isCompleted: false,
+          notes: input.notes,
         });
+        return { id: Number(result[0].insertId) };
       }),
 
     getSessions: protectedProcedure
@@ -1218,9 +1223,21 @@ export const appRouter = router({
       }),
 
     complete: protectedProcedure
+      .input(z.object({ id: z.number(), notes: z.string().max(1200).optional() }))
+      .mutation(async ({ input, ctx }) => {
+        return completeStudyTimerSession(input.id, ctx.user.id, new Date(), input.notes);
+      }),
+
+    cancel: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        return completeStudyTimerSession(input.id, new Date());
+      .mutation(async ({ input, ctx }) => {
+        return cancelStudyTimerSession(input.id, ctx.user.id);
+      }),
+
+    getInsights: protectedProcedure
+      .input(z.object({ daysBack: z.number().int().min(1).max(31).default(7) }).optional())
+      .query(async ({ input, ctx }) => {
+        return getFocusInsights(ctx.user.id, input?.daysBack ?? 7);
       }),
   }),
   // Community Contribution Certificates

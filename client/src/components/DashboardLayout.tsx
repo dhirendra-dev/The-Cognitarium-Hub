@@ -22,6 +22,7 @@ import {
   Sparkles,
   Swords,
   Target,
+  Timer,
   Zap,
   Trophy,
   Users,
@@ -39,6 +40,7 @@ const navGroups = [
       { label: "Overview", path: "/dashboard", icon: LayoutDashboard },
       { label: "Syllabus map", path: "/syllabus", icon: BookMarked },
       { label: "Daily plan", path: "/daily-tasks", icon: CalendarDays },
+      { label: "Focus lab", path: "/focus-lab", icon: Timer },
     ],
   },
   {

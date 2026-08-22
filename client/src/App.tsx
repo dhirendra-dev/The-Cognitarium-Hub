@@ -43,6 +43,7 @@ import DoubtDesk from "./pages/DoubtDesk";
 import CBTReview from "./pages/CBTReview";
 import CommunityHub from "./pages/CommunityHub";
 import TestSeriesRunner from "./pages/TestSeriesRunner";
+import FocusLab from "./pages/FocusLab";
 
 function DashboardRouter() {
   return (
@@ -51,6 +52,7 @@ function DashboardRouter() {
       <Route path={"/subjects"} component={SubjectsTracker} />
       <Route path={"/jee-plan"} component={JEEPlan} />
       <Route path={"/daily-tasks"} component={DailyTasks} />
+      <Route path={"/focus-lab"} component={FocusLab} />
       <Route path={"/ai-assistant"} component={AIAssistant} />
       <Route path={"/leaderboard"} component={Leaderboard} />
       <Route path={"/syllabus"} component={SyllabusTracker} />

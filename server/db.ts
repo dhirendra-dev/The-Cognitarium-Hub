@@ -902,15 +902,120 @@ export async function getDailyStudyTime(userId: number, date: Date) {
   const db = await getDb();
   if (!db) return 0;
   const sessions = await getStudyTimerSessions(userId, date);
-  return sessions.reduce((total, session) => total + (session.duration || 0), 0);
+  return sessions
+    .filter((session) => session.isCompleted)
+    .reduce((total, session) => total + (session.duration || 0), 0);
 }
 
-export async function completeStudyTimerSession(id: number, endTime: Date) {
+export async function completeStudyTimerSession(
+  id: number,
+  userId: number,
+  endTime: Date,
+  notes?: string,
+) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.update(studyTimerSessions)
-    .set({ isCompleted: true, endTime })
-    .where(eq(studyTimerSessions.id, id));
+  const result = await db
+    .update(studyTimerSessions)
+    .set({
+      isCompleted: true,
+      endTime,
+      ...(notes === undefined ? {} : { notes }),
+    })
+    .where(and(eq(studyTimerSessions.id, id), eq(studyTimerSessions.userId, userId)));
+
+  return { success: true, updated: Number(result[0]?.affectedRows ?? 0) > 0 };
+}
+
+export async function cancelStudyTimerSession(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .delete(studyTimerSessions)
+    .where(and(eq(studyTimerSessions.id, id), eq(studyTimerSessions.userId, userId)));
+  return { success: true, deleted: Number(result[0]?.affectedRows ?? 0) > 0 };
+}
+
+type FocusMetadata = {
+  kind?: "focus" | "break";
+  distractions?: string[];
+};
+
+function readFocusMetadata(notes: string | null): FocusMetadata {
+  if (!notes) return {};
+  try {
+    const parsed = JSON.parse(notes) as FocusMetadata;
+    return {
+      kind: parsed.kind === "break" ? "break" : "focus",
+      distractions: Array.isArray(parsed.distractions)
+        ? parsed.distractions.filter((item): item is string => typeof item === "string")
+        : [],
+    };
+  } catch {
+    return {};
+  }
+}
+
+export async function getFocusInsights(userId: number, daysBack: number = 7) {
+  const db = await getDb();
+  if (!db) {
+    return {
+      completedCycles: 0,
+      focusMinutes: 0,
+      breakMinutes: 0,
+      focusDays: 0,
+      interruptionCount: 0,
+      topDistraction: null as string | null,
+    };
+  }
+
+  const startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - Math.max(0, daysBack - 1));
+
+  const sessions = await db
+    .select()
+    .from(studyTimerSessions)
+    .where(
+      and(
+        eq(studyTimerSessions.userId, userId),
+        eq(studyTimerSessions.isCompleted, true),
+        gte(studyTimerSessions.date, startDate),
+      ),
+    );
+
+  const distractionCounts = new Map<string, number>();
+  const focusDates = new Set<string>();
+  let focusMinutes = 0;
+  let breakMinutes = 0;
+  let interruptionCount = 0;
+
+  for (const session of sessions) {
+    const metadata = readFocusMetadata(session.notes);
+    if (metadata.kind === "break") {
+      breakMinutes += session.duration ?? 0;
+      continue;
+    }
+
+    focusMinutes += session.duration ?? 0;
+    focusDates.add(new Date(session.date).toISOString().slice(0, 10));
+    for (const distraction of metadata.distractions ?? []) {
+      interruptionCount += 1;
+      distractionCounts.set(distraction, (distractionCounts.get(distraction) ?? 0) + 1);
+    }
+  }
+
+  const topDistraction = Array.from(distractionCounts.entries())
+    .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+  return {
+    completedCycles: sessions.length,
+    focusMinutes,
+    breakMinutes,
+    focusDays: focusDates.size,
+    interruptionCount,
+    topDistraction,
+  };
 }
 
 

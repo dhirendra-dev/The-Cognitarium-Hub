@@ -425,7 +425,7 @@ describe("Study Timer Router", () => {
       duration: 25,
     });
 
-    expect(result).toBeDefined();
+    expect(result.id).toBeTypeOf("number");
   });
 
   it("should get study sessions for a date", async () => {
@@ -455,7 +455,41 @@ describe("Study Timer Router", () => {
     const ctx = createMockContext();
     const caller = appRouter.createCaller(ctx);
 
-    const result = await caller.studyTimer.complete({ id: 1 });
-    expect(result).toBeDefined();
+    const session = await caller.studyTimer.create({
+      date: new Date(),
+      subject: "Chemistry",
+      duration: 25,
+      notes: JSON.stringify({ kind: "focus", distractions: ["phone"] }),
+    });
+    const result = await caller.studyTimer.complete({
+      id: session.id,
+      notes: JSON.stringify({ kind: "focus", distractions: ["phone"] }),
+    });
+    expect(result.updated).toBe(true);
+  });
+
+  it("does not let another user complete an unfinished focus session", async () => {
+    const owner = appRouter.createCaller(createMockContext(401));
+    const otherUser = appRouter.createCaller(createMockContext(402));
+    const session = await owner.studyTimer.create({
+      date: new Date(),
+      subject: "Mathematics",
+      duration: 25,
+    });
+
+    const result = await otherUser.studyTimer.complete({ id: session.id });
+    expect(result.updated).toBe(false);
+
+    await owner.studyTimer.cancel({ id: session.id });
+  });
+
+  it("returns focus insights for completed sessions", async () => {
+    const caller = appRouter.createCaller(createMockContext());
+    const result = await caller.studyTimer.getInsights({ daysBack: 7 });
+
+    expect(result.completedCycles).toBeGreaterThanOrEqual(0);
+    expect(result.focusMinutes).toBeGreaterThanOrEqual(0);
+    expect(result.breakMinutes).toBeGreaterThanOrEqual(0);
+    expect(result.interruptionCount).toBeGreaterThanOrEqual(0);
   });
 });
