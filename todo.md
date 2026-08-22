@@ -492,3 +492,7 @@
 - [x] Add squad-scoped accountability and effort-weighted engagement presentation
 - [x] Add focused regression tests for the upgrade surfaces (109 serial tests passing)
 - [x] Run typecheck, full tests, health checks, and save the upgraded checkpoint
+
+- [ ] Add Google and GitHub social login buttons and secure OAuth callback flows to the authentication experience
+- [ ] Add regression coverage for social-login route handling and safe provider configuration
+- [ ] Verify the refreshed authentication page at desktop and mobile breakpoints

@@ -82,13 +82,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!loading && !user) setLocation("/contact");
   }, [loading, user, setLocation]);
 
+  const allItems = useMemo(() => [...navGroups.flatMap((group) => group.items), ...utilityItems], []);
+  const activeLabel = useMemo(() => {
+    return allItems.find((item) => location === item.path || location.startsWith(`${item.path}/`))?.label ?? "Overview";
+  }, [allItems, location]);
+
   if (loading || !user) return <DashboardLayoutSkeleton />;
 
   const initials = (user.name || user.email || "S").split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
-  const activeLabel = useMemo(() => {
-    const allItems = [...navGroups.flatMap((group) => group.items), ...utilityItems];
-    return allItems.find((item) => location === item.path || location.startsWith(`${item.path}/`))?.label ?? "Overview";
-  }, [location]);
 
   const go = (path: string) => {
     setLocation(path);
