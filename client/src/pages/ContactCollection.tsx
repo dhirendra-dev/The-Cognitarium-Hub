@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, Copy, Eye, EyeOff, ShieldCheck, Sparkles, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { savePendingLogin } from "@/lib/credentialHandoff";
 
 interface CredentialsData {
   email: string;
@@ -25,6 +26,7 @@ export default function ContactCollectionPage() {
   const submitMutation = trpc.contactSubmissions.submit.useMutation({
     onSuccess: (data) => {
       if (data.credentials) {
+        savePendingLogin({ email: data.credentials.email, password: data.credentials.password, name: data.credentials.name });
         setCredentials(data.credentials);
         setName("");
         setEmail("");
@@ -144,7 +146,10 @@ export default function ContactCollectionPage() {
 
             <Button
               className="w-full bg-[#2D2420] hover:bg-[#3E322C] text-stone-50 font-bold py-3 rounded-xl shadow-md transition-all mt-2"
-              onClick={() => window.location.href = '/login'}
+              onClick={() => {
+                savePendingLogin({ email: credentials.email, password: credentials.password, name: credentials.name });
+                window.location.href = "/login";
+              }}
             >
               Sign In to Dashboard
             </Button>

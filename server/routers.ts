@@ -2147,15 +2147,6 @@ export const appRouter = router({
       return { id: res[0].insertId };
     }),
   }),
-  pyqArchive: router({
-    list: publicProcedure.input(z.object({ subject: z.string().optional(), examYear: z.number().optional() }).optional()).query(async ({ input }) => {
-      const { getDb } = await import("./db");
-      const db = await getDb();
-      if (!db) return [];
-      const { pyqArchive } = await import("../drizzle/schema");
-      return db.select().from(pyqArchive).orderBy(desc(pyqArchive.examYear), asc(pyqArchive.subject), asc(pyqArchive.questionNumber));
-    }),
-  }),
   speedDrills: router({
     history: protectedProcedure.query(async ({ ctx }) => {
       const { getDb } = await import("./db");

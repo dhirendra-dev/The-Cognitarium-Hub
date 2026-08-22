@@ -67,11 +67,11 @@ export default function Settings() {
           <div className="space-y-4">
             <div>
               <Label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Full Name</Label>
-              <p className="mt-1 text-base font-bold text-foreground">{user?.name || "Dhirendra Kumar"}</p>
+              <p className="mt-1 text-base font-bold text-foreground">{user?.name || "Student"}</p>
             </div>
             <div>
               <Label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Email Address</Label>
-              <p className="mt-1 text-base font-bold text-foreground">{user?.email || "dhirendraofficial0@gmail.com"}</p>
+              <p className="mt-1 text-base font-bold text-foreground">{user?.email || "No email on file"}</p>
             </div>
             <div>
               <Label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Role & Access</Label>

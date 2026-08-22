@@ -501,3 +501,13 @@
 - [x] Apply the official Cognitarium Hub logo mark to navigation, auth, public pages, and app metadata
 - [x] Update favicon/PWA metadata and project title for the official brand
 - [x] Verify legacy-name removal and responsive brand rendering
+
+## Current Fix: Credential Privacy & Login Handoff
+- [x] Remove personal/admin email from login placeholders and any default field values
+- [x] Add a one-time, short-lived account-created credential handoff to the login page
+- [x] Keep auto-filled password masked and clear the handoff after login-page hydration
+- [x] Verify authenticated access after account creation and login
+- [x] Add/update Vitest coverage for credential handoff behavior
+- [x] Run responsive visual verification for login and account creation
+- [x] Save checkpoint for credential privacy and login handoff fix
+
