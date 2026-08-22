@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Bookmark, BookmarkCheck, ChevronDown, ChevronUp, Lightbulb, Loader, Search, Sparkles } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const SAVED_KEY = "hslc-concept-vault-saved";
 
@@ -42,82 +45,116 @@ export default function ConceptVault() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 p-6 text-white shadow-xl md:p-8">
-          <div className="flex items-center gap-3">
-            <Lightbulb className="h-9 w-9 text-yellow-100" aria-hidden="true" />
-            <div>
-              <h1 className="text-3xl font-bold">Concept Vault</h1>
-              <p className="mt-1 text-orange-50">Search the active PCM syllabus and save the ideas you need to revisit.</p>
-            </div>
-          </div>
-        </header>
+    <div className="mx-auto max-w-[1440px] space-y-8 animate-in fade-in duration-300">
+      <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8 lg:p-10">
+        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-accent/30 blur-3xl pointer-events-none" />
+        <div className="relative">
+          <p className="ink-kicker mb-3">Conceptual Reference</p>
+          <h1 className="display-serif text-3xl font-bold tracking-tight sm:text-5xl">Concept Vault</h1>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Search the active PCM syllabus and save the fundamental ideas, derivations, and formulas you need to revisit.</p>
+        </div>
+      </section>
 
-        <section className="mb-6 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_auto_auto]">
-          <label className="relative block">
-            <span className="sr-only">Search concepts</span>
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search subjects, units, topics, or prerequisites" className="w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-200" />
-          </label>
-          <select value={subject} onChange={(event) => setSubject(event.target.value)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
-            <option value="all">All subjects</option>
-            {subjects.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-          <button type="button" onClick={() => setSavedOnly((value) => !value)} className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold ${savedOnly ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
-            {savedOnly ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />} Saved only
-          </button>
-        </section>
-
-        {syllabusQuery.isLoading ? (
-          <div className="flex items-center justify-center rounded-xl bg-white p-16 text-slate-500"><Loader className="mr-2 h-5 w-5 animate-spin" /> Loading concepts…</div>
-        ) : syllabusQuery.isError ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-800">Could not load the Concept Vault. Please refresh and try again.</div>
-        ) : filteredTopics.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm">
-            <Sparkles className="mx-auto mb-4 h-10 w-10 text-orange-400" />
-            <h2 className="text-xl font-semibold text-slate-800">No matching concepts</h2>
-            <p className="mt-2 text-sm text-slate-500">Try another search or ask an admin to publish the PDF-defined syllabus topics.</p>
+      <Card className="elevated-card rounded-[2rem] p-6 sm:p-8 space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="relative md:col-span-2">
+            <Search className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search subjects, units, topics, or formulas..."
+              className="w-full rounded-2xl border border-border bg-background pl-12 pr-4 py-3 text-sm font-semibold text-foreground focus:outline-primary"
+            />
           </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {filteredTopics.map((topic) => {
-              const expanded = expandedId === topic.id;
-              const saved = savedIds.includes(topic.id);
-              return (
-                <article key={topic.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
-                  <div className="flex items-start justify-between gap-4 p-5">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">{topic.subject} · {topic.unit}</p>
-                      <h2 className="mt-1 text-lg font-bold text-slate-900">{topic.topic}</h2>
-                      <p className="mt-1 text-xs text-slate-500">{topic.class === "jeeMain" ? "JEE Main" : topic.class === "jeeAdvanced" ? "JEE Advanced" : `Class ${topic.class}`}{topic.subtopic ? ` · ${topic.subtopic}` : ""}</p>
-                    </div>
-                    <button type="button" onClick={() => toggleSaved(topic.id)} aria-label={saved ? "Remove from saved concepts" : "Save concept"} className={`rounded-lg p-2 ${saved ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-500 hover:bg-orange-50 hover:text-orange-600"}`}>
-                      {saved ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
+          <div>
+            <select
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground"
+            >
+              <option value="all">All Subjects</option>
+              {subjects.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between pt-2">
+          <Button
+            variant={savedOnly ? "default" : "outline"}
+            onClick={() => setSavedOnly((v) => !v)}
+            className="rounded-full px-5 font-bold gap-2"
+          >
+            {savedOnly ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+            {savedOnly ? "Showing Saved Only" : "Show Saved Only"}
+          </Button>
+          <span className="text-xs font-bold text-muted-foreground">Found {filteredTopics.length} concepts</span>
+        </div>
+      </Card>
+
+      {syllabusQuery.isLoading ? (
+        <div className="flex items-center justify-center rounded-[2rem] bg-card p-16 text-muted-foreground border border-border">
+          <Loader className="mr-3 h-5 w-5 animate-spin text-primary" /> Loading concept database...
+        </div>
+      ) : filteredTopics.length === 0 ? (
+        <Card className="rounded-[2rem] p-12 text-center space-y-3 border border-dashed border-border bg-card">
+          <Lightbulb className="mx-auto h-10 w-10 text-muted-foreground/60" />
+          <p className="text-base font-bold text-foreground">No matching concepts</p>
+          <p className="text-sm font-semibold text-muted-foreground">Try adjusting your search terms or filter criteria.</p>
+        </Card>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredTopics.map((topic) => {
+            const isSaved = savedIds.includes(topic.id);
+            const isExpanded = expandedId === topic.id;
+            return (
+              <Card key={topic.id} className="elevated-card rounded-[1.75rem] p-6 flex flex-col justify-between space-y-4 border border-border bg-card">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">{topic.subject}</span>
+                    <button
+                      onClick={() => toggleSaved(topic.id)}
+                      className={`rounded-full p-2 transition-colors ${isSaved ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                      title={isSaved ? "Saved to vault" : "Save concept"}
+                    >
+                      {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
                     </button>
                   </div>
-                  <button type="button" onClick={() => setExpandedId(expanded ? null : topic.id)} className="flex w-full items-center justify-between border-t border-slate-100 bg-slate-50 px-5 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-orange-50">
-                    <span>{expanded ? "Hide concept snapshot" : "Open concept snapshot"}</span>
-                    {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </button>
-                  {expanded && (
-                    <div className="space-y-4 border-t border-slate-100 p-5 text-sm text-slate-700">
-                      <div>
-                        <h3 className="mb-1 flex items-center gap-2 font-semibold text-orange-700"><Lightbulb className="h-4 w-4" /> Core concept / prerequisites</h3>
-                        <p className="leading-relaxed">{topic.conceptsRequired || "Review the definitions, laws, and prerequisite ideas for this topic before attempting advanced problems."}</p>
-                      </div>
-                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
-                        <p className="font-semibold">Common trap check</p>
-                        <p className="mt-1">State the governing condition, units, and limiting case before finalising your answer. Add a personal mistake note while revising.</p>
-                      </div>
+                  <h3 className="text-lg font-bold tracking-tight text-foreground">{topic.topic}</h3>
+                  <p className="text-xs font-semibold text-muted-foreground">{topic.unit} {topic.subtopic ? `· ${topic.subtopic}` : ""}</p>
+                </div>
+
+                <div className="pt-4 border-t border-border/60 space-y-3">
+                  {topic.conceptsRequired && (
+                    <p className="text-xs font-semibold text-foreground/90 bg-muted/40 p-3 rounded-xl border border-border/50">
+                      {topic.conceptsRequired}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[0.65rem] font-black uppercase text-muted-foreground">Class: {topic.class || "JEE Main"}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setExpandedId(isExpanded ? null : topic.id)}
+                      className="rounded-full text-xs font-bold gap-1"
+                    >
+                      {isExpanded ? "Hide notes" : "Quick review"}
+                      {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+                  {isExpanded && (
+                    <div className="rounded-xl bg-background p-4 text-xs font-semibold text-muted-foreground space-y-2 border border-border/80 animate-in fade-in">
+                      <p><strong className="text-foreground">Exam Weight:</strong> High priority for JEE Main / Advanced.</p>
+                      <p><strong className="text-foreground">Recommended Action:</strong> Solve at least 15 timed PYQs from this chapter.</p>
                     </div>
                   )}
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
