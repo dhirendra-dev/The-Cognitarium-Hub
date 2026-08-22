@@ -118,7 +118,7 @@ export default function StudyMaterialsPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredMaterials.map((material) => (
-              <Card key={material.id} className="elevated-card rounded-[1.75rem] p-6 flex flex-col justify-between space-y-4 border border-border bg-card hover:border-primary/50 transition-all">
+              <Card key={material.id} className="group elevated-card rounded-[1.75rem] p-6 flex flex-col justify-between space-y-4 border border-border bg-card hover:border-primary/60 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase text-primary">{material.subject}</span>
@@ -130,9 +130,9 @@ export default function StudyMaterialsPage() {
                 <div className="pt-4 border-t border-border/60 flex items-center justify-between">
                   <span className="text-xs font-bold text-muted-foreground">Author: {material.author || "Expert Faculty"}</span>
                   {material.url && (
-                    <Button asChild size="sm" className="rounded-full px-4 font-bold">
+                    <Button asChild size="sm" className="rounded-full px-4 font-bold transition-transform group-hover:scale-105">
                       <a href={material.url} target="_blank" rel="noopener noreferrer">
-                        Access <ExternalLink className="ml-1.5 h-3 w-3" />
+                        Access <ExternalLink className="ml-1.5 h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                       </a>
                     </Button>
                   )}
