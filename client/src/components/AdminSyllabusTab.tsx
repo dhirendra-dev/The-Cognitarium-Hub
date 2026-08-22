@@ -8,6 +8,7 @@ const CLASS_OPTIONS = [
   { value: "12", label: "Class 12" },
   { value: "jeeMain", label: "JEE Main" },
   { value: "jeeAdvanced", label: "JEE Advanced" },
+  { value: "neet", label: "NEET 2025" },
 ] as const;
 
 type SyllabusClass = (typeof CLASS_OPTIONS)[number]["value"];

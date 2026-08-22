@@ -273,7 +273,7 @@ export const syllabusChapters = mysqlTable("syllabusChapters", {
   id: int("id").autoincrement().primaryKey(),
   subject: varchar("subject", { length: 100 }).notNull(),
   chapter: varchar("chapter", { length: 255 }).notNull(),
-  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced"]).notNull(),
+  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced", "neet"]).notNull(),
   description: text("description"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -289,7 +289,7 @@ export const jeeSyllabusTopics = mysqlTable("jeeSyllabusTopics", {
   unit: varchar("unit", { length: 255 }).notNull(),
   topic: varchar("topic", { length: 255 }).notNull(),
   subtopic: varchar("subtopic", { length: 255 }),
-  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced"]).notNull(),
+  class: mysqlEnum("class", ["11", "12", "jeeMain", "jeeAdvanced", "neet"]).notNull(),
   weightage: decimal("weightage", { precision: 5, scale: 2 }),
   difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium"),
   conceptsRequired: text("conceptsRequired"),

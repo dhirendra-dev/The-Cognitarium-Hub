@@ -1604,7 +1604,7 @@ export const appRouter = router({
       .input(
         z.object({
           subject: z.string().optional(),
-          exam: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]).optional(),
+          exam: z.enum(["11", "12", "jeeMain", "jeeAdvanced", "neet"]).optional(),
         }).optional()
       )
       .query(async ({ ctx, input }) => {
@@ -1694,14 +1694,14 @@ export const appRouter = router({
       if (!db) return [];
       return db.select().from(syllabusChapters).orderBy(asc(syllabusChapters.subject), asc(syllabusChapters.chapter));
     }),
-    createChapter: adminProcedure.input(z.object({ subject: z.string().min(1).max(100), chapter: z.string().min(1).max(255), class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]), description: z.string().max(1000).optional() })).mutation(async ({ input }) => {
+    createChapter: adminProcedure.input(z.object({ subject: z.string().min(1).max(100), chapter: z.string().min(1).max(255), class: z.enum(["11", "12", "jeeMain", "jeeAdvanced", "neet"]), description: z.string().max(1000).optional() })).mutation(async ({ input }) => {
       const { getDb } = await import("./db");
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       const result = await db.insert(syllabusChapters).values(input);
       return { id: result[0].insertId };
     }),
-    updateChapter: adminProcedure.input(z.object({ id: z.number(), subject: z.string().min(1).max(100), chapter: z.string().min(1).max(255), class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]), description: z.string().max(1000).optional() })).mutation(async ({ input }) => {
+    updateChapter: adminProcedure.input(z.object({ id: z.number(), subject: z.string().min(1).max(100), chapter: z.string().min(1).max(255), class: z.enum(["11", "12", "jeeMain", "jeeAdvanced", "neet"]), description: z.string().max(1000).optional() })).mutation(async ({ input }) => {
       const { getDb } = await import("./db");
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
@@ -1724,7 +1724,7 @@ export const appRouter = router({
           unit: z.string().min(1).max(255),
           topic: z.string().min(1).max(255),
           subtopic: z.string().max(255).optional(),
-          class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]),
+          class: z.enum(["11", "12", "jeeMain", "jeeAdvanced", "neet"]),
           weightage: z.number().min(0).max(100).optional(),
           difficulty: z.enum(["easy", "medium", "hard"]).optional(),
           conceptsRequired: z.string().max(5000).optional(),
@@ -1749,7 +1749,7 @@ export const appRouter = router({
           unit: z.string().min(1).max(255).optional(),
           topic: z.string().min(1).max(255).optional(),
           subtopic: z.string().max(255).optional(),
-          class: z.enum(["11", "12", "jeeMain", "jeeAdvanced"]).optional(),
+          class: z.enum(["11", "12", "jeeMain", "jeeAdvanced", "neet"]).optional(),
           weightage: z.number().min(0).max(100).optional(),
           difficulty: z.enum(["easy", "medium", "hard"]).optional(),
           conceptsRequired: z.string().max(5000).optional(),
@@ -1775,6 +1775,68 @@ export const appRouter = router({
         await db.delete(jeeSyllabusTopics).where(eq(jeeSyllabusTopics.id, input.id));
         return { success: true };
       }),
+    syncNtaSyllabus: adminProcedure.mutation(async () => {
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      const officialTopics = [
+        // JEE Main Physics
+        { subject: "Physics", class: "jeeMain" as const, unit: "Mechanics", topic: "Kinematics & Vector Calculus", subtopic: "Frames of reference, projectile motion", weightage: "8.50", difficulty: "medium" as const, conceptsRequired: "Calculus, Vectors" },
+        { subject: "Physics", class: "jeeMain" as const, unit: "Mechanics", topic: "Laws of Motion & Friction", subtopic: "Newton's laws, impulse, banking of roads", weightage: "9.00", difficulty: "hard" as const, conceptsRequired: "Free body diagrams" },
+        { subject: "Physics", class: "jeeMain" as const, unit: "Mechanics", topic: "Work, Energy & Power", subtopic: "Work-energy theorem, conservative forces, collision", weightage: "7.50", difficulty: "medium" as const, conceptsRequired: "Conservation of energy & momentum" },
+        { subject: "Physics", class: "jeeMain" as const, unit: "Mechanics", topic: "Rotational Motion", subtopic: "Moment of inertia, torque, angular momentum conservation", weightage: "11.00", difficulty: "hard" as const, conceptsRequired: "Rigid body dynamics" },
+        { subject: "Physics", class: "jeeMain" as const, unit: "Electrodynamics", topic: "Electrostatics & Gauss Law", subtopic: "Electric field, potential, capacitors & dielectric", weightage: "10.00", difficulty: "hard" as const, conceptsRequired: "Integration, Gauss law" },
+        { subject: "Physics", class: "jeeMain" as const, unit: "Electrodynamics", topic: "Current Electricity", subtopic: "Ohm's law, Kirchhoff's laws, potentiometer & meter bridge", weightage: "9.50", difficulty: "medium" as const, conceptsRequired: "Circuit analysis" },
+        { subject: "Physics", class: "jeeMain" as const, unit: "Electrodynamics", topic: "Magnetic Effects & EMI", subtopic: "Biot-Savart law, Faraday's laws, Lenz's law, AC circuits", weightage: "10.50", difficulty: "hard" as const, conceptsRequired: "Vector cross products, differential equations" },
+        { subject: "Physics", class: "jeeMain" as const, unit: "Optics & Modern Physics", topic: "Ray & Wave Optics", subtopic: "Refraction, lenses, Young's double slit, diffraction", weightage: "9.00", difficulty: "medium" as const, conceptsRequired: "Geometry, Wave interference" },
+        { subject: "Physics", class: "jeeMain" as const, unit: "Optics & Modern Physics", topic: "Dual Nature & Atoms/Nuclei", subtopic: "Photoelectric effect, Bohr model, radioactive decay", weightage: "8.50", difficulty: "easy" as const, conceptsRequired: "Quantum basics" },
+
+        // JEE Main Chemistry
+        { subject: "Chemistry", class: "jeeMain" as const, unit: "Physical Chemistry", topic: "Mole Concept & Stoichiometry", subtopic: "Equivalent weight, concentration terms, limiting reagent", weightage: "7.00", difficulty: "medium" as const, conceptsRequired: "Basic arithmetic" },
+        { subject: "Chemistry", class: "jeeMain" as const, unit: "Physical Chemistry", topic: "Atomic Structure & Quantum Mechanics", subtopic: "De Broglie, Heisenberg, quantum numbers, radial nodes", weightage: "8.00", difficulty: "medium" as const, conceptsRequired: "Wave equations" },
+        { subject: "Chemistry", class: "jeeMain" as const, unit: "Physical Chemistry", topic: "Chemical Thermodynamics & Equilibrium", subtopic: "Enthalpy, entropy, Gibbs free energy, Le Chatelier principle", weightage: "10.50", difficulty: "hard" as const, conceptsRequired: "Calculus & thermodynamics" },
+        { subject: "Chemistry", class: "jeeMain" as const, unit: "Inorganic Chemistry", topic: "Periodic Table & Chemical Bonding", subtopic: "VSEPR theory, hybridization, molecular orbital theory (MOT)", weightage: "11.50", difficulty: "medium" as const, conceptsRequired: "Periodic trends" },
+        { subject: "Chemistry", class: "jeeMain" as const, unit: "Inorganic Chemistry", topic: "Coordination Compounds", subtopic: "IUPAC nomenclature, isomerism, CFT (Crystal Field Theory)", weightage: "9.00", difficulty: "hard" as const, conceptsRequired: "Ligand field theory" },
+        { subject: "Chemistry", class: "jeeMain" as const, unit: "Organic Chemistry", topic: "General Organic Chemistry (GOC)", subtopic: "Inductive, resonance, hyperconjugation, reaction intermediates", weightage: "12.00", difficulty: "hard" as const, conceptsRequired: "Electronic displacement" },
+        { subject: "Chemistry", class: "jeeMain" as const, unit: "Organic Chemistry", topic: "Hydrocarbons & Oxygen/Nitrogen Compounds", subtopic: "Alkanes, alkenes, carbonyls, amines, name reactions", weightage: "13.00", difficulty: "hard" as const, conceptsRequired: "Reaction mechanisms" },
+
+        // JEE Main Mathematics
+        { subject: "Mathematics", class: "jeeMain" as const, unit: "Algebra", topic: "Matrices & Determinants", subtopic: "Properties of determinants, inverse, Cramer's rule, systems of linear equations", weightage: "9.00", difficulty: "medium" as const, conceptsRequired: "Linear algebra" },
+        { subject: "Mathematics", class: "jeeMain" as const, unit: "Algebra", topic: "Complex Numbers & Quadratic Equations", subtopic: "De Moivre's theorem, roots of unity, nature of roots", weightage: "8.00", difficulty: "medium" as const, conceptsRequired: "Algebraic manipulation" },
+        { subject: "Mathematics", class: "jeeMain" as const, unit: "Algebra", topic: "Permutations, Combinations & Binomial Theorem", subtopic: "Fundamental counting, multinomial theorem, coefficients", weightage: "8.50", difficulty: "hard" as const, conceptsRequired: "Combinatorial reasoning" },
+        { subject: "Mathematics", class: "jeeMain" as const, unit: "Calculus", topic: "Limits, Continuity & Differentiability", subtopic: "L'Hopital's rule, standard limits, differentiability theorems", weightage: "10.00", difficulty: "medium" as const, conceptsRequired: "Limits & functions" },
+        { subject: "Mathematics", class: "jeeMain" as const, unit: "Calculus", topic: "Integral Calculus & Differential Equations", subtopic: "Definite integrals, area under curves, variable separable ODE", weightage: "12.50", difficulty: "hard" as const, conceptsRequired: "Integration techniques" },
+        { subject: "Mathematics", class: "jeeMain" as const, unit: "Coordinate Geometry", topic: "Circles & Conic Sections", subtopic: "Parabola, ellipse, hyperbola, tangents & normals", weightage: "11.00", difficulty: "hard" as const, conceptsRequired: "Coordinate geometry" },
+        { subject: "Mathematics", class: "jeeMain" as const, unit: "Vector & 3D Geometry", topic: "Vectors and Three Dimensional Geometry", subtopic: "Dot/cross product, skew lines, shortest distance, planes", weightage: "11.00", difficulty: "medium" as const, conceptsRequired: "Vector algebra" },
+
+        // NEET 2025 Biology
+        { subject: "Biology", class: "neet" as const, unit: "Diversity in Living World", topic: "The Living World & Biological Classification", subtopic: "Taxonomical aids, Monera, Protista, Fungi, Viruses", weightage: "8.00", difficulty: "easy" as const, conceptsRequired: "Classification principles" },
+        { subject: "Biology", class: "neet" as const, unit: "Structural Organization", topic: "Morphology & Anatomy of Flowering Plants", subtopic: "Root, stem, leaf modifications, secondary growth", weightage: "9.00", difficulty: "medium" as const, conceptsRequired: "Plant histology" },
+        { subject: "Biology", class: "neet" as const, unit: "Cell Structure & Function", topic: "Cell: The Unit of Life & Cell Cycle", subtopic: "Biomolecules, enzymes, mitosis, meiosis, cell organelles", weightage: "11.00", difficulty: "medium" as const, conceptsRequired: "Biochemical structure" },
+        { subject: "Biology", class: "neet" as const, unit: "Plant Physiology", topic: "Photosynthesis & Respiration in Plants", subtopic: "C3/C4 pathways, photophosphorylation, glycolysis, Krebs cycle", weightage: "10.00", difficulty: "hard" as const, conceptsRequired: "Metabolic pathways" },
+        { subject: "Biology", class: "neet" as const, unit: "Human Physiology", topic: "Digestion, Respiration & Body Fluids", subtopic: "Gastrointestinal tract, breathing mechanism, ECG, cardiac cycle", weightage: "12.00", difficulty: "medium" as const, conceptsRequired: "Human anatomy" },
+        { subject: "Biology", class: "neet" as const, unit: "Human Physiology", topic: "Excretion, Locomotion & Neural Control", subtopic: "Nephron function, counter-current mechanism, sarcomere, synapse", weightage: "11.50", difficulty: "hard" as const, conceptsRequired: "Physiological control" },
+        { subject: "Biology", class: "neet" as const, unit: "Genetics & Evolution", topic: "Principles of Inheritance & Molecular Basis", subtopic: "Mendelian genetics, DNA replication, transcription, translation", weightage: "15.00", difficulty: "hard" as const, conceptsRequired: "Molecular biology" },
+        { subject: "Biology", class: "neet" as const, unit: "Biotechnology", topic: "Biotechnology: Principles and Processes", subtopic: "Recombinant DNA tech, PCR, restriction enzymes, applications", weightage: "9.50", difficulty: "medium" as const, conceptsRequired: "Genetic engineering" },
+        { subject: "Biology", class: "neet" as const, unit: "Ecology & Environment", topic: "Organisms, Populations & Ecosystems", subtopic: "Biotic interactions, pyramids, biodiversity conservation, issues", weightage: "12.00", difficulty: "easy" as const, conceptsRequired: "Ecological balance" },
+      ];
+
+      // Check if topics already exist to avoid complete duplication
+      const existing = await db.select({ count: jeeSyllabusTopics.id }).from(jeeSyllabusTopics).limit(1);
+      if (existing.length === 0) {
+        for (const topic of officialTopics) {
+          await db.insert(jeeSyllabusTopics).values(topic);
+        }
+      } else {
+        // Upsert or insert new 2025 NTA topics
+        for (const topic of officialTopics) {
+          await db.insert(jeeSyllabusTopics).values(topic).onDuplicateKeyUpdate({ set: { topic: topic.topic } });
+        }
+      }
+
+      return { success: true, count: officialTopics.length };
+    }),
   }),
   dpp: router({
     generate: protectedProcedure

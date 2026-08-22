@@ -1,0 +1,2 @@
+ALTER TABLE `jeeSyllabusTopics` MODIFY COLUMN `class` enum('11','12','jeeMain','jeeAdvanced','neet') NOT NULL;--> statement-breakpoint
+ALTER TABLE `syllabusChapters` MODIFY COLUMN `class` enum('11','12','jeeMain','jeeAdvanced','neet') NOT NULL;
