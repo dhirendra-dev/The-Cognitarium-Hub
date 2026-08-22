@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Mail, Phone, Copy, Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, Copy, Eye, EyeOff, ShieldCheck, Sparkles, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -21,7 +21,6 @@ export default function ContactCollectionPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [credentials, setCredentials] = useState<CredentialsData | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoginMode, setIsLoginMode] = useState(false);
 
   const submitMutation = trpc.contactSubmissions.submit.useMutation({
     onSuccess: (data) => {
@@ -41,19 +40,15 @@ export default function ContactCollectionPage() {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    // Validate name
     if (!name.trim()) {
       newErrors.name = "Name is required";
     } else if (name.trim().length < 2) {
       newErrors.name = "Name must be at least 2 characters";
     }
 
-    // Validate email (required)
     if (!email.trim()) {
       newErrors.email = "Email is required";
-    }
-
-    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = "Invalid email format";
     }
 
@@ -68,7 +63,6 @@ export default function ContactCollectionPage() {
 
     setErrors({});
 
-    // Submit via tRPC
     await submitMutation.mutateAsync({
       name: name.trim(),
       email: email.trim(),
@@ -83,57 +77,57 @@ export default function ContactCollectionPage() {
 
   if (credentials) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-xl border-2 border-green-200">
-          <CardHeader className="space-y-2 text-center">
-            <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-2" />
-            <CardTitle className="text-2xl text-green-700">Account Created! 🎉</CardTitle>
-            <CardDescription>Your login credentials are ready</CardDescription>
+      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-4 font-sans" style={{ backgroundImage: 'radial-gradient(#e5e5e5 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
+        <Card className="w-full max-w-md shadow-xl rounded-3xl border border-stone-200 bg-white p-2">
+          <CardHeader className="space-y-3 text-center pb-2">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <CardTitle className="text-2xl font-serif font-bold text-stone-900">Account Created! 🎉</CardTitle>
+            <CardDescription className="text-stone-600">Your secure access credentials for The Cognitarium Hub</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-700">
-                Your account is ready to use immediately!
+          <CardContent className="space-y-5 pt-4">
+            <Alert className="border-emerald-200 bg-emerald-50/60 rounded-2xl">
+              <ShieldCheck className="h-4 w-4 text-emerald-700" />
+              <AlertDescription className="text-emerald-900 text-xs font-medium">
+                Your account is ready. Save your auto-generated credentials below.
               </AlertDescription>
             </Alert>
 
-            {/* Email Display */}
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-gray-700">Email</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-stone-600">Email Address</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="text"
                   value={credentials.email}
                   readOnly
-                  className="bg-gray-50 text-gray-900 font-mono text-sm"
+                  className="bg-stone-50 text-stone-900 font-mono text-xs rounded-xl border-stone-200"
                 />
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => copyToClipboard(credentials.email, "Email")}
-                  className="px-3"
+                  className="rounded-xl border-stone-200 text-stone-700 hover:bg-stone-100 px-3"
                 >
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>
             </div>
 
-            {/* Password Display */}
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-gray-700">Password</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-stone-600">Secure Password</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type={showPassword ? "text" : "password"}
                   value={credentials.password}
                   readOnly
-                  className="bg-gray-50 text-gray-900 font-mono text-sm"
+                  className="bg-stone-50 text-stone-900 font-mono text-xs rounded-xl border-stone-200"
                 />
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="px-3"
+                  className="rounded-xl border-stone-200 text-stone-700 hover:bg-stone-100 px-3"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
@@ -141,32 +135,23 @@ export default function ContactCollectionPage() {
                   size="sm"
                   variant="outline"
                   onClick={() => copyToClipboard(credentials.password, "Password")}
-                  className="px-3"
+                  className="rounded-xl border-stone-200 text-stone-700 hover:bg-stone-100 px-3"
                 >
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>
             </div>
 
-            <Alert className="border-blue-200 bg-blue-50">
-              <AlertCircle className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-700 text-sm">
-                Save these credentials securely. You can change your password after logging in.
-              </AlertDescription>
-            </Alert>
-
-            {/* Login Button */}
             <Button
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-2 rounded-lg transition"
+              className="w-full bg-[#2D2420] hover:bg-[#3E322C] text-stone-50 font-bold py-3 rounded-xl shadow-md transition-all mt-2"
               onClick={() => window.location.href = '/login'}
             >
-              Go to Login
+              Sign In to Dashboard
             </Button>
 
-            {/* Create Another Account */}
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full rounded-xl border-stone-200 text-stone-700 hover:bg-stone-100"
               onClick={() => setCredentials(null)}
             >
               Create Another Account
@@ -177,165 +162,73 @@ export default function ContactCollectionPage() {
     );
   }
 
-  if (isLoginMode) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-xl border-2 border-blue-200">
-          <CardHeader className="space-y-2 text-center">
-            <div className="text-4xl font-bold text-blue-600 mb-2">🔐</div>
-            <CardTitle className="text-2xl">Login</CardTitle>
-            <CardDescription>Enter your credentials to access the dashboard</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600 text-center">
-                Redirecting to login page...
-              </p>
-              <Button
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2 rounded-lg transition"
-                onClick={() => window.location.href = '/login'}
-              >
-                Go to Login
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setIsLoginMode(false)}
-              >
-                Back to Sign Up
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-xl border-2 border-blue-200">
-        <CardHeader className="space-y-2 text-center">
-          <div className="text-4xl font-bold text-blue-600 mb-2">📚</div>
-          <CardTitle className="text-2xl">Join Our Community</CardTitle>
-          <CardDescription>Share your contact details to get started</CardDescription>
+    <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-4 font-sans" style={{ backgroundImage: 'radial-gradient(#e5e5e5 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
+      <Card className="w-full max-w-md shadow-xl rounded-3xl border border-stone-200 bg-white p-2">
+        <CardHeader className="space-y-3 text-center pb-2">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-800 border border-amber-200/40">
+            <BookOpen className="w-8 h-8" />
+          </div>
+          <CardTitle className="text-2xl font-serif font-bold text-stone-900">Join The Cognitarium Hub</CardTitle>
+          <CardDescription className="text-stone-600 text-xs md:text-sm">
+            Enter your details below to generate your secure student account instantly.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-2">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* General Error Alert */}
-            {errors.contact && (
-              <Alert className="border-red-200 bg-red-50">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-600">
-                  {errors.contact}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Name Field */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-stone-700">Full Name *</Label>
               <Input
-                id="name"
                 type="text"
                 placeholder="Enter your full name"
                 value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (errors.name) {
-                    const newErrors = { ...errors };
-                    delete newErrors.name;
-                    setErrors(newErrors);
-                  }
-                }}
-                className={errors.name ? "border-red-500" : ""}
+                onChange={(e) => setName(e.target.value)}
+                className={`rounded-xl border-stone-200 bg-stone-50/50 py-2.5 text-sm ${errors.name ? "border-red-400" : ""}`}
               />
-              {errors.name && (
-                <p className="text-sm text-red-600">{errors.name}</p>
-              )}
+              {errors.name && <p className="text-xs text-red-500 font-medium">{errors.name}</p>}
             </div>
 
-            {/* Email Field */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                Email Address *
-              </Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-stone-700">Email Address *</Label>
               <Input
-                id="email"
                 type="email"
                 placeholder="your.email@example.com"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (errors.email) {
-                    const newErrors = { ...errors };
-                    delete newErrors.email;
-                    setErrors(newErrors);
-                  }
-                }}
-                className={errors.email ? "border-red-500" : ""}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`rounded-xl border-stone-200 bg-stone-50/50 py-2.5 text-sm ${errors.email ? "border-red-400" : ""}`}
               />
-              {errors.email && (
-                <p className="text-sm text-red-600">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-xs text-red-500 font-medium">{errors.email}</p>}
             </div>
 
-            {/* Phone Field */}
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                Phone Number
-              </Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-stone-700">Phone Number (Optional)</Label>
               <Input
-                id="phone"
                 type="tel"
                 placeholder="+91 9876543210"
                 value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value);
-                  if (errors.phone) {
-                    const newErrors = { ...errors };
-                    delete newErrors.phone;
-                    setErrors(newErrors);
-                  }
-                }}
-                className={errors.phone ? "border-red-500" : ""}
+                onChange={(e) => setPhone(e.target.value)}
+                className={`rounded-xl border-stone-200 bg-stone-50/50 py-2.5 text-sm ${errors.phone ? "border-red-400" : ""}`}
               />
-              {errors.phone && (
-                <p className="text-sm text-red-600">{errors.phone}</p>
-              )}
+              {errors.phone && <p className="text-xs text-red-500 font-medium">{errors.phone}</p>}
             </div>
 
-            <p className="text-xs text-gray-500 text-center">
-              * Required field
-            </p>
-
-            {/* Submit Button */}
             <Button
               type="submit"
               disabled={submitMutation.isPending}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2 rounded-lg transition"
+              className="w-full bg-[#2D2420] hover:bg-[#3E322C] text-stone-50 font-bold py-3 rounded-xl shadow-md transition-all mt-4"
             >
-              {submitMutation.isPending ? "Creating Account..." : "Create Account"}
+              {submitMutation.isPending ? "Creating Account..." : "Create Account & Get Credentials"}
             </Button>
 
-            <p className="text-xs text-gray-500 text-center">
-              Your account will be created instantly. Get your login credentials immediately!
-            </p>
+            <div className="text-center pt-2">
+              <p className="text-xs text-stone-500">
+                Already have an account?{" "}
+                <a href="/login" className="text-amber-800 font-bold hover:underline">
+                  Sign in here
+                </a>
+              </p>
+            </div>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center mb-3">
-              Already have an account?
-            </p>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setIsLoginMode(true)}
-            >
-              Login Here
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
