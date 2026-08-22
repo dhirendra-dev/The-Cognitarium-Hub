@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Calendar, CheckCircle, Circle, Loader, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export default function DailyTasks() {
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split("T")[0]);
@@ -67,31 +69,161 @@ export default function DailyTasks() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
-      <div className="mx-auto max-w-5xl">
-        <header className="mb-6 rounded-2xl bg-gradient-to-r from-indigo-700 to-violet-800 p-6 text-white shadow-xl md:p-8">
-          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-3"><Calendar className="h-8 w-8 text-indigo-200" /><h1 className="text-3xl font-bold">Daily Study Tasks</h1></div>
-              <p className="max-w-2xl text-indigo-100">Generate a focused checklist from the published PCM syllabus, then add personal tasks when needed.</p>
+    <div className="mx-auto max-w-[1440px] space-y-8 animate-in fade-in duration-300">
+      <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8 lg:p-10">
+        <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-accent/30 blur-3xl pointer-events-none" />
+        <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="ink-kicker mb-3">Daily study checklist</p>
+            <h1 className="display-serif text-3xl font-bold tracking-tight sm:text-5xl">Daily Study Tasks</h1>
+            <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Generate a focused checklist from the published PCM syllabus, then add personal study items when needed.</p>
+          </div>
+          <Card className="rounded-[1.5rem] bg-primary p-5 text-primary-foreground shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wider text-primary-foreground/75">Progress for today</p>
+            <p className="mt-1 text-3xl font-black">{progress}% <span className="text-xs font-semibold text-primary-foreground/75">({completedCount}/{tasks.length})</span></p>
+            <div className="mt-3 h-2 w-48 overflow-hidden rounded-full bg-black/15">
+              <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${progress}%` }} />
             </div>
-            <div className="rounded-xl bg-white/10 px-5 py-4 text-center"><p className="text-sm text-indigo-100">{completedCount} of {tasks.length} complete</p><p className="text-3xl font-bold">{progress}%</p></div>
+          </Card>
+        </div>
+      </section>
+
+      <Card className="elevated-card rounded-[2rem] p-6 sm:p-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <label htmlFor="task-date" className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Select Study Date</label>
+          <input
+            id="task-date"
+            type="date"
+            value={selectedDate}
+            onChange={(event) => setSelectedDate(event.target.value)}
+            className="rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground focus:outline-primary"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            onClick={() => generateMutation.mutate({ date: dateInput.date, count: 5 })}
+            disabled={generateMutation.isPending}
+            className="rounded-full px-6 font-bold shadow-sm"
+          >
+            <Sparkles className="mr-2 h-4 w-4" /> {generateMutation.isPending ? "Generating..." : "Generate from syllabus"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowAddForm((value) => !value)}
+            className="rounded-full px-5 font-bold bg-card"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Add custom task
+          </Button>
+        </div>
+      </Card>
+
+      {showAddForm && (
+        <Card className="elevated-card rounded-[2rem] p-6 sm:p-8 border border-primary/40 bg-card/90">
+          <form onSubmit={handleAddTask} className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-xs font-bold uppercase text-muted-foreground mb-1.5">Subject</label>
+              <select
+                value={newTaskSubject}
+                onChange={(event) => setNewTaskSubject(event.target.value)}
+                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground"
+              >
+                <option value="General">General</option>
+                {subjects.map((subject) => (
+                  <option key={subject} value={subject}>{subject}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase text-muted-foreground mb-1.5">Task Description</label>
+              <input
+                value={newTaskDescription}
+                onChange={(event) => setNewTaskDescription(event.target.value)}
+                placeholder="e.g. Revise electrostatics derivations"
+                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold uppercase text-muted-foreground mb-1.5">Notes (optional)</label>
+              <textarea
+                value={newTaskNotes}
+                onChange={(event) => setNewTaskNotes(event.target.value)}
+                placeholder="Add formula reminders or chapter references..."
+                className="w-full rounded-xl border border-border bg-background p-4 text-sm font-semibold text-foreground min-h-24"
+              />
+            </div>
+            <div className="md:col-span-2 flex justify-end gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} className="rounded-full px-6 font-bold">Cancel</Button>
+              <Button type="submit" disabled={createTaskMutation.isPending} className="rounded-full px-6 font-bold">
+                {createTaskMutation.isPending ? "Adding..." : "Save Task"}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      {isLoading ? (
+        <div className="flex items-center justify-center rounded-[2rem] bg-card p-16 text-muted-foreground border border-border">
+          <Loader className="mr-3 h-5 w-5 animate-spin text-primary" /> Loading today's study plan...
+        </div>
+      ) : tasks.length === 0 ? (
+        <Card className="rounded-[2rem] p-12 text-center space-y-4 border border-dashed border-border bg-card">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Sparkles className="h-8 w-8" />
           </div>
-          <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/20"><div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${progress}%` }} /></div>
-        </header>
-
-        <section className="mb-6 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div><label htmlFor="task-date" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Study date</label><input id="task-date" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700" /></div>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => generateMutation.mutate({ date: dateInput.date, count: 5 })} disabled={generateMutation.isPending} className="inline-flex items-center gap-2 rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800 disabled:bg-slate-400"><Sparkles className="h-4 w-4" />{generateMutation.isPending ? "Generating…" : "Generate from syllabus"}</button>
-            <button type="button" onClick={() => setShowAddForm((value) => !value)} className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200"><Plus className="h-4 w-4" /> Add task</button>
+          <div>
+            <h3 className="text-2xl font-bold">No tasks for this date</h3>
+            <p className="mt-1 text-sm font-semibold text-muted-foreground">Generate a checklist instantly from the published PCM syllabus or add your own custom tasks.</p>
           </div>
-        </section>
-
-        {showAddForm && <form onSubmit={handleAddTask} className="mb-6 grid gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-5 md:grid-cols-2"><select value={newTaskSubject} onChange={(event) => setNewTaskSubject(event.target.value)} className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm"><option value="General">General</option>{subjects.map((subject) => <option key={subject} value={subject}>{subject}</option>)}</select><input value={newTaskDescription} onChange={(event) => setNewTaskDescription(event.target.value)} placeholder="Task description" className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm" /><textarea value={newTaskNotes} onChange={(event) => setNewTaskNotes(event.target.value)} placeholder="Notes (optional)" className="min-h-20 rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm md:col-span-2" /><button type="submit" disabled={createTaskMutation.isPending} className="rounded-lg bg-indigo-700 px-4 py-2.5 font-semibold text-white hover:bg-indigo-800 disabled:bg-slate-400 md:col-span-2">{createTaskMutation.isPending ? "Adding…" : "Save personal task"}</button></form>}
-
-        {isLoading ? <div className="flex items-center justify-center rounded-xl bg-white p-16 text-slate-500"><Loader className="mr-2 h-5 w-5 animate-spin" /> Loading tasks…</div> : tasks.length === 0 ? <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm"><Sparkles className="mx-auto mb-4 h-10 w-10 text-indigo-400" /><h2 className="text-xl font-semibold text-slate-800">No tasks for this date</h2><p className="mt-2 text-sm text-slate-500">Generate a checklist from the active syllabus or add a personal study task.</p></div> : <div className="space-y-5">{Array.from(groupedTasks.entries()).map(([subject, subjectTasks]) => <section key={subject} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-bold text-slate-900">{subject}</h2><span className="text-sm text-slate-500">{subjectTasks.filter((task) => task.isCompleted).length}/{subjectTasks.length}</span></div><div className="space-y-3">{subjectTasks.map((task) => <div key={task.id} className={`flex items-start gap-3 rounded-lg border p-4 ${task.isCompleted ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"}`}><button type="button" aria-label={task.isCompleted ? "Mark task incomplete" : "Mark task complete"} onClick={() => toggleTaskMutation.mutate({ taskId: task.id, isCompleted: !task.isCompleted })} disabled={toggleTaskMutation.isPending} className="mt-0.5 shrink-0 text-emerald-600">{task.isCompleted ? <CheckCircle className="h-5 w-5" /> : <Circle className="h-5 w-5 text-slate-400" />}</button><div className="min-w-0 flex-1"><p className={`font-semibold ${task.isCompleted ? "text-emerald-800 line-through" : "text-slate-800"}`}>{task.taskDescription}</p>{task.notes && <p className="mt-2 rounded bg-white/70 p-2 text-sm text-slate-600">{task.notes}</p>}</div></div>)}</div></section>)}</div>}
-      </div>
+          <Button onClick={() => generateMutation.mutate({ date: dateInput.date, count: 5 })} className="rounded-full px-6 font-bold">
+            <Sparkles className="mr-2 h-4 w-4" /> Generate from Syllabus
+          </Button>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {Array.from(groupedTasks.entries()).map(([subject, subjectTasks]) => (
+            <Card key={subject} className="elevated-card rounded-[2rem] p-6 sm:p-8 space-y-4 border border-border bg-card">
+              <div className="flex items-center justify-between border-b border-border/60 pb-4">
+                <h3 className="text-xl font-bold tracking-tight text-foreground">{subject}</h3>
+                <span className="rounded-full bg-muted px-3 py-1 text-xs font-black uppercase text-muted-foreground">
+                  {subjectTasks.filter((task) => task.isCompleted).length} / {subjectTasks.length} done
+                </span>
+              </div>
+              <div className="space-y-3">
+                {subjectTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={`flex items-start gap-4 rounded-2xl border p-4 transition-all ${
+                      task.isCompleted ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-900 dark:text-emerald-200" : "border-border/80 bg-background/50 hover:bg-muted/30"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      aria-label={task.isCompleted ? "Mark task incomplete" : "Mark task complete"}
+                      onClick={() => toggleTaskMutation.mutate({ taskId: task.id, isCompleted: !task.isCompleted })}
+                      disabled={toggleTaskMutation.isPending}
+                      className="mt-0.5 shrink-0 text-primary transition-transform hover:scale-110"
+                    >
+                      {task.isCompleted ? <CheckCircle className="h-6 w-6 text-emerald-600 dark:text-emerald-400" /> : <Circle className="h-6 w-6 text-muted-foreground" />}
+                    </button>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <p className={`font-bold text-base ${task.isCompleted ? "line-through opacity-75" : "text-foreground"}`}>
+                        {task.taskDescription}
+                      </p>
+                      {task.notes && (
+                        <p className="rounded-xl bg-card p-3 text-xs font-semibold text-muted-foreground border border-border/50">
+                          {task.notes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
