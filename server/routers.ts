@@ -1250,7 +1250,9 @@ export const appRouter = router({
       .input(z.object({
         subject: z.string().trim().min(1).max(100),
         intention: z.string().trim().min(1).max(255),
-        scheduledFor: z.date(),
+        scheduledFor: z.date().refine((date) => date.getTime() >= Date.now(), {
+          message: "Choose a future start time for an upcoming focus block.",
+        }),
         duration: z.number().int().min(1).max(480),
         timerMode: z.enum(["pomodoro", "custom", "stopwatch"]),
       }))
@@ -1260,7 +1262,9 @@ export const appRouter = router({
         id: z.number(),
         subject: z.string().trim().min(1).max(100).optional(),
         intention: z.string().trim().min(1).max(255).optional(),
-        scheduledFor: z.date().optional(),
+        scheduledFor: z.date().refine((date) => date.getTime() >= Date.now(), {
+          message: "Choose a future start time for an upcoming focus block.",
+        }).optional(),
         duration: z.number().int().min(1).max(480).optional(),
         timerMode: z.enum(["pomodoro", "custom", "stopwatch"]).optional(),
         status: z.enum(["planned", "started", "dismissed"]).optional(),

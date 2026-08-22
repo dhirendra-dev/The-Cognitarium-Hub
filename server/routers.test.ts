@@ -498,6 +498,18 @@ describe("Study Timer Router", () => {
 });
 
 describe("Focus Plans Router", () => {
+  it("rejects an upcoming focus block scheduled in the past", async () => {
+    const caller = appRouter.createCaller(createMockContext(510));
+
+    await expect(caller.focusPlans.create({
+      subject: "Chemistry",
+      intention: "Review periodic trends",
+      scheduledFor: new Date(Date.now() - 60_000),
+      duration: 25,
+      timerMode: "pomodoro",
+    })).rejects.toThrow("future start time");
+  });
+
   it("creates, lists, and dismisses a user-owned upcoming focus block", async () => {
     const caller = appRouter.createCaller(createMockContext(511));
     const scheduledFor = new Date(Date.now() + 60 * 60_000);
