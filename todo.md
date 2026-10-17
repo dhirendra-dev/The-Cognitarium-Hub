@@ -544,3 +544,10 @@
 - [x] Make the NTA syllabus import idempotent and safe to retry
 - [x] Verify Biology/NEET synchronization and display a clear success/error result
 - [x] Add regression coverage and save a repair checkpoint
+
+## Repository Publishing
+- [ ] Connect the project to `https://github.com/dhirendra-dev/The-Cognitarium-Hub.git`
+- [ ] Compare the existing GitHub `main` history with the current project checkpoint
+- [ ] Preserve unrelated remote work and merge only when histories diverge
+- [ ] Push the complete current codebase to GitHub after authentication
+- [ ] Verify the remote branch points to the pushed commit
