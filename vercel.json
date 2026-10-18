@@ -5,8 +5,7 @@
   "framework": "vite",
   "functions": {
     "api/index.ts": {
-      "runtime": "nodejs22.x",
-      "includeFiles": ["drizzle/**", "shared/**"]
+      "runtime": "nodejs22.x"
     }
   },
   "rewrites": [
