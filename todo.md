@@ -551,3 +551,13 @@
 - [x] Preserve unrelated remote work and merge only when histories diverge
 - [x] Push the complete current codebase to GitHub after authentication
 - [x] Verify the remote branch points to the pushed commit
+
+## Vercel Deployment
+- [ ] Inspect Vercel projects and deployment configuration
+- [ ] Deploy The Cognitarium Hub to Vercel
+- [ ] Verify deployment status and URL
+
+## Vercel Rendering Repair
+- [ ] Reproduce the live source-code response
+- [ ] Correct Vercel build/runtime configuration
+- [ ] Redeploy and verify the application renders normally
